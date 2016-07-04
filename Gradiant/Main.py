@@ -7,7 +7,7 @@ parser = argparse.ArgumentParser(description='Basis Sets project')
 parser.add_argument('-e','--element', help='Input element atomic number', type=int, required=True)
 parser.add_argument('-b','--basis',help='Basis set', required=False, default="6-31G")
 parser.add_argument('-t','--theory',help='Level of theory', required=False, default="UHF")
-parser.add_argument('-d','--delta',help='The value of delta', required=False, type=float, default=0.01)
+parser.add_argument('-d','--delta',help='The value of delta', required=False, type=float, default=0.4)
 parser.add_argument('-c','--charge',help='The charge', required=False, type=int, default=0)
 parser.add_argument('-s','--initial',help='Initial value of scale', required=False, type=float, default=1.0)
 parser.add_argument('-l','--limit',help='Cutoff limit', required=False, type=float, default=1.0e-6)
@@ -24,8 +24,10 @@ print ("The value of Delta is {}".format(args.delta))
 
 sto=elementMod.GetSTO(Z,args.basis)
 ## Guess file name  ##
-GuessFile='Guess_'+str(Z)+elementMod.GetElemSym(Z).strip()+args.basis.strip()+'.txt'
-GradFile='grad_'+str(Z)+elementMod.GetElemSym(Z).strip()+args.basis.strip()+'.txt'
+GuessFile='Guess_'+str(Z)+'_'+elementMod.GetElemSym(Z).strip()+'_'+args.basis.strip()+'.txt'
+GradFile='Grad_'+str(Z)+'_'+elementMod.GetElemSym(Z).strip()+'_'+args.basis.strip()+'.txt'
+EnergyFileI='EnergyI_'+str(Z)+'_'+elementMod.GetElemSym(Z).strip()+'_'+args.basis.strip()
+EnergyFileF='EnergyF_'+str(Z)+'_'+elementMod.GetElemSym(Z).strip()+'_'+args.basis.strip()
 
 ### Read Guess scale values from the file ####
 if os.path.isfile(GuessFile):
@@ -42,7 +44,7 @@ else:
 	file.close()
 
 # calculate the energy
-OEnergy=elementMod.Get_Energy('energy',Z,args.charge,args.theory,args.basis,guessScale)
+OEnergy=elementMod.Get_Energy(EnergyFileI,Z,args.charge,args.theory,args.basis,guessScale)
 
 #>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 ### Generate Scale values to find Gradiant
@@ -57,7 +59,7 @@ for index,sto_out in enumerate(guessScale):
     AlphaValue.append(tempScale)
 ### 
 #>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-### Generate OUTPUT FILE ###
+### Generate INPUT FILE ###
 job=[]
 title=EleName.strip()+'_'+args.basis.strip()
 for index,sto_out in enumerate(AlphaValue):
@@ -84,13 +86,17 @@ for val in range(half_len_grid):
 guessScale=[float(i) - j for i, j in zip(guessScale, Grad)] 
 
 # calculate the new energy
-NEnergy=elementMod.Get_Energy('energy',Z,args.charge,args.theory,args.basis,guessScale)
-print(guessScale, NEnergy, OEnergy, NEnergy-OEnergy)
+NEnergy=elementMod.Get_Energy(EnergyFileF,Z,args.charge,args.theory,args.basis,guessScale)
+DEnergy=NEnergy-OEnergy
+print(guessScale, NEnergy, OEnergy, DEnergy)
 
 # store the new scale values 
-file=open(GuessFile,'w')
-for val in guessScale:
-	file.write(str(val)+'\n')
-file.close()
-
+if DEnergy < 0.0:
+	file=open(GuessFile,'w')
+	for val in guessScale:
+		file.write(str(val)+'\n')
+	file.close()
+else:
+	print('Dalta is large, \nIncrease in the energy\nExit')
+	sys.exit(0)
 #subprocess.call(['qsub',title+'.sh'])
