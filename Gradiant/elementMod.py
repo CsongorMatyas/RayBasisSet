@@ -1,4 +1,5 @@
 from sys import exit
+import subprocess
 
 def GetElemSym(z):
     if z<1:
@@ -135,9 +136,37 @@ def returnInput(Z, charge, method, basis, scaling_factors):
     outputtext+=gen_cartesian_coord(Z)
     sto=GetSTO(Z,basis)
     for index,sto_out in enumerate(sto):
-        outputtext+=sto_out+' '+scaling_factors[index]+'\n'
+        outputtext+=sto_out+' '+str(scaling_factors[index])+'\n'
     outputtext+='****\n\n'
     return outputtext
+    
+def Get_Energy(fileName,Z,charge,theory,basis,guessScale):
+    # calculate the energy
+    file=open(fileName+'.gfj','w')
+    file.write(returnInput(Z,charge,theory,basis,guessScale)+'\n\n')
+    file.close()
+    subprocess.call('g09 < '+fileName+'.gfj > '+fileName+'.out\n',shell=True)
+    Energy=subprocess.check_output('grep "SCF Done:" '+fileName+'.out | tail -1|awk \'{ print $5 }\'', shell=True)
+    return float(Energy.decode('ascii').rstrip('\n'))
 
+# Generate .sh file to run it on the Cluster (serial)
+'''
+file=open(title+'.sh','w')
+file.write('#$ -S /bin/csh\n')
+file.write('#$ -cwd\n')
+file.write('#$ -j y\n')
+file.write('#$ -l h_rt=1:00:00\n')
+#file.write('#$ -l h_vmem=7500M\n')
+#file.write('#$ -pe openmp 4\n')
+file.write('\n\n')
+file.write('setenv GAUSS_SCRDIR /nqs/$USER\n')
+file.write('module load gaussian\n')
+for ijob in job:
+    file.write('g09 < '+ijob+'.gfj > '+ijob+'.out\n')
+    file.write('grep "SCF Done:  E(" '+ijob+'.out | tail -1|awk \'{ print $5 }\' >> "'+GradFile+'"\n')
+file.write('\n\n')
+file.write('# bash to extract energy\n')
+file.close()
+'''
 
-
+#HE-2.85516042615
