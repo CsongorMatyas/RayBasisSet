@@ -1,7 +1,7 @@
  Entering Gaussian System, Link 0=g09
  Initial command:
- /home/ibrahim/.g09D1/g09/l1.exe "/home/ibrahim/.g09D1/g09/exe/Gau-11224.inp" -scrdir="/home/ibrahim/.g09D1/g09/exe/"
- Entering Link 1 = /home/ibrahim/.g09D1/g09/l1.exe PID=     11226.
+ /home/ibrahim/.g09D1/g09/l1.exe "/home/ibrahim/.g09D1/g09/exe/Gau-3027.inp" -scrdir="/home/ibrahim/.g09D1/g09/exe/"
+ Entering Link 1 = /home/ibrahim/.g09D1/g09/l1.exe PID=      3029.
   
  Copyright (c) 1988,1990,1992,1993,1995,1998,2003,2009,2013,
             Gaussian, Inc.  All Rights Reserved.
@@ -98,12 +98,12 @@
  2/9=110/2;
  6/7=2,8=2,9=2,10=2,19=2,28=1/1;
  99/9=1/99;
- ---------------------------------------------
- HELIUM_2.2341255426913613_1.0963810561677123_
- ---------------------------------------------
+ -----------------------------------------------
+ HYDROGEN_0.9650614599325549_0.9998690751669902_
+ -----------------------------------------------
  Symbolic Z-matrix:
- Charge =  0 Multiplicity = 1
- He
+ Charge =  0 Multiplicity = 2
+ H
  
 
  GradGradGradGradGradGradGradGradGradGradGradGradGradGradGradGradGradGrad
@@ -119,10 +119,10 @@
  Center     Atomic      Atomic             Coordinates (Angstroms)
  Number     Number       Type             X           Y           Z
  ---------------------------------------------------------------------
-      1          2           0        0.000000    0.000000    0.000000
+      1          1           0        0.000000    0.000000    0.000000
  ---------------------------------------------------------------------
- Stoichiometry    He
- Framework group  OH[O(He)]
+ Stoichiometry    H(2)
+ Framework group  OH[O(H)]
  Deg. of freedom     0
  Full point group                 OH      NOp  48
  Largest Abelian subgroup         D2H     NOp   8
@@ -132,16 +132,16 @@
  Center     Atomic      Atomic             Coordinates (Angstroms)
  Number     Number       Type             X           Y           Z
  ---------------------------------------------------------------------
-      1          2           0        0.000000    0.000000    0.000000
+      1          1           0        0.000000    0.000000    0.000000
  ---------------------------------------------------------------------
  General basis read from cards:  (5D, 7F)
  AO basis set (Overlap normalization):
- Atom He1      Shell     1 S   3     bf    1 -     1          0.000000000000          0.000000000000          0.000000000000
-      0.1111896001D+02  0.1543289673D+00
-      0.2025332446D+01  0.5353281423D+00
-      0.5481340000D+00  0.4446345422D+00
- Atom He1      Shell     2 S   1     bf    2 -     2          0.000000000000          0.000000000000          0.000000000000
-      0.3256956029D+00  0.1000000000D+01
+ Atom H1       Shell     1 S   3     bf    1 -     1          0.000000000000          0.000000000000          0.000000000000
+      0.2074717476D+01  0.1543289673D+00
+      0.3779123781D+00  0.5353281423D+00
+      0.1022778378D+00  0.4446345422D+00
+ Atom H1       Shell     2 S   1     bf    2 -     2          0.000000000000          0.000000000000          0.000000000000
+      0.2708788656D+00  0.1000000000D+01
  There are     2 symmetry adapted cartesian basis functions of AG  symmetry.
  There are     0 symmetry adapted cartesian basis functions of B1G symmetry.
  There are     0 symmetry adapted cartesian basis functions of B2G symmetry.
@@ -159,16 +159,16 @@
  There are     0 symmetry adapted basis functions of B2U symmetry.
  There are     0 symmetry adapted basis functions of B3U symmetry.
      2 basis functions,     4 primitive gaussians,     2 cartesian basis functions
-     1 alpha electrons        1 beta electrons
+     1 alpha electrons        0 beta electrons
        nuclear repulsion energy         0.0000000000 Hartrees.
  NAtoms=    1 NActive=    1 NUniq=    1 SFac= 1.00D+00 NAtFMM=   60 NAOKFM=F Big=F
  Integral buffers will be    131072 words long.
  Raffenetti 2 integral format.
  Two-electron integral symmetry is turned on.
  One-electron integrals computed using PRISM.
- NBasis=     2 RedAO= T EigKep=  6.79D-01  NBF=     2     0     0     0     0     0     0     0
+ NBasis=     2 RedAO= T EigKep=  6.25D-02  NBF=     2     0     0     0     0     0     0     0
  NBsUse=     2 1.00D-06 EigRej= -1.00D+00 NBFU=     2     0     0     0     0     0     0     0
- ExpMin= 3.26D-01 ExpMax= 1.11D+01 ExpMxC= 1.11D+01 IAcc=1 IRadAn=         1 AccDes= 0.00D+00
+ ExpMin= 1.02D-01 ExpMax= 2.07D+00 ExpMxC= 2.07D+00 IAcc=1 IRadAn=         1 AccDes= 0.00D+00
  Harris functional with IExCor=  205 and IRadAn=       1 diagonalized for initial guess.
  HarFok:  IExCor=  205 AccDes= 0.00D+00 IRadAn=         1 IDoV= 1 UseB2=F ITyADJ=14
  ICtDFT=  3500011 ScaDFX=  1.000000  1.000000  1.000000  1.000000
@@ -182,21 +182,20 @@
        Occupied  (A1G)
        Virtual   (A1G)
  Beta  Orbitals:
-       Occupied  (A1G)
-       Virtual   (A1G)
- The electronic state of the initial guess is 1-A1G.
- Initial guess <Sx>= 0.0000 <Sy>= 0.0000 <Sz>= 0.0000 <S**2>= 0.0000 S= 0.0000
+       Virtual   (A1G) (A1G)
+ The electronic state of the initial guess is 2-A1G.
+ Initial guess <Sx>= 0.0000 <Sy>= 0.0000 <Sz>= 0.5000 <S**2>= 0.7500 S= 0.5000
  Keep R1 and R2 ints in memory in symmetry-blocked form, NReq=821127.
  Requested convergence on RMS density matrix=1.00D-08 within 128 cycles.
  Requested convergence on MAX density matrix=1.00D-06.
  Requested convergence on             energy=1.00D-06.
  No special actions if energy rises.
- SCF Done:  E(UHF) =  -2.83446462635     A.U. after    4 cycles
-            NFock=  4  Conv=0.16D-10     -V/T= 1.9964
- <Sx>= 0.0000 <Sy>= 0.0000 <Sz>= 0.0000 <S**2>= 0.0000 S= 0.0000
+ SCF Done:  E(UHF) = -0.494287130700     A.U. after    4 cycles
+            NFock=  4  Conv=0.30D-14     -V/T= 2.0713
+ <Sx>= 0.0000 <Sy>= 0.0000 <Sz>= 0.5000 <S**2>= 0.7500 S= 0.5000
  <L.S>= 0.000000000000E+00
  Annihilation of the first spin contaminant:
- S**2 before annihilation     0.0000,   after     0.0000
+ S**2 before annihilation     0.7500,   after     0.7500
 
  **********************************************************************
 
@@ -209,32 +208,29 @@
        Occupied  (A1G)
        Virtual   (A1G)
  Beta  Orbitals:
-       Occupied  (A1G)
-       Virtual   (A1G)
- The electronic state is 1-A1G.
- Alpha  occ. eigenvalues --   -0.90491
- Alpha virt. eigenvalues --    1.59064
-  Beta  occ. eigenvalues --   -0.90491
-  Beta virt. eigenvalues --    1.59064
+       Virtual   (A1G) (A1G)
+ The electronic state is 2-A1G.
+ Alpha  occ. eigenvalues --   -0.49429
+ Alpha virt. eigenvalues --    1.50367
+  Beta virt. eigenvalues --    0.10853   1.55104
           Condensed to atoms (all electrons):
                1
-     1  He   2.000000
+     1  H    1.000000
           Atomic-Atomic Spin Densities.
                1
-     1  He   0.000000
+     1  H    1.000000
  Mulliken charges and spin densities:
                1          2
-     1  He   0.000000   0.000000
- Sum of Mulliken charges =   0.00000   0.00000
+     1  H    0.000000   1.000000
+ Sum of Mulliken charges =   0.00000   1.00000
  Mulliken charges and spin densities with hydrogens summed into heavy atoms:
                1          2
-     1  He   0.000000   0.000000
- Electronic spatial extent (au):  <R**2>=              2.2776
+ Electronic spatial extent (au):  <R**2>=              3.2233
  Charge=              0.0000 electrons
  Dipole moment (field-independent basis, Debye):
     X=              0.0000    Y=              0.0000    Z=              0.0000  Tot=              0.0000
  Quadrupole moment (field-independent basis, Debye-Ang):
-   XX=             -1.0211   YY=             -1.0211   ZZ=             -1.0211
+   XX=             -1.4451   YY=             -1.4451   ZZ=             -1.4451
    XY=              0.0000   XZ=              0.0000   YZ=              0.0000
  Traceless Quadrupole moment (field-independent basis, Debye-Ang):
    XX=              0.0000   YY=              0.0000   ZZ=              0.0000
@@ -244,12 +240,12 @@
   XXY=              0.0000  XXZ=              0.0000  XZZ=              0.0000  YZZ=              0.0000
   YYZ=              0.0000  XYZ=              0.0000
  Hexadecapole moment (field-independent basis, Debye-Ang**3):
- XXXX=             -0.4655 YYYY=             -0.4655 ZZZZ=             -0.4655 XXXY=              0.0000
+ XXXX=             -1.9285 YYYY=             -1.9285 ZZZZ=             -1.9285 XXXY=              0.0000
  XXXZ=              0.0000 YYYX=              0.0000 YYYZ=              0.0000 ZZZX=              0.0000
- ZZZY=              0.0000 XXYY=             -0.1552 XXZZ=             -0.1552 YYZZ=             -0.1552
+ ZZZY=              0.0000 XXYY=             -0.6428 XXZZ=             -0.6428 YYZZ=             -0.6428
  XXYZ=              0.0000 YYXZ=              0.0000 ZZXY=              0.0000
- N-N= 0.000000000000D+00 E-N=-6.703860520166D+00  KE= 2.844745273661D+00
- Symmetry AG   KE= 2.844745273661D+00
+ N-N= 0.000000000000D+00 E-N=-9.556763160654D-01  KE= 4.613891853657D-01
+ Symmetry AG   KE= 4.613891853657D-01
  Symmetry B1G  KE= 0.000000000000D+00
  Symmetry B2G  KE= 0.000000000000D+00
  Symmetry B3G  KE= 0.000000000000D+00
@@ -259,7 +255,7 @@
  Symmetry B3U  KE= 0.000000000000D+00
                           Isotropic Fermi Contact Couplings
         Atom                 a.u.       MegaHertz       Gauss      10(-4) cm-1
-     1  He(3)              0.00000       0.00000       0.00000       0.00000
+     1  H(1)               0.18717     836.60768     298.52241     279.06228
  --------------------------------------------------------
        Center         ----  Spin Dipole Couplings  ----
                       3XX-RR        3YY-RR        3ZZ-RR
@@ -279,7 +275,7 @@
        Atom             a.u.   MegaHertz   Gauss  10(-4) cm-1        Axes
 
               Baa     0.0000     0.000     0.000     0.000  1.0000  0.0000  0.0000
-     1 He(3)  Bbb     0.0000     0.000     0.000     0.000  0.0000  1.0000  0.0000
+     1 H(1)   Bbb     0.0000     0.000     0.000     0.000  0.0000  1.0000  0.0000
               Bcc     0.0000     0.000     0.000     0.000  0.0000  0.0000  1.0000
  
 
@@ -291,7 +287,7 @@
  Center     Atomic                   Forces (Hartrees/Bohr)
  Number     Number              X              Y              Z
  -------------------------------------------------------------------
-      1        2           0.000000000    0.000000000    0.000000000
+      1        1           0.000000000    0.000000000    0.000000000
  -------------------------------------------------------------------
  Cartesian Forces:  Max     0.000000000 RMS     0.000000000
 
@@ -334,10 +330,10 @@
  Center     Atomic      Atomic             Coordinates (Angstroms)
  Number     Number       Type             X           Y           Z
  ---------------------------------------------------------------------
-      1          2           0        0.000000    0.000000    0.000000
+      1          1           0        0.000000    0.000000    0.000000
  ---------------------------------------------------------------------
- Stoichiometry    He
- Framework group  OH[O(He)]
+ Stoichiometry    H(2)
+ Framework group  OH[O(H)]
  Deg. of freedom     0
  Full point group                 OH      NOp  48
  Largest Abelian subgroup         D2H     NOp   8
@@ -347,20 +343,23 @@
  Center     Atomic      Atomic             Coordinates (Angstroms)
  Number     Number       Type             X           Y           Z
  ---------------------------------------------------------------------
-      1          2           0        0.000000    0.000000    0.000000
+      1          1           0        0.000000    0.000000    0.000000
  ---------------------------------------------------------------------
- 1\1\GINC-IBRAHIM-LENOVO-IDEAPAD-P500\FOpt\UHF\Gen\He1\IBRAHIM\04-Jul-2
- 016\0\\# opt freq UHF/gen gfprint\\HELIUM_2.2341255426913613_1.0963810
- 561677123_\\0,1\He,0.,0.,0.\\Version=ES64L-G09RevD.01\State=1-A1G\HF=-
- 2.8344646\S2=0.\S2-1=0.\S2A=0.\RMSD=1.601e-11\RMSF=0.000e+00\Dipole=0.
- ,0.,0.\Quadrupole=0.,0.,0.,0.,0.,0.\PG=OH [O(He1)]\\@
+ 1\1\GINC-IBRAHIM-LENOVO-IDEAPAD-P500\FOpt\UHF\Gen\H1(2)\IBRAHIM\04-Jul
+ -2016\0\\# opt freq UHF/gen gfprint\\HYDROGEN_0.9650614599325549_0.999
+ 8690751669902_\\0,2\H,0.,0.,0.\\Version=ES64L-G09RevD.01\State=2-A1G\H
+ F=-0.4942871\S2=0.75\S2-1=0.\S2A=0.75\RMSD=2.957e-15\RMSF=0.000e+00\Di
+ pole=0.,0.,0.\Quadrupole=0.,0.,0.,0.,0.,0.\PG=OH [O(H1)]\\@
 
 
- YOU KNOW YOU'VE SPOKEN TOO LONG WHEN THE AUDIENCE STOPS LOOKING AT
- THEIR WATCHES AND STARTS SHAKING THEM.
- Job cpu time:       0 days  0 hours  0 minutes  0.7 seconds.
+ THIS CURIOUS WORLD WHICH WE INHABIT IS MORE WONDERFUL THAN IT IS CONVENIENT;
+ MORE BEAUTIFUL THAN IT IS USEFUL;
+ IT IS MORE TO BE ADMIRED THAN IT IS TO BE USED.
+
+                                                                 -- THOREAU
+ Job cpu time:       0 days  0 hours  0 minutes  0.8 seconds.
  File lengths (MBytes):  RWF=      5 Int=      0 D2E=      0 Chk=      1 Scr=      1
- Normal termination of Gaussian 09 at Mon Jul  4 21:00:07 2016.
+ Normal termination of Gaussian 09 at Mon Jul  4 20:07:00 2016.
  Link1:  Proceeding to internal job step number  2.
  ---------------------------------------------------------------
  #N Geom=AllCheck Guess=TCheck SCRF=Check GenChk UHF/ChkBas Freq
@@ -378,13 +377,13 @@
  7/8=1,10=1,25=1/1,2,3,16;
  1/10=4,30=1/3;
  99//99;
- Structure from the checkpoint file:  "/home/ibrahim/.g09D1/g09/exe/Gau-11226.chk"
- ---------------------------------------------
- HELIUM_2.2341255426913613_1.0963810561677123_
- ---------------------------------------------
- Charge =  0 Multiplicity = 1
+ Structure from the checkpoint file:  "/home/ibrahim/.g09D1/g09/exe/Gau-3029.chk"
+ -----------------------------------------------
+ HYDROGEN_0.9650614599325549_0.9998690751669902_
+ -----------------------------------------------
+ Charge =  0 Multiplicity = 2
  No Z-Matrix found in file; cartesian coordinates used.
-  He                                                0.000000000000      0.000000000000      0.000000000000
+  H                                                 0.000000000000      0.000000000000      0.000000000000
  Recover connectivity data from disk.
 
  GradGradGradGradGradGradGradGradGradGradGradGradGradGradGradGradGradGrad
@@ -399,10 +398,10 @@
  Center     Atomic      Atomic             Coordinates (Angstroms)
  Number     Number       Type             X           Y           Z
  ---------------------------------------------------------------------
-      1          2           0        0.000000    0.000000    0.000000
+      1          1           0        0.000000    0.000000    0.000000
  ---------------------------------------------------------------------
- Stoichiometry    He
- Framework group  OH[O(He)]
+ Stoichiometry    H(2)
+ Framework group  OH[O(H)]
  Deg. of freedom     0
  Full point group                 OH      NOp  48
  Largest Abelian subgroup         D2H     NOp   8
@@ -412,16 +411,16 @@
  Center     Atomic      Atomic             Coordinates (Angstroms)
  Number     Number       Type             X           Y           Z
  ---------------------------------------------------------------------
-      1          2           0        0.000000    0.000000    0.000000
+      1          1           0        0.000000    0.000000    0.000000
  ---------------------------------------------------------------------
- Basis read from chk: "/home/ibrahim/.g09D1/g09/exe/Gau-11226.chk" (5D, 7F)
+ Basis read from chk: "/home/ibrahim/.g09D1/g09/exe/Gau-3029.chk" (5D, 7F)
  AO basis set (Overlap normalization):
- Atom He1      Shell     1 S   3     bf    1 -     1          0.000000000000          0.000000000000          0.000000000000
-      0.1111896001D+02  0.1543289673D+00
-      0.2025332446D+01  0.5353281423D+00
-      0.5481340000D+00  0.4446345422D+00
- Atom He1      Shell     2 S   1     bf    2 -     2          0.000000000000          0.000000000000          0.000000000000
-      0.3256956029D+00  0.1000000000D+01
+ Atom H1       Shell     1 S   3     bf    1 -     1          0.000000000000          0.000000000000          0.000000000000
+      0.2074717476D+01  0.1543289673D+00
+      0.3779123781D+00  0.5353281423D+00
+      0.1022778378D+00  0.4446345422D+00
+ Atom H1       Shell     2 S   1     bf    2 -     2          0.000000000000          0.000000000000          0.000000000000
+      0.2708788656D+00  0.1000000000D+01
  There are     2 symmetry adapted cartesian basis functions of AG  symmetry.
  There are     0 symmetry adapted cartesian basis functions of B1G symmetry.
  There are     0 symmetry adapted cartesian basis functions of B2G symmetry.
@@ -439,16 +438,16 @@
  There are     0 symmetry adapted basis functions of B2U symmetry.
  There are     0 symmetry adapted basis functions of B3U symmetry.
      2 basis functions,     4 primitive gaussians,     2 cartesian basis functions
-     1 alpha electrons        1 beta electrons
+     1 alpha electrons        0 beta electrons
        nuclear repulsion energy         0.0000000000 Hartrees.
  NAtoms=    1 NActive=    1 NUniq=    1 SFac= 1.00D+00 NAtFMM=   60 NAOKFM=F Big=F
  Integral buffers will be    131072 words long.
  Raffenetti 2 integral format.
  Two-electron integral symmetry is turned on.
  One-electron integrals computed using PRISM.
- NBasis=     2 RedAO= T EigKep=  6.79D-01  NBF=     2     0     0     0     0     0     0     0
+ NBasis=     2 RedAO= T EigKep=  6.25D-02  NBF=     2     0     0     0     0     0     0     0
  NBsUse=     2 1.00D-06 EigRej= -1.00D+00 NBFU=     2     0     0     0     0     0     0     0
- Initial guess from the checkpoint file:  "/home/ibrahim/.g09D1/g09/exe/Gau-11226.chk"
+ Initial guess from the checkpoint file:  "/home/ibrahim/.g09D1/g09/exe/Gau-3029.chk"
  B after Tr=     0.000000    0.000000    0.000000
          Rot=    1.000000    0.000000    0.000000    0.000000 Ang=   0.00 deg.
  Initial guess orbital symmetries:
@@ -456,9 +455,8 @@
        Occupied  (A1G)
        Virtual   (A1G)
  Beta  Orbitals:
-       Occupied  (A1G)
-       Virtual   (A1G)
- Initial guess <Sx>= 0.0000 <Sy>= 0.0000 <Sz>= 0.0000 <S**2>= 0.0000 S= 0.0000
+       Virtual   (A1G) (A1G)
+ Initial guess <Sx>= 0.0000 <Sy>= 0.0000 <Sz>= 0.5000 <S**2>= 0.7500 S= 0.5000
  Keep R1 and R2 ints in memory in symmetry-blocked form, NReq=821127.
  Requested convergence on RMS density matrix=1.00D-08 within 128 cycles.
  Requested convergence on MAX density matrix=1.00D-06.
@@ -466,21 +464,22 @@
  No special actions if energy rises.
  Skip diagonalization as Alpha Fock matrix is already diagonal.
  Skip diagonalization as Beta Fock matrix is already diagonal.
- SCF Done:  E(UHF) =  -2.83446462635     A.U. after    1 cycles
-            NFock=  1  Conv=0.00D+00     -V/T= 1.9964
- <Sx>= 0.0000 <Sy>= 0.0000 <Sz>= 0.0000 <S**2>= 0.0000 S= 0.0000
+ SCF Done:  E(UHF) = -0.494287130700     A.U. after    1 cycles
+            NFock=  1  Conv=0.00D+00     -V/T= 2.0713
+ <Sx>= 0.0000 <Sy>= 0.0000 <Sz>= 0.5000 <S**2>= 0.7500 S= 0.5000
  <L.S>= 0.000000000000E+00
  Annihilation of the first spin contaminant:
- S**2 before annihilation     0.0000,   after     0.0000
+ S**2 before annihilation     0.7500,   after     0.7500
  Range of M.O.s used for correlation:     1     2
- NBasis=     2 NAE=     1 NBE=     1 NFC=     0 NFV=     0
- NROrb=      2 NOA=     1 NOB=     1 NVA=     1 NVB=     1
+ NBasis=     2 NAE=     1 NBE=     0 NFC=     0 NFV=     0
+ NROrb=      2 NOA=     1 NOB=     0 NVA=     1 NVB=     2
+ *** There is no correlation energy for this system ***
           Differentiating once with respect to electric field.
                 with respect to dipole field.
           Electric field/nuclear overlap derivatives assumed to be zero.
  Keep R1 and R2 ints in memory in symmetry-blocked form, NReq=801649.
           There are     3 degrees of freedom in the 1st order CPHF.  IDoFFX=0 NUNeed=     3.
-      0 vectors produced by pass  0 Test12= 6.67D-17 3.33D-08 XBig12= 0.00D+00 0.00D+00.
+      0 vectors produced by pass  0 Test12= 3.33D-17 3.33D-08 XBig12= 0.00D+00 0.00D+00.
  End of Minotr F.D. properties file   721 does not exist.
  End of Minotr F.D. properties file   722 does not exist.
  End of Minotr F.D. properties file   788 does not exist.
@@ -499,7 +498,7 @@
  Keep R1 and R2 ints in memory in symmetry-blocked form, NReq=801675.
           There are     6 degrees of freedom in the 1st order CPHF.  IDoFFX=5 NUNeed=     6.
  Will reuse    3 saved solutions.
-      0 vectors produced by pass  0 Test12= 3.33D-17 1.67D-08 XBig12= 0.00D+00 0.00D+00.
+      0 vectors produced by pass  0 Test12= 1.67D-17 1.67D-08 XBig12= 0.00D+00 0.00D+00.
  Isotropic polarizability for W=    0.000000        0.00 Bohr**3.
  End of Minotr F.D. properties file   721 does not exist.
  End of Minotr F.D. properties file   722 does not exist.
@@ -516,39 +515,35 @@
        Occupied  (A1G)
        Virtual   (A1G)
  Beta  Orbitals:
-       Occupied  (A1G)
-       Virtual   (A1G)
- The electronic state is 1-A1G.
- Alpha  occ. eigenvalues --   -0.90491
- Alpha virt. eigenvalues --    1.59064
-  Beta  occ. eigenvalues --   -0.90491
-  Beta virt. eigenvalues --    1.59064
+       Virtual   (A1G) (A1G)
+ The electronic state is 2-A1G.
+ Alpha  occ. eigenvalues --   -0.49429
+ Alpha virt. eigenvalues --    1.50367
+  Beta virt. eigenvalues --    0.10853   1.55104
           Condensed to atoms (all electrons):
                1
-     1  He   2.000000
+     1  H    1.000000
           Atomic-Atomic Spin Densities.
                1
-     1  He   0.000000
+     1  H    1.000000
  Mulliken charges and spin densities:
                1          2
-     1  He   0.000000   0.000000
- Sum of Mulliken charges =   0.00000   0.00000
+     1  H    0.000000   1.000000
+ Sum of Mulliken charges =   0.00000   1.00000
  Mulliken charges and spin densities with hydrogens summed into heavy atoms:
                1          2
-     1  He   0.000000   0.000000
  APT charges:
                1
-     1  He   0.000000
+     1  H    0.000000
  Sum of APT charges =   0.00000
  APT charges with hydrogens summed into heavy atoms:
                1
-     1  He   0.000000
- Electronic spatial extent (au):  <R**2>=              2.2776
+ Electronic spatial extent (au):  <R**2>=              3.2233
  Charge=              0.0000 electrons
  Dipole moment (field-independent basis, Debye):
     X=              0.0000    Y=              0.0000    Z=              0.0000  Tot=              0.0000
  Quadrupole moment (field-independent basis, Debye-Ang):
-   XX=             -1.0211   YY=             -1.0211   ZZ=             -1.0211
+   XX=             -1.4451   YY=             -1.4451   ZZ=             -1.4451
    XY=              0.0000   XZ=              0.0000   YZ=              0.0000
  Traceless Quadrupole moment (field-independent basis, Debye-Ang):
    XX=              0.0000   YY=              0.0000   ZZ=              0.0000
@@ -558,12 +553,12 @@
   XXY=              0.0000  XXZ=              0.0000  XZZ=              0.0000  YZZ=              0.0000
   YYZ=              0.0000  XYZ=              0.0000
  Hexadecapole moment (field-independent basis, Debye-Ang**3):
- XXXX=             -0.4655 YYYY=             -0.4655 ZZZZ=             -0.4655 XXXY=              0.0000
+ XXXX=             -1.9285 YYYY=             -1.9285 ZZZZ=             -1.9285 XXXY=              0.0000
  XXXZ=              0.0000 YYYX=              0.0000 YYYZ=              0.0000 ZZZX=              0.0000
- ZZZY=              0.0000 XXYY=             -0.1552 XXZZ=             -0.1552 YYZZ=             -0.1552
+ ZZZY=              0.0000 XXYY=             -0.6428 XXZZ=             -0.6428 YYZZ=             -0.6428
  XXYZ=              0.0000 YYXZ=              0.0000 ZZXY=              0.0000
- N-N= 0.000000000000D+00 E-N=-6.703860520166D+00  KE= 2.844745273661D+00
- Symmetry AG   KE= 2.844745273661D+00
+ N-N= 0.000000000000D+00 E-N=-9.556763160654D-01  KE= 4.613891853657D-01
+ Symmetry AG   KE= 4.613891853657D-01
  Symmetry B1G  KE= 0.000000000000D+00
  Symmetry B2G  KE= 0.000000000000D+00
  Symmetry B3G  KE= 0.000000000000D+00
@@ -575,7 +570,7 @@
  Approx polarizability:   0.000   0.000   0.000   0.000   0.000   0.000
                           Isotropic Fermi Contact Couplings
         Atom                 a.u.       MegaHertz       Gauss      10(-4) cm-1
-     1  He(3)              0.00000       0.00000       0.00000       0.00000
+     1  H(1)               0.18717     836.60768     298.52241     279.06228
  --------------------------------------------------------
        Center         ----  Spin Dipole Couplings  ----
                       3XX-RR        3YY-RR        3ZZ-RR
@@ -595,7 +590,7 @@
        Atom             a.u.   MegaHertz   Gauss  10(-4) cm-1        Axes
 
               Baa     0.0000     0.000     0.000     0.000  1.0000  0.0000  0.0000
-     1 He(3)  Bbb     0.0000     0.000     0.000     0.000  0.0000  1.0000  0.0000
+     1 H(1)   Bbb     0.0000     0.000     0.000     0.000  0.0000  1.0000  0.0000
               Bcc     0.0000     0.000     0.000     0.000  0.0000  0.0000  1.0000
  
 
@@ -603,7 +598,7 @@
 
  Calling FoFJK, ICntrl=    100127 FMM=F ISym2X=1 I1Cent= 0 IOpClX= 1 NMat=1 NMatS=1 NMatT=0.
  Full mass-weighted force constant matrix:
- Low frequencies ---    0.0002    0.0002    0.0002
+ Low frequencies ---    0.0001    0.0001    0.0001
  Diagonal vibrational polarizability:
         0.0000000       0.0000000       0.0000000
  Diagonal vibrational hyperpolarizability:
@@ -617,8 +612,8 @@
  - Thermochemistry -
  -------------------
  Temperature   298.150 Kelvin.  Pressure   1.00000 Atm.
- Atom     1 has atomic number  2 and mass   4.00260
- Molecular mass:     4.00260 amu.
+ Atom     1 has atomic number  1 and mass   1.00783
+ Molecular mass:     1.00783 amu.
  Zero-point vibrational energy          0.0 (Joules/Mol)
                                     0.00000 (Kcal/Mol)
  Vibrational temperatures: 
@@ -627,33 +622,33 @@
  Zero-point correction=                           0.000000 (Hartree/Particle)
  Thermal correction to Energy=                    0.001416
  Thermal correction to Enthalpy=                  0.002360
- Thermal correction to Gibbs Free Energy=        -0.011953
- Sum of electronic and zero-point Energies=             -2.834465
- Sum of electronic and thermal Energies=                -2.833048
- Sum of electronic and thermal Enthalpies=              -2.832104
- Sum of electronic and thermal Free Energies=           -2.846418
+ Thermal correction to Gibbs Free Energy=        -0.010654
+ Sum of electronic and zero-point Energies=             -0.494287
+ Sum of electronic and thermal Energies=                -0.492871
+ Sum of electronic and thermal Enthalpies=              -0.491927
+ Sum of electronic and thermal Free Energies=           -0.504941
  
                      E (Thermal)             CV                S
                       KCal/Mol        Cal/Mol-Kelvin    Cal/Mol-Kelvin
- Total                    0.889              2.981             30.125
- Electronic               0.000              0.000              0.000
- Translational            0.889              2.981             30.125
+ Total                    0.889              2.981             27.392
+ Electronic               0.000              0.000              1.377
+ Translational            0.889              2.981             26.014
  Rotational               0.000              0.000              0.000
  Vibrational              0.000              0.000              0.000
                        Q            Log10(Q)             Ln(Q)
- Total Bot       0.314752D+06          5.497969         12.659542
- Total V=0       0.314752D+06          5.497969         12.659542
+ Total Bot       0.795358D+05          4.900563         11.283963
+ Total V=0       0.795358D+05          4.900563         11.283963
  Vib (Bot)       0.100000D+01          0.000000          0.000000
  Vib (V=0)       0.100000D+01          0.000000          0.000000
- Electronic      0.100000D+01          0.000000          0.000000
- Translational   0.314752D+06          5.497969         12.659542
+ Electronic      0.200000D+01          0.301030          0.693147
+ Translational   0.397679D+05          4.599533         10.590816
  Rotational      0.100000D+01          0.000000          0.000000
  ***** Axes restored to original set *****
  -------------------------------------------------------------------
  Center     Atomic                   Forces (Hartrees/Bohr)
  Number     Number              X              Y              Z
  -------------------------------------------------------------------
-      1        2           0.000000000    0.000000000    0.000000000
+      1        1           0.000000000    0.000000000    0.000000000
  -------------------------------------------------------------------
  Cartesian Forces:  Max     0.000000000 RMS     0.000000000
 
@@ -690,18 +685,21 @@
     -- Stationary point found.
  GradGradGradGradGradGradGradGradGradGradGradGradGradGradGradGradGradGrad
 
- 1\1\GINC-IBRAHIM-LENOVO-IDEAPAD-P500\Freq\UHF\Gen\He1\IBRAHIM\04-Jul-2
- 016\0\\#N Geom=AllCheck Guess=TCheck SCRF=Check GenChk UHF/ChkBas Freq
- \\HELIUM_2.2341255426913613_1.0963810561677123_\\0,1\He,0.,0.,0.\\Vers
- ion=ES64L-G09RevD.01\State=1-A1G\HF=-2.8344646\S2=0.\S2-1=0.\S2A=0.\RM
- SD=0.000e+00\RMSF=0.000e+00\Thermal=0.0014163\Dipole=0.,0.,0.\DipoleDe
- riv=0.,0.,0.,0.,0.,0.,0.,0.,0.\Polar=0.,0.,0.,0.,0.,0.\PolarDeriv=0.,0
- .,0.,0.,0.,0.,0.,0.,0.,0.,0.,0.,0.,0.,0.,0.,0.,0.\HyperPolar=0.,0.,0.,
- 0.,0.,0.,0.,0.,0.,0.\PG=OH [O(He1)]\NImag=0\\0.,0.,0.,0.,0.,0.\\0.,0.,
- 0.\\\@
+ 1\1\GINC-IBRAHIM-LENOVO-IDEAPAD-P500\Freq\UHF\Gen\H1(2)\IBRAHIM\04-Jul
+ -2016\0\\#N Geom=AllCheck Guess=TCheck SCRF=Check GenChk UHF/ChkBas Fr
+ eq\\HYDROGEN_0.9650614599325549_0.9998690751669902_\\0,2\H,0.,0.,0.\\V
+ ersion=ES64L-G09RevD.01\State=2-A1G\HF=-0.4942871\S2=0.75\S2-1=0.\S2A=
+ 0.75\RMSD=0.000e+00\RMSF=0.000e+00\Thermal=0.0014163\Dipole=0.,0.,0.\D
+ ipoleDeriv=0.,0.,0.,0.,0.,0.,0.,0.,0.\Polar=0.,0.,0.,0.,0.,0.\PolarDer
+ iv=0.,0.,0.,0.,0.,0.,0.,0.,0.,0.,0.,0.,0.,0.,0.,0.,0.,0.\HyperPolar=0.
+ ,0.,0.,0.,0.,0.,0.,0.,0.,0.\PG=OH [O(H1)]\NImag=0\\0.,0.,0.,0.,0.,0.\\
+ 0.,0.,0.\\\@
 
 
- THE WORLD IS NOT A HAMBURGER - YOU CAN'T HAVE IT YOUR WAY.
- Job cpu time:       0 days  0 hours  0 minutes  1.2 seconds.
+ ALMOST ANYTHING IS EASIER TO GET INTO THAN OUT OF.
+
+                         -- AGNES ALLEN'S LAW FROM
+                PAUL DICKSON'S "THE OFFICIAL RULES"
+ Job cpu time:       0 days  0 hours  0 minutes  1.1 seconds.
  File lengths (MBytes):  RWF=      5 Int=      0 D2E=      0 Chk=      1 Scr=      1
- Normal termination of Gaussian 09 at Mon Jul  4 21:00:08 2016.
+ Normal termination of Gaussian 09 at Mon Jul  4 20:07:01 2016.
