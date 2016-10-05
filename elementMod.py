@@ -1,4 +1,5 @@
 from sys import exit
+import subprocess
 
 def GetElemSym(z):
     if z<1:
@@ -82,7 +83,7 @@ def GetElemCorVal(z):
 
 def GetBasisCorVal(BasisSet):
     core=BasisSet[:BasisSet.find('-')]
-    valance=BasisSet[BasisSet.find('-')+1:BasisSet.find('G')]
+    valance=BasisSet[BasisSet.find('-')+1:BasisSet.find('G')]  #<<<<<<<<<<Needing to use RE :(
     return core, valance
 
 def GetSTO(Z,basis):
@@ -100,4 +101,72 @@ def GetSTO(Z,basis):
             #count+=1
     return STO
 
+##### Input file
 
+def gen_first_line(method):
+	first_line = '# opt freq ' + method + '/gen gfprint\n'
+	return first_line
+
+def gen_title(Z, scaling_factors):
+	t_scaling_factor = ''
+	atom=GetElemNam(Z).strip()
+	for t in range(len(scaling_factors)):
+		t_scaling_factor = t_scaling_factor + str(scaling_factors[t]) + '_'
+
+	title = "\n" + atom + "_" + t_scaling_factor + "\n\n"
+	return title
+
+def gen_charge_multiplicity(Z, charge):
+	charge_multiplicity = "{} {}\n".format(charge, GetElemMult(Z,charge))
+	return charge_multiplicity
+
+def gen_z_matrix(Z):
+	z_matrix = GetElemSym(Z).strip() + "\n\n"
+	return z_matrix
+
+def gen_cartesian_coord(Z):
+	cart_coord = GetElemSym(Z).strip()+' 0\n'
+	return cart_coord
+	
+def returnInput(cpu, Z, charge, method, basis, scaling_factors):
+    outputtext='%NPROCS='+str(cpu)+'\n'+gen_first_line(method)
+    outputtext+=gen_title(Z, scaling_factors)
+    outputtext+=gen_charge_multiplicity(Z, charge)
+    outputtext+=gen_z_matrix(Z)
+    outputtext+=gen_cartesian_coord(Z)
+    sto=GetSTO(Z,basis)
+    for index,sto_out in enumerate(sto):
+        outputtext+=sto_out+' '+str(scaling_factors[index])+'\n'
+    outputtext+='****\n\n'
+    return outputtext
+    
+def Get_Energy(fileName,cpu,Z,charge,theory,basis,guessScale):
+    # calculate the energy
+    file=open(fileName+'.gjf','w')
+    file.write(returnInput(cpu,Z,charge,theory,basis,guessScale)+'\n\n')
+    file.close()
+    subprocess.call('g09 < '+fileName+'.gjf > '+fileName+'.out\n',shell=True)
+    Energy=subprocess.check_output('grep "SCF Done:" '+fileName+'.out | tail -1|awk \'{ print $5 }\'', shell=True)
+    return float(Energy.decode('ascii').rstrip('\n'))
+    
+# Generate .sh file to run it on the Cluster (serial)
+'''
+file=open(title+'.sh','w')
+file.write('#$ -S /bin/csh\n')
+file.write('#$ -cwd\n')
+file.write('#$ -j y\n')
+file.write('#$ -l h_rt=1:00:00\n')
+#file.write('#$ -l h_vmem=7500M\n')
+#file.write('#$ -pe openmp 4\n')
+file.write('\n\n')
+file.write('setenv GAUSS_SCRDIR /nqs/$USER\n')
+file.write('module load gaussian\n')
+for ijob in job:
+    file.write('g09 < '+ijob+'.gjf > '+ijob+'.out\n')
+    file.write('grep "SCF Done:  E(" '+ijob+'.out | tail -1|awk \'{ print $5 }\' >> "'+GradFile+'"\n')
+file.write('\n\n')
+file.write('# bash to extract energy\n')
+file.close()
+'''
+
+#HE-2.85516042615
