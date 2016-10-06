@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 import argparse, sys, os.path 
 import re
 import subprocess
@@ -92,7 +93,6 @@ while abs(DEnergy) > abs(CurrCutOff):
     FRmatrix=Hessian_Diff(DeltaVal,-DeltaVal,guessScale)
     RFmatrix=Hessian_Diff(-DeltaVal,DeltaVal,guessScale)
     RRmatrix=Hessian_Diff(-DeltaVal,-DeltaVal,guessScale)
-    # large matrix contains all above matrices
     FFFRRFRR=FFmatrix+FRmatrix+RFmatrix+RRmatrix
     print(DeltaVal)
     print(guessScale)

@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 import argparse, sys, os.path 
 import re
 import subprocess
