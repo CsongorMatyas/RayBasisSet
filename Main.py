@@ -50,7 +50,7 @@ while abs(DEnergy) > abs(CurrCutOff):
         guessScale=[]
         file=open(GuessFile,'r')
         for line in file:
-            guessScale.append(line.rstrip('\n'))
+            guessScale.append(float(line.rstrip('\n')))
         file.close()
     else:
         guessScale=[str(args.initial)]*len(sto)
@@ -61,29 +61,30 @@ while abs(DEnergy) > abs(CurrCutOff):
      
     # Calculate the initial energy
     OEnergy=Get_Energy(EnergyFileI,cpu,Z,args.charge,args.theory,args.basis,guessScale)
-    print(OEnergy)
-    break
     
     ### Generate Scale values to find Gradiant
     AlphaValue=[]
     for index,sto_out in enumerate(guessScale):
         tempScale=guessScale[:]
-        tempScale[index]=str(float(tempScale[index])+DeltaVal)
+        tempScale[index]=((tempScale[index])+DeltaVal)
         AlphaValue.append(tempScale)
     for index,sto_out in enumerate(guessScale):
         tempScale=guessScale[:]
-        tempScale[index]=str(float(tempScale[index])-DeltaVal)
+        tempScale[index]=((tempScale[index])-DeltaVal)
         AlphaValue.append(tempScale)
     ###
+    print(guessScale)
+    print(AlphaValue)
+    print("")
     ### Generate Scale values to find Hessian in 1 Dim
     def Hessian_Diff(DeltaVal1,DeltaVal2,guessScale):
         Value=[]
         for index1 in range(len(guessScale)):
             tempScale1=guessScale[:]
-            tempScale1[index1]=str(float(tempScale1[index1])+DeltaVal1)
+            tempScale1[index1]=((tempScale1[index1])+DeltaVal1)
             for index2 in range(index1,len(guessScale)):
                 tempScale2=tempScale1[:]
-                tempScale2[index2]=str(float(tempScale2[index2])+DeltaVal2)
+                tempScale2[index2]=((tempScale2[index2])+DeltaVal2)
                 Value.append(tempScale2)
         return Value
        
@@ -92,7 +93,15 @@ while abs(DEnergy) > abs(CurrCutOff):
     RFmatrix=Hessian_Diff(-DeltaVal,DeltaVal,guessScale)
     RRmatrix=Hessian_Diff(-DeltaVal,-DeltaVal,guessScale)
     FFFRRFRR=FFmatrix+FRmatrix+RFmatrix+RRmatrix
+    print(DeltaVal)
+    print(guessScale)
    
+    print(FFmatrix)
+    print(FRmatrix)
+    print(RFmatrix)
+    print(RRmatrix)
+    print(FFFRRFRR)
+    break    
     ###  
     #>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
     ### Generate INPUT FILE and Run the Job ###
