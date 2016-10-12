@@ -1,10 +1,9 @@
 #!/usr/bin/env python
 import argparse, sys, os.path 
-import re
 import subprocess
 from joblib import Parallel, delayed
 from elementMod import *
-from numpy import matrix, dot
+from numpy import matrix, dot, reshape, shape, zeros
 __author__ = 'Ray Group'
  
 parser = argparse.ArgumentParser(description='Basis Sets project')
@@ -14,7 +13,7 @@ parser.add_argument('-t','--theory',help='Level of theory', required=False, defa
 parser.add_argument('-d','--delta',help='The value of delta', required=False, type=float, default=0.001)
 parser.add_argument('-c','--charge',help='The charge', required=False, type=int, default=0)
 parser.add_argument('-s','--initial',help='Initial value of scale', required=False, type=float, default=1.0)
-parser.add_argument('-l','--limit',help='Cutoff limit', required=False, type=float, default=1.0e-5)
+parser.add_argument('-l','--limit',help='Cutoff limit', required=False, type=float, default=1.0e-6)
 parser.add_argument('-p','--parWith',help='Parallel processing within gaussian input', required=False, type=int, default=1)
 parser.add_argument('-j','--parFile',help='Parallel processing for multiple gaussian files', required=False, type=int, default=4)
 args = parser.parse_args()
@@ -64,45 +63,37 @@ while abs(DEnergy) > abs(CurrCutOff):
     OEnergy=Get_Energy(EnergyFileI,cpu,Z,args.charge,args.theory,args.basis,guessScale)
     
     ### Generate Scale values to find Gradiant
-    AlphaValue=[]
-    for index,sto_out in enumerate(guessScale):
-        tempScale=guessScale[:]
-        tempScale[index]=((tempScale[index])+DeltaVal)
-        AlphaValue.append(tempScale)
-    for index,sto_out in enumerate(guessScale):
-        tempScale=guessScale[:]
-        tempScale[index]=((tempScale[index])-DeltaVal)
-        AlphaValue.append(tempScale)
-    ###
-    print(guessScale)
-    print(AlphaValue)
-    print("")
-    ### Generate Scale values to find Hessian in 1 Dim
-    def Hessian_Diff(DeltaVal1,DeltaVal2,guessScale):
-        Value=[]
-        for index1 in range(len(guessScale)):
-            tempScale1=guessScale[:]
-            tempScale1[index1]=((tempScale1[index1])+DeltaVal1)
-            for index2 in range(index1,len(guessScale)):
-                tempScale2=tempScale1[:]
-                tempScale2[index2]=((tempScale2[index2])+DeltaVal2)
-                Value.append(tempScale2)
-        return Value
-       
-    FFmatrix=Hessian_Diff(DeltaVal,DeltaVal,guessScale)
-    FRmatrix=Hessian_Diff(DeltaVal,-DeltaVal,guessScale)
-    RFmatrix=Hessian_Diff(-DeltaVal,DeltaVal,guessScale)
-    RRmatrix=Hessian_Diff(-DeltaVal,-DeltaVal,guessScale)
-    FFFRRFRR=FFmatrix+FRmatrix+RFmatrix+RRmatrix
-    print(DeltaVal)
-    print(guessScale)
-   
-    print(FFmatrix)
-    print(FRmatrix)
-    print(RFmatrix)
-    print(RRmatrix)
-    print(FFFRRFRR)
-    break    
+    def Gradient(DeltaVal, guessScale):
+        result = []
+        for i in range(len(guessScale)):
+            plus = guessScale[:]
+            plus[i] = round(guessScale[i] + DeltaVal, 15)
+            minus = guessScale[:]
+            minus[i] = round(guessScale[i] - DeltaVal, 15)
+            result.append([plus, minus])
+        return(result)
+    
+    def Hessian(DeltaVal, GradientA):
+        result = []
+        sorted_gradient = []
+        sorted_hessian = []
+        for val in range(len(GradientA)):
+            arr = GradientA[val]
+            sorted_gradient.append(arr[0])
+            sorted_gradient.append(arr[1])
+            for i in range(len(arr[0])):
+                arr_plus = arr[0][:]
+                arr_plus[i] = round(arr[0][i] + DeltaVal, 15)
+                arr_minus = arr[1][:]
+                arr_minus[i] = round(arr[1][i] - DeltaVal, 15)
+                result.append([arr_plus, arr_minus])
+                sorted_hessian.append(arr_plus)
+                sorted_hessian.append(arr_minus)
+        return(result, sorted_gradient, sorted_hessian)
+    
+    GradientA = Gradient(DeltaVal, guessScale)
+    HessianA, sorted_gradient, sorted_hessian = Hessian(DeltaVal, GradientA)
+    
     ###  
     #>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
     ### Generate INPUT FILE and Run the Job ###
@@ -113,60 +104,42 @@ while abs(DEnergy) > abs(CurrCutOff):
         GEnergy=Get_Energy(title2,cpu,Z,charge,theory,basis,sto_out)
         return [index,GEnergy]
 
-    ll=Parallel(n_jobs=args.parFile)(delayed(EnergyPar)('Grad',cpu,Z,args.charge,args.theory,args.basis,sto_out,index,EleName) 
-        for index,sto_out in enumerate(AlphaValue))
+    ll=Parallel(n_jobs=args.parFile)(delayed(EnergyPar)('Grad',cpu,Z,args.charge,args.theory,args.basis,sto_out,index,EleName)
+        for index,sto_out in enumerate(sorted_gradient))
     EnergyGrad={} 
     EnergyGrad={t[0]:t[1] for t in ll}
     #Hessian
     ll=Parallel(n_jobs=args.parFile)(delayed(EnergyPar)('Hess',cpu,Z,args.charge,args.theory,args.basis,sto_out,index,EleName) 
-        for index,sto_out in enumerate(FFFRRFRR)) 
+        for index,sto_out in enumerate(sorted_hessian)) 
     EnergyHess={}
     EnergyHess={t[0]:t[1] for t in ll}
         
     # calculate Gradiant
     Grad=[]
-    half_len_grid=int(len(EnergyGrad)/2)
-    for val in range(half_len_grid):
-        Grad.append((float(EnergyGrad[val])-float(EnergyGrad[val+half_len_grid]))/(2.0*DeltaVal))
+    GradMatLen = len(EnergyGrad)
+    for val in range(0, GradMatLen, 2):
+        Grad.append(round((float(EnergyGrad[val])-float(EnergyGrad[val + 1]))/(2.0*DeltaVal), 15))
+    
     # calculate Hessian
     # one dim hessian
-    Hess=[]
-    quart_len_hess=int(len(EnergyHess)/4)
-    for val in range(quart_len_hess):
-        Hess.append((float(EnergyHess[val])+float(EnergyHess[val+3*quart_len_hess])
-            -float(EnergyHess[val+quart_len_hess])-float(EnergyHess[val+2*quart_len_hess]))/(2.0*DeltaVal)**2)
     
-    HessLen1D=len(Hess)
-    HessLen2D=len(guessScale)
-    HessMatrix = [[0 for x in range(HessLen2D)] for y in range(HessLen2D)]
-    
-    M=HessLen1D-1
-    K=M
-    N=HessLen2D-1
-    #print(M,N,K)
-    for J in range(N+1):
-        JX=N-J
-        for I in range(JX+1):
-            IX=JX-I
-            HessMatrix[IX][JX]=Hess[K]
-            HessMatrix[JX][IX]=Hess[K]
-            K=K-1
-    
-    
-    HessLen2DInv = matrix(HessMatrix).I
+    HessMatLen = len(EnergyHess)
+    HESS = []
+    for val in range(0, HessMatLen, 2):
+        HESS.append(round((float(EnergyHess[val]) + float(EnergyHess[val + 1]) - 2*OEnergy)/((2.0*DeltaVal)**2), 15))
+
+    HeSSiAn = zeros(len(HESS))
+    for i in range(len(HESS)):
+        HeSSiAn[i] = HESS[i]
+
+    HeSSiAn = HeSSiAn.reshape(int(len(HESS)/2), 2)
+    HessLen2DInv = matrix(HeSSiAn).I
     HessLen2DInv=HessLen2DInv.tolist()
-    #print(HessMatrix,HessLen2DInv)
-    #print('RRRRRRRRRRR')
+    
     Corr=dot(matrix(Grad),matrix(HessLen2DInv))
     Corr=Corr.tolist()[0]
-    #print(Corr)
     
-    #sys.exit(0)
-    # calculate the new scale values
-    #print(Grad)
-    #print(guessScale)
-    guessScale=[float(i) - j*0.01 for i, j in zip(guessScale, Corr)] 
-    #print(guessScale)
+    guessScale=[float(i) - float(j) for i, j in zip(guessScale, Grad)] 
     # calculate the new energy
     NEnergy=Get_Energy(EnergyFileF,cpu,Z,args.charge,args.theory,args.basis,guessScale)
     DEnergy=NEnergy-OEnergy
@@ -177,14 +150,3 @@ while abs(DEnergy) > abs(CurrCutOff):
     for val in guessScale:
         file.write(str(val)+'\n')
     file.close()
-    '''if DEnergy < 0.0:
-        file=open(GuessFile,'w')
-        for val in guessScale:
-            file.write(str(val)+'\n')
-        file.close()
-    else:
-        DeltaVal=DeltaVal*0.1
-        print('Change dalta value to '+ str(DeltaVal))
-        #sys.exit(0)
-    #subprocess.call(['qsub',title+'.sh'])'''
-    
