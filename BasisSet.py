@@ -16,6 +16,7 @@ parser.add_argument('-s','--initial',help='Initial value of scale', required=Fal
 parser.add_argument('-l','--limit',help='Cutoff limit', required=False, type=float, default=1.0e-6)
 parser.add_argument('-p','--parWith',help='Parallel processing within gaussian input', required=False, type=int, default=1)
 parser.add_argument('-j','--parFile',help='Parallel processing for multiple gaussian files', required=False, type=int, default=4)
+parser.add_argument('-m','--parser',help='Parallel or serial', required=False, default="P")
 args = parser.parse_args()
 
 ## show values ##
