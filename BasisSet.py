@@ -12,54 +12,63 @@ parser.add_argument('-b','--basis',help='Basis set', required=False, default="6-
 parser.add_argument('-t','--theory',help='Level of theory', required=False, default="UHF")
 parser.add_argument('-d','--delta',help='The value of delta', required=False, type=float, default=0.001)
 parser.add_argument('-c','--charge',help='The charge', required=False, type=int, default=0)
-parser.add_argument('-s','--initial',help='Initial value of scale', required=False, type=float, default=1.0)
+parser.add_argument('-s','--initial',help='Initial scale values', required=False, type=float, nargs='+')
 parser.add_argument('-l','--limit',help='Cutoff limit', required=False, type=float, default=1.0e-6)
 parser.add_argument('-p','--parWith',help='Parallel processing within gaussian input', required=False, type=int, default=1)
 parser.add_argument('-j','--parFile',help='Parallel processing for multiple gaussian files', required=False, type=int, default=4)
+parser.add_argument('-m','--parser',help='Parallel or serial', required=False, default="P")
 args = parser.parse_args()
+
 
 ## show values ##
 Z=args.element
 EleName=GetElemNam(Z)
+cpu=args.parWith
+CurrCutOff=args.limit
+DeltaVal=args.delta
+
 print ("Test element is {}".format(EleName))
 print ("Basis set is {}".format(args.basis))
 print ("Level of theory is {}".format(args.theory))
 print ("The value of Delta is {}".format(args.delta))
 print ("The cutoff is {}".format(args.limit))
 
-sto=GetSTO(Z,args.basis)
 ## files names  ##
 fileName=str(Z)+'_'+GetElemSym(Z).strip()+'_'+args.basis.strip()
 GuessFile='Guess_'+fileName+'.txt'
-#GradFile='Grad_'+fileName+'.txt'
-#EnergyAlphaFile='EnAl_'+fileName+'.txt'
 EnergyFileI='EnergyI_'+fileName
 EnergyFileF='EnergyF_'+fileName
 
-cpu=args.parWith
+sto=GetSTO(Z,args.basis)
+stoLen=len(sto)
 
-#>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-DeltaVal=args.delta
-DEnergy=9999999999.99
-CurrCutOff=args.limit
-while abs(DEnergy) > abs(CurrCutOff):
-    #print(str(DEnergy)+ '>'+ str(CurrCutOff))
-    ### Read Guess scale values from the file ####
-    if os.path.isfile(GuessFile):
+if args.initial is not None:
+    if stoLen == len(args.initial):
+        print("The guess values ", args.initial)
+        guessScale=args.initial
+    else:
+        print(bcolors.FAIL,"\nSTOP STOP: number of guess values should be ", stoLen,bcolors.ENDC)
+        sys.exit()
+elif os.path.isfile(GuessFile):
         guessScale=[]
         file=open(GuessFile,'r')
         for line in file:
             guessScale.append(float(line.rstrip('\n')))
         file.close()
-    else:
-        guessScale=[str(args.initial)]*len(sto)
-        for i in range(len(guessScale)):
-            guessScale[i] = float(guessScale[i])
-        file=open(GuessFile,'w')
-        for index,sto_out in enumerate(sto):
-            file.write(str(args.initial)+'\n')
-        file.close()
-     
+        print("The guess values (From the File) are ", guessScale)
+else:
+        guessScale=[1.0]*stoLen
+        print("The guess values (Default Values) are ", guessScale)
+
+# Store the values in file
+file=open(GuessFile,'w')
+for val in guessScale:
+    file.write(str(val)+'\n')
+file.close()
+
+#>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+DEnergy=9999999999.99
+while abs(DEnergy) > abs(CurrCutOff):
     # Calculate the initial energy
     OEnergy=Get_Energy(EnergyFileI,cpu,Z,args.charge,args.theory,args.basis,guessScale)
     
@@ -146,17 +155,22 @@ while abs(DEnergy) > abs(CurrCutOff):
     EnergyGrad={} 
     EnergyGrad={t[0]:round(t[1], 15) for t in ll}
     
+    
+    # calculate Gradiant
+    Grad=[]
+    GradMatLen = len(EnergyGrad)
+    for val in range(0, GradMatLen, 2):
+        Grad.append(round((float(EnergyGrad[val])-float(EnergyGrad[val + 1]))/(2.0*DeltaVal), 15))
+    
+    if any(val==0.0 for val in Grad):
+        print(bcolors.FAIL,"\nSTOP STOP: Gradiant contains Zero values",bcolors.ENDC,"\n", Grad)
+        sys.exit()
     #Hessian
     ll=Parallel(n_jobs=args.parFile)(delayed(EnergyPar)('Hess',cpu,Z,args.charge,args.theory,args.basis,sto_out,index,EleName) 
         for index,sto_out in enumerate(sorted_hessian))
     EnergyHess={}
     EnergyHess={t[0]:round(t[1], 15) for t in ll}
         
-    # calculate Gradiant
-    Grad=[]
-    GradMatLen = len(EnergyGrad)
-    for val in range(0, GradMatLen, 2):
-        Grad.append(round((float(EnergyGrad[val])-float(EnergyGrad[val + 1]))/(2.0*DeltaVal), 15))
     
     # calculate Hessian
     # one dim hessian
@@ -199,8 +213,8 @@ while abs(DEnergy) > abs(CurrCutOff):
             else:
                 print("Wrong value!")
     
-    print(Grad)
-    print(Hessian)
+    #print(Grad)
+    #print(Hessian)
     HessLen2DInv = matrix(Hessian).I
     HessLen2DInv=HessLen2DInv.tolist()
     
@@ -218,11 +232,16 @@ while abs(DEnergy) > abs(CurrCutOff):
     #print("HessianInv")
     #print(Corr)
     #print("Corr")
-    print(Grad)
+    #print(Grad)
     #print("Grad")
     #print("")
     #break
-    print(guessScale, DEnergy, NEnergy, OEnergy)
+    if DEnergy <= 0.0:
+        ColoRR=bcolors.OKGREEN
+    else:
+        ColoRR=bcolors.FAIL
+
+    print(ColoRR, guessScale, DEnergy, NEnergy, OEnergy, bcolors.ENDC)
     
     # store the new scale values 
     file=open(GuessFile,'w')

@@ -1,6 +1,18 @@
 from sys import exit
 import subprocess
 
+
+class bcolors:
+    HEADER = '\033[95m'
+    OKBLUE = '\033[94m'
+    OKGREEN = '\033[92m'
+    WARNING = '\033[93m'
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
+
+
 def GetElemSym(z):
     if z<1:
         print('Error: the atomic number is less than one (Z<1)\nProgram Exit ):')
@@ -149,7 +161,15 @@ def Get_Energy(fileName,cpu,Z,charge,theory,basis,guessScale):
     subprocess.call('GAUSS_SCRDIR="/nqs/$USER"\n',shell=True)
     subprocess.call('g09 < '+fileName+'.gjf > '+fileName+'.out\n',shell=True)
     Energy=subprocess.check_output('grep "SCF Done:" '+fileName+'.out | tail -1|awk \'{ print $5 }\'', shell=True)
-    return float(Energy.decode('ascii').rstrip('\n'))
+    Energy = Energy.decode('ascii').rstrip('\n')
+    if Energy != "":
+         EnergyNUM=float(Energy)
+         #print('|',end="")
+    else:
+         print(bcolors.FAIL,"\n STOP STOP: Gaussian is stupid, Sorry for that :(",bcolors.ENDC)
+         print(bcolors.FAIL,"File Name: ",fileName,bcolors.ENDC,"\n\n GOOD LUCK NEXT TIME!!!")
+         exit()
+    return EnergyNUM
     
 # Generate .sh file to run it on the Cluster (serial)
 '''
