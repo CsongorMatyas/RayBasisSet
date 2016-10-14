@@ -38,11 +38,6 @@ EnergyFileF='EnergyF_'+fileName
 
 cpu=args.parWith
 
-def EquValue2(scalevalues):
-        X=scalevalues[0]
-        Y=scalevalues[1]
-        equ=round(X**2, 15)+round(Y**2, 15)
-        return round(equ, 15)
 #>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 DeltaVal=args.delta
 DEnergy=9999999999.99
@@ -66,7 +61,7 @@ while abs(DEnergy) > abs(CurrCutOff):
         file.close()
      
     # Calculate the initial energy
-    OEnergy=EquValue2(guessScale)#Get_Energy(EnergyFileI,cpu,Z,args.charge,args.theory,args.basis,guessScale)
+    OEnergy=Get_Energy(EnergyFileI,cpu,Z,args.charge,args.theory,args.basis,guessScale)
     
     ### Generate Scale values to find Gradiant
     def Gradient(DeltaVal, guessScale):
@@ -140,41 +135,23 @@ while abs(DEnergy) > abs(CurrCutOff):
     ### Generate INPUT FILE and Run the Job ###
     # gradiants
     
-    """def EnergyPar(title,cpu,Z,charge,theory,basis,sto_out,index,EleName):      
+    def EnergyPar(title,cpu,Z,charge,theory,basis,sto_out,index,EleName):      
         title2=title+'_'+EleName.strip()+'_'+args.basis.strip()+'_scale_'+str(index+1)
         GEnergy=Get_Energy(title2,cpu,Z,charge,theory,basis,sto_out)
-        return [index,GEnergy]"""
+        return [index,GEnergy]
         
-    def EquValue(scalevalues,index):
-        for i in range(len(scalevalues)):
-            scalevalues[i] = round(scalevalues[i], 15)
-        equ=EquValue2(scalevalues)
-        return [index,equ]
-    
-    EnergyGrad={}
 
-    for index,sto_out in enumerate(sorted_gradient):
-        lo=EquValue(sto_out,index)
-        EnergyGrad[index] = lo       
-        print(EnergyGrad)
-    
-    #ll=Parallel(n_jobs=args.parFile)(delayed(EquValue)(sto_out,index)
-    #    for index,sto_out in enumerate(sorted_gradient))
-    """ll=Parallel(n_jobs=args.parFile)(delayed(EnergyPar)('Grad',cpu,Z,args.charge,args.theory,args.basis,sto_out,index,EleName)
-        for index,sto_out in enumerate(sorted_gradient))"""
-    ##EnergyGrad={} 
-    #EnergyGrad={t[0]:round(t[1], 15) for t in ll}
+    ll=Parallel(n_jobs=args.parFile)(delayed(EnergyPar)('Grad',cpu,Z,args.charge,args.theory,args.basis,sto_out,index,EleName)
+        for index,sto_out in enumerate(sorted_gradient))
+    EnergyGrad={} 
+    EnergyGrad={t[0]:round(t[1], 15) for t in ll}
     
     #Hessian
-    ll=Parallel(n_jobs=args.parFile)(delayed(EquValue)(sto_out,index)
+    ll=Parallel(n_jobs=args.parFile)(delayed(EnergyPar)('Hess',cpu,Z,args.charge,args.theory,args.basis,sto_out,index,EleName) 
         for index,sto_out in enumerate(sorted_hessian))
-    
-    """ll=Parallel(n_jobs=args.parFile)(delayed(EnergyPar)('Hess',cpu,Z,args.charge,args.theory,args.basis,sto_out,index,EleName) 
-        for index,sto_out in enumerate(sorted_hessian)) """
     EnergyHess={}
     EnergyHess={t[0]:round(t[1], 15) for t in ll}
-    #print(EnergyHess)
-    
+        
     # calculate Gradiant
     Grad=[]
     GradMatLen = len(EnergyGrad)
@@ -212,13 +189,18 @@ while abs(DEnergy) > abs(CurrCutOff):
         for j in range(Nr_of_scales):
             if i == j:
                 Hessian[i][i] = HessianTrace[i]
+                continue
             elif i < j:
                 Hessian[i][j] = HessianUpT[i * (Nr_of_scales - i - 1) + j - 1]
+                continue
             elif i > j:
                 Hessian[i][j] = HessianUpT[j * (Nr_of_scales - j - 1) + i - 1]
+                continue
             else:
                 print("Wrong value!")
-
+    
+    print(Grad)
+    print(Hessian)
     HessLen2DInv = matrix(Hessian).I
     HessLen2DInv=HessLen2DInv.tolist()
     
@@ -227,7 +209,7 @@ while abs(DEnergy) > abs(CurrCutOff):
     
     guessScale=[float(i) - float(j) for i, j in zip(guessScale, Corr)] 
     # calculate the new energy
-    NEnergy=EquValue2(guessScale)#Get_Energy(EnergyFileF,cpu,Z,args.charge,args.theory,args.basis,guessScale)
+    NEnergy=Get_Energy(EnergyFileF,cpu,Z,args.charge,args.theory,args.basis,guessScale)
     DEnergy=NEnergy-OEnergy
 
     #print(Hessian)
@@ -236,7 +218,7 @@ while abs(DEnergy) > abs(CurrCutOff):
     #print("HessianInv")
     #print(Corr)
     #print("Corr")
-    #print(Grad)
+    print(Grad)
     #print("Grad")
     #print("")
     #break
