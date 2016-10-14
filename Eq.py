@@ -41,8 +41,8 @@ cpu=args.parWith
 def EquValue2(scalevalues):
         X=scalevalues[0]
         Y=scalevalues[1]
-        equ=round(X**2, 10)+round(Y**2, 10)
-        return round(equ, 10)
+        equ=round(X**2, 15)+round(Y**2, 15)
+        return round(equ, 15)
 #>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 DeltaVal=args.delta
 DEnergy=9999999999.99
@@ -74,9 +74,9 @@ while abs(DEnergy) > abs(CurrCutOff):
         sorted_gradient = []
         for i in range(len(guessScale)):
             plus = guessScale[:]
-            plus[i] = round(guessScale[i] + DeltaVal, 14)
+            plus[i] = round(guessScale[i] + DeltaVal, 15)
             minus = guessScale[:]
-            minus[i] = round(guessScale[i] - DeltaVal, 14)
+            minus[i] = round(guessScale[i] - DeltaVal, 15)
             result.append([plus, minus])
             sorted_gradient.append(plus)
             sorted_gradient.append(minus)
@@ -104,7 +104,7 @@ while abs(DEnergy) > abs(CurrCutOff):
         for i in range(Nr_of_scales):
             iScales = zeros(Nr_of_scales).tolist()
             for j in range(Nr_of_scales):
-                iScales[j] = guessScale[i]
+                iScales[j] = guessScale[j]
             iScales[i] = iScales[i] + 2 * DeltaVal
             E2Scales.append(iScales)
         return(E2Scales)
@@ -128,7 +128,7 @@ while abs(DEnergy) > abs(CurrCutOff):
     ENPScales = CreateEEScales(Nr_of_scales, -DeltaVal, DeltaVal, guessScale, Indices)
     EPNScales = CreateEEScales(Nr_of_scales, DeltaVal, -DeltaVal, guessScale, Indices)
     ENNScales = CreateEEScales(Nr_of_scales, -DeltaVal, -DeltaVal, guessScale, Indices)
- 
+
     sorted_hessian = []
     sorted_hessian.extend(E2PScales)
     sorted_hessian.extend(E2MScales)
@@ -147,7 +147,7 @@ while abs(DEnergy) > abs(CurrCutOff):
         
     def EquValue(scalevalues,index):
         for i in range(len(scalevalues)):
-            scalevalues[i] = round(scalevalues[i], 10)
+            scalevalues[i] = round(scalevalues[i], 15)
         equ=EquValue2(scalevalues)
         return [index,equ]
 
@@ -157,7 +157,7 @@ while abs(DEnergy) > abs(CurrCutOff):
     """ll=Parallel(n_jobs=args.parFile)(delayed(EnergyPar)('Grad',cpu,Z,args.charge,args.theory,args.basis,sto_out,index,EleName)
         for index,sto_out in enumerate(sorted_gradient))"""
     EnergyGrad={} 
-    EnergyGrad={t[0]:round(t[1], 10) for t in ll}
+    EnergyGrad={t[0]:round(t[1], 15) for t in ll}
     
     #Hessian
     ll=Parallel(n_jobs=args.parFile)(delayed(EquValue)(sto_out,index)
@@ -166,7 +166,7 @@ while abs(DEnergy) > abs(CurrCutOff):
     """ll=Parallel(n_jobs=args.parFile)(delayed(EnergyPar)('Hess',cpu,Z,args.charge,args.theory,args.basis,sto_out,index,EleName) 
         for index,sto_out in enumerate(sorted_hessian)) """
     EnergyHess={}
-    EnergyHess={t[0]:round(t[1], 10) for t in ll}
+    EnergyHess={t[0]:round(t[1], 15) for t in ll}
         
     # calculate Gradiant
     Grad=[]
@@ -223,17 +223,17 @@ while abs(DEnergy) > abs(CurrCutOff):
     NEnergy=EquValue2(guessScale)#Get_Energy(EnergyFileF,cpu,Z,args.charge,args.theory,args.basis,guessScale)
     DEnergy=NEnergy-OEnergy
 
-    print(Hessian)
-    print("Hessian")
-    print(HessLen2DInv)
-    print("HessianInv")
-    print(Corr)
-    print("Corr")
-    print(Grad)
-    print("Grad")
-    print("")
-    break
-    #print(guessScale, DEnergy, NEnergy, OEnergy)
+    #print(Hessian)
+    #print("Hessian")
+    #print(HessLen2DInv)
+    #print("HessianInv")
+    #print(Corr)
+    #print("Corr")
+    #print(Grad)
+    #print("Grad")
+    #print("")
+    #break
+    print(guessScale, DEnergy, NEnergy, OEnergy)
     
     # store the new scale values 
     file=open(GuessFile,'w')
