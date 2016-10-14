@@ -47,7 +47,7 @@ if args.initial is not None:
         print("The guess values ", args.initial)
         guessScale=args.initial
     else:
-        print(bcolors.FAIL,"STOP STOP: number of guess values should be ", stoLen,bcolors.ENDC)
+        print(bcolors.FAIL,"\nSTOP STOP: number of guess values should be ", stoLen,bcolors.ENDC)
         sys.exit()
 elif os.path.isfile(GuessFile):
         guessScale=[]
@@ -155,17 +155,22 @@ while abs(DEnergy) > abs(CurrCutOff):
     EnergyGrad={} 
     EnergyGrad={t[0]:round(t[1], 15) for t in ll}
     
+    
+    # calculate Gradiant
+    Grad=[]
+    GradMatLen = len(EnergyGrad)
+    for val in range(0, GradMatLen, 2):
+        Grad.append(round((float(EnergyGrad[val])-float(EnergyGrad[val + 1]))/(2.0*DeltaVal), 15))
+    
+    if any(val==0.0 for val in Grad):
+        print(bcolors.FAIL,"\nSTOP STOP: Gradiant contains Zero values",bcolors.ENDC,"\n", Grad)
+        sys.exit()
     #Hessian
     ll=Parallel(n_jobs=args.parFile)(delayed(EnergyPar)('Hess',cpu,Z,args.charge,args.theory,args.basis,sto_out,index,EleName) 
         for index,sto_out in enumerate(sorted_hessian))
     EnergyHess={}
     EnergyHess={t[0]:round(t[1], 15) for t in ll}
         
-    # calculate Gradiant
-    Grad=[]
-    GradMatLen = len(EnergyGrad)
-    for val in range(0, GradMatLen, 2):
-        Grad.append(round((float(EnergyGrad[val])-float(EnergyGrad[val + 1]))/(2.0*DeltaVal), 15))
     
     # calculate Hessian
     # one dim hessian

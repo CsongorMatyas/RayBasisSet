@@ -161,7 +161,13 @@ def Get_Energy(fileName,cpu,Z,charge,theory,basis,guessScale):
     subprocess.call('GAUSS_SCRDIR="/nqs/$USER"\n',shell=True)
     subprocess.call('g09 < '+fileName+'.gjf > '+fileName+'.out\n',shell=True)
     Energy=subprocess.check_output('grep "SCF Done:" '+fileName+'.out | tail -1|awk \'{ print $5 }\'', shell=True)
-    return float(Energy.decode('ascii').rstrip('\n'))
+    Energy = Energy.decode('ascii').rstrip('\n')
+    if Energy != "":
+         EnergyNUM=float(Energy)
+    else:
+         print(bcolors.FAIL,"\nSTOP STOP: Gaussian is stupied, Sorry for that :(",bcolors.ENDC)
+         exit()
+    return EnergyNUM
     
 # Generate .sh file to run it on the Cluster (serial)
 '''
