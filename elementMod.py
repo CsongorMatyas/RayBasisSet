@@ -164,6 +164,7 @@ def Get_Energy(fileName,cpu,Z,charge,theory,basis,guessScale):
     Energy = Energy.decode('ascii').rstrip('\n')
     if Energy != "":
          EnergyNUM=float(Energy)
+         #print('|',end="")
     else:
          print(bcolors.FAIL,"\nSTOP STOP: Gaussian is stupied, Sorry for that :(",bcolors.ENDC)
          exit()

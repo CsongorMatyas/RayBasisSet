@@ -57,7 +57,7 @@ elif os.path.isfile(GuessFile):
         file.close()
         print("The guess values (From the File) are ", guessScale)
 else:
-        guessScale=[str(1.0)]*stoLen
+        guessScale=[1.0]*stoLen
         print("The guess values (Default Values) are ", guessScale)
 
 # Store the values in file
