@@ -28,7 +28,6 @@ print ("The value of Delta is {}".format(args.delta))
 print ("The cutoff is {}".format(args.limit))
 
 sto=GetSTO(Z,args.basis)
-
 ## files names  ##
 fileName=str(Z)+'_'+GetElemSym(Z).strip()+'_'+args.basis.strip()
 GuessFile='Guess_'+fileName+'.txt'
@@ -42,11 +41,11 @@ cpu=args.parWith
 def EquValue2(scalevalues):
         X=scalevalues[0]
         Y=scalevalues[1]
-        equ=X**2+Y**2
-        return equ
+        equ=round(X**2, 10)+round(Y**2, 10)
+        return round(equ, 10)
 #>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 DeltaVal=args.delta
-DEnergy=999.99
+DEnergy=9999999999.99
 CurrCutOff=args.limit
 while abs(DEnergy) > abs(CurrCutOff):
     #print(str(DEnergy)+ '>'+ str(CurrCutOff))
@@ -59,6 +58,8 @@ while abs(DEnergy) > abs(CurrCutOff):
         file.close()
     else:
         guessScale=[str(args.initial)]*len(sto)
+        for i in range(len(guessScale)):
+            guessScale[i] = float(guessScale[i])
         file=open(GuessFile,'w')
         for index,sto_out in enumerate(sto):
             file.write(str(args.initial)+'\n')
@@ -70,37 +71,72 @@ while abs(DEnergy) > abs(CurrCutOff):
     ### Generate Scale values to find Gradiant
     def Gradient(DeltaVal, guessScale):
         result = []
+        sorted_gradient = []
         for i in range(len(guessScale)):
             plus = guessScale[:]
-            plus[i] = round(guessScale[i] + DeltaVal, 15)
+            plus[i] = round(guessScale[i] + DeltaVal, 14)
             minus = guessScale[:]
-            minus[i] = round(guessScale[i] - DeltaVal, 15)
+            minus[i] = round(guessScale[i] - DeltaVal, 14)
             result.append([plus, minus])
-        return(result)
+            sorted_gradient.append(plus)
+            sorted_gradient.append(minus)
+        return(result, sorted_gradient)
     
-    def Hessian(DeltaVal, GradientA):
-        result = []
-        sorted_gradient = []
-        sorted_hessian = []
-        for val in range(len(GradientA)):
-            arr = GradientA[val]
-            sorted_gradient.append(arr[0])
-            sorted_gradient.append(arr[1])
-            for i in range(len(arr[0])):
-                arr_plus = arr[0][:]
-                arr_plus[i] = round(arr[0][i] + DeltaVal, 15)
-                arr_minus = arr[1][:]
-                arr_minus[i] = round(arr[1][i] - DeltaVal, 15)
-                result.append([arr_plus, arr_minus])
-                sorted_hessian.append(arr_plus)
-                sorted_hessian.append(arr_minus)
-        return(result, sorted_gradient, sorted_hessian)
+    Nr_of_scales = len(guessScale)
+
+    def CreateIndices(Nr_of_scales):
+        Indices = []
+        Trace = []
+        for i in range(Nr_of_scales):
+            for j in range(Nr_of_scales):
+                if j < i:
+                   continue
+                elif j == i:
+                   Trace.append([i, j])
+                else:
+                   Indices.append([i, j])
+        return(Indices, Trace)
     
-    GradientA = Gradient(DeltaVal, guessScale)
-    HessianA, sorted_gradient, sorted_hessian = Hessian(DeltaVal, GradientA)
+    Indices, Trace = CreateIndices(Nr_of_scales)
     
-    ###  
-    #>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+    def CreateE2Scales(Nr_of_scales, DeltaVal, guessScale):
+        E2Scales = []
+        for i in range(Nr_of_scales):
+            iScales = zeros(Nr_of_scales).tolist()
+            for j in range(Nr_of_scales):
+                iScales[j] = guessScale[i]
+            iScales[i] = iScales[i] + 2 * DeltaVal
+            E2Scales.append(iScales)
+        return(E2Scales)
+
+    def CreateEEScales(Nr_of_scales, DeltaVal1, DeltaVal2, guessScale, Indices):
+        EEScales = []
+        for (i, j) in Indices:
+            ijScales = zeros(Nr_of_scales).tolist()
+            for k in range(Nr_of_scales):
+                ijScales[k] = guessScale[k]
+            ijScales[i] = ijScales[i] + DeltaVal1
+            ijScales[j] = ijScales[j] + DeltaVal2
+            EEScales.append(ijScales)
+        return(EEScales)
+
+    GradientA, sorted_gradient = Gradient(DeltaVal, guessScale)
+
+    E2PScales = CreateE2Scales(Nr_of_scales, DeltaVal, guessScale)
+    E2MScales = CreateE2Scales(Nr_of_scales, -DeltaVal, guessScale)
+    EPPScales = CreateEEScales(Nr_of_scales, DeltaVal, DeltaVal, guessScale, Indices)
+    ENPScales = CreateEEScales(Nr_of_scales, -DeltaVal, DeltaVal, guessScale, Indices)
+    EPNScales = CreateEEScales(Nr_of_scales, DeltaVal, -DeltaVal, guessScale, Indices)
+    ENNScales = CreateEEScales(Nr_of_scales, -DeltaVal, -DeltaVal, guessScale, Indices)
+ 
+    sorted_hessian = []
+    sorted_hessian.extend(E2PScales)
+    sorted_hessian.extend(E2MScales)
+    sorted_hessian.extend(EPPScales)
+    sorted_hessian.extend(ENPScales)
+    sorted_hessian.extend(EPNScales)
+    sorted_hessian.extend(ENNScales)
+    
     ### Generate INPUT FILE and Run the Job ###
     # gradiants
     
@@ -110,6 +146,8 @@ while abs(DEnergy) > abs(CurrCutOff):
         return [index,GEnergy]"""
         
     def EquValue(scalevalues,index):
+        for i in range(len(scalevalues)):
+            scalevalues[i] = round(scalevalues[i], 10)
         equ=EquValue2(scalevalues)
         return [index,equ]
 
@@ -119,16 +157,16 @@ while abs(DEnergy) > abs(CurrCutOff):
     """ll=Parallel(n_jobs=args.parFile)(delayed(EnergyPar)('Grad',cpu,Z,args.charge,args.theory,args.basis,sto_out,index,EleName)
         for index,sto_out in enumerate(sorted_gradient))"""
     EnergyGrad={} 
-    EnergyGrad={t[0]:t[1] for t in ll}
+    EnergyGrad={t[0]:round(t[1], 10) for t in ll}
     
     #Hessian
     ll=Parallel(n_jobs=args.parFile)(delayed(EquValue)(sto_out,index)
         for index,sto_out in enumerate(sorted_hessian))
-        
+    
     """ll=Parallel(n_jobs=args.parFile)(delayed(EnergyPar)('Hess',cpu,Z,args.charge,args.theory,args.basis,sto_out,index,EleName) 
         for index,sto_out in enumerate(sorted_hessian)) """
     EnergyHess={}
-    EnergyHess={t[0]:t[1] for t in ll}
+    EnergyHess={t[0]:round(t[1], 10) for t in ll}
         
     # calculate Gradiant
     Grad=[]
@@ -139,27 +177,63 @@ while abs(DEnergy) > abs(CurrCutOff):
     # calculate Hessian
     # one dim hessian
     
-    HessMatLen = len(EnergyHess)
-    HESS = []
-    for val in range(0, HessMatLen, 2):
-        HESS.append(round((float(EnergyHess[val]) + float(EnergyHess[val + 1]) - 2*OEnergy)/((2.0*DeltaVal)**2), 15))
+    HessianEnergies = []
 
-    HeSSiAn = zeros(len(HESS))
-    for i in range(len(HESS)):
-        HeSSiAn[i] = HESS[i]
+    for i in range(len(sorted_hessian)):
+        HessianEnergies.append(EnergyHess[i])
+ 
+    HessianE2P = HessianEnergies[ : Nr_of_scales]
+    HessianE2N = HessianEnergies[Nr_of_scales : 2 * Nr_of_scales]
+    HessianEPP = HessianEnergies[2 * Nr_of_scales : 2 * Nr_of_scales + len(EPPScales)]
+    HessianENP = HessianEnergies[2 * Nr_of_scales + len(EPPScales) : 2 * Nr_of_scales + 2 * len(EPPScales)]
+    HessianEPN = HessianEnergies[2 * Nr_of_scales + 2 * len(EPPScales) : 2 * Nr_of_scales + 3 * len(EPPScales)]
+    HessianENN = HessianEnergies[2 * Nr_of_scales + 3 * len(EPPScales) : ]
 
-    HeSSiAn = HeSSiAn.reshape(int(len(HESS)/2), 2)
-    HessLen2DInv = matrix(HeSSiAn).I
+    HessianTrace = []
+
+    for i in range(Nr_of_scales):
+        HessianTrace.append((HessianE2P[i] + HessianE2N[i] - 2*OEnergy) /((2.0*DeltaVal)**2))
+
+    HessianUpT = []
+
+    for i in range(len(HessianEPP)):
+        HessianUpT.append((HessianEPP[i] - HessianENP[i] - HessianEPN[i] + HessianENN[i]) / ((2.0*DeltaVal)**2))
+
+    Hessian = zeros((Nr_of_scales, Nr_of_scales)).tolist()
+    
+    for i in range(Nr_of_scales):
+        for j in range(Nr_of_scales):
+            if i == j:
+                Hessian[i][i] = HessianTrace[i]
+            elif i < j:
+                Hessian[i][j] = HessianUpT[i * (Nr_of_scales - i - 1) + j - 1]
+            elif i > j:
+                Hessian[i][j] = HessianUpT[j * (Nr_of_scales - j - 1) + i - 1]
+            else:
+                print("Wrong value!")
+
+    HessLen2DInv = matrix(Hessian).I
     HessLen2DInv=HessLen2DInv.tolist()
     
     Corr=dot(matrix(Grad),matrix(HessLen2DInv))
     Corr=Corr.tolist()[0]
     
-    guessScale=[float(i) - float(j)*0.01 for i, j in zip(guessScale, Corr)] 
+    guessScale=[float(i) - float(j) for i, j in zip(guessScale, Corr)] 
     # calculate the new energy
     NEnergy=EquValue2(guessScale)#Get_Energy(EnergyFileF,cpu,Z,args.charge,args.theory,args.basis,guessScale)
     DEnergy=NEnergy-OEnergy
-    print(guessScale, NEnergy, OEnergy, DEnergy)
+
+    print(Hessian)
+    print("Hessian")
+    print(HessLen2DInv)
+    print("HessianInv")
+    print(Corr)
+    print("Corr")
+    print(Grad)
+    print("Grad")
+    print("")
+    break
+    #print(guessScale, DEnergy, NEnergy, OEnergy)
     
     # store the new scale values 
     file=open(GuessFile,'w')
