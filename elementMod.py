@@ -166,7 +166,8 @@ def Get_Energy(fileName,cpu,Z,charge,theory,basis,guessScale):
          EnergyNUM=float(Energy)
          #print('|',end="")
     else:
-         print(bcolors.FAIL,"\nSTOP STOP: Gaussian is stupied, Sorry for that :(",bcolors.ENDC)
+         print(bcolors.FAIL,"\n STOP STOP: Gaussian is stupid, Sorry for that :(",bcolors.ENDC)
+         print(bcolors.FAIL,"File Name: ",fileName,bcolors.ENDC,"\n\n GOOD LUCK NEXT TIME!!!")
          exit()
     return EnergyNUM
     
