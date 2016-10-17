@@ -1,4 +1,6 @@
 #!/usr/bin/env python
+import numpy as np
+from scipy.optimize import minimize
 import argparse, sys, os.path 
 import subprocess
 from joblib import Parallel, delayed
@@ -18,7 +20,6 @@ parser.add_argument('-p','--parWith',help='Parallel processing within gaussian i
 parser.add_argument('-j','--parFile',help='Parallel processing for multiple gaussian files', required=False, type=int, default=4)
 parser.add_argument('-m','--parser',help='Parallel or serial', required=False, default="P")
 args = parser.parse_args()
-
 
 ## show values ##
 Z=args.element
@@ -66,6 +67,27 @@ for val in guessScale:
     file.write(str(val)+'\n')
 file.close()
 
+Nr_of_scales = len(guessScale)
+npguessScale = zeros(Nr_of_scales)
+
+for i in range(Nr_of_scales):
+    npguessScale[i] = float(guessScale[i])
+
+x0 = npguessScale
+
+def Function(npguessScale):
+    global EnergyFileI,cpu,Z,args
+    guessScale = npguessScale.tolist()
+    Energy = Get_Energy(EnergyFileI,cpu,Z,args.charge,args.theory,args.basis,guessScale)
+    return(Energy)
+
+
+
+res = minimize(Function, x0, method='nelder-mead', options={'xtol': 1e-8, 'disp': True})
+
+print(res.x)
+
+"""
 #>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 DEnergy=9999999999.99
 while True: #abs(DEnergy) > abs(CurrCutOff):
@@ -248,3 +270,4 @@ while True: #abs(DEnergy) > abs(CurrCutOff):
     for val in guessScale:
         file.write(str(val)+'\n')
     file.close()
+"""
