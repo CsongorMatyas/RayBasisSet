@@ -39,6 +39,16 @@ GuessFile='Guess_'+fileName+'.txt'
 EnergyFileI='EnergyI_'+fileName
 EnergyFileF='EnergyF_'+fileName
 
+def EquValue2(scalevalues):
+        X=scalevalues[0]
+        Y=scalevalues[1]
+       # Z=scalevalues[2]
+       # Y1=scalevalues[3]
+       # Y2=scalevalues[4]
+        equ=round(X**4, 15)+round(Y**2, 15)#round(Z**2, 15)+round(Y1**2, 15)+round(Y2**2, 15)
+        return round(equ, 15)
+#>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
 sto=GetSTO(Z,args.basis)
 stoLen=len(sto)
 
@@ -70,7 +80,7 @@ file.close()
 DEnergy=9999999999.99
 while True: #abs(DEnergy) > abs(CurrCutOff):
     # Calculate the initial energy
-    OEnergy=Get_Energy(EnergyFileI,cpu,Z,args.charge,args.theory,args.basis,guessScale)
+    OEnergy=EquValue2(guessScale)#Get_Energy(EnergyFileI,cpu,Z,args.charge,args.theory,args.basis,guessScale)
     
     ### Generate Scale values to find Gradiant
     def Gradient(DeltaVal, guessScale):
@@ -146,12 +156,20 @@ while True: #abs(DEnergy) > abs(CurrCutOff):
     
     def EnergyPar(title,cpu,Z,charge,theory,basis,sto_out,index,EleName):      
         title2=title+'_'+EleName.strip()+'_'+args.basis.strip()+'_scale_'+str(index+1)
-        GEnergy=Get_Energy(title2,cpu,Z,charge,theory,basis,sto_out)
+        GEnergy=EquValue2(guessScale)#Get_Energy(title2,cpu,Z,charge,theory,basis,sto_out)
         return [index,GEnergy]
         
+    def EquValue(scalevalues,index):
+        for i in range(len(scalevalues)):
+            scalevalues[i] = round(scalevalues[i], 15)
+        equ=EquValue2(scalevalues)
+        return [index,equ]
 
-    ll=Parallel(n_jobs=args.parFile)(delayed(EnergyPar)('Grad',cpu,Z,args.charge,args.theory,args.basis,sto_out,index,EleName)
+    ll=Parallel(n_jobs=args.parFile)(delayed(EquValue)(sto_out,index)
         for index,sto_out in enumerate(sorted_gradient))
+
+    #ll=Parallel(n_jobs=args.parFile)(delayed(EnergyPar)('Grad',cpu,Z,args.charge,args.theory,args.basis,sto_out,index,EleName)
+       # for index,sto_out in enumerate(sorted_gradient))
     EnergyGrad={} 
     EnergyGrad={t[0]:round(t[1], 15) for t in ll}
     
@@ -166,8 +184,11 @@ while True: #abs(DEnergy) > abs(CurrCutOff):
         print(bcolors.FAIL,"\nSTOP STOP: Gradiant contains Zero values",bcolors.ENDC,"\n", Grad)
         sys.exit()
     #Hessian
-    ll=Parallel(n_jobs=args.parFile)(delayed(EnergyPar)('Hess',cpu,Z,args.charge,args.theory,args.basis,sto_out,index,EleName) 
+    ll=Parallel(n_jobs=args.parFile)(delayed(EquValue)(sto_out,index)
         for index,sto_out in enumerate(sorted_hessian))
+
+#    ll=Parallel(n_jobs=args.parFile)(delayed(EnergyPar)('Hess',cpu,Z,args.charge,args.theory,args.basis,sto_out,index,EleName) 
+#        for index,sto_out in enumerate(sorted_hessian))
     EnergyHess={}
     EnergyHess={t[0]:round(t[1], 15) for t in ll}
         
@@ -213,28 +234,26 @@ while True: #abs(DEnergy) > abs(CurrCutOff):
             else:
                 print("Wrong value!")
     
-    #print(Grad)
-    #print(Hessian)
     HessLen2DInv = matrix(Hessian).I
     HessLen2DInv=HessLen2DInv.tolist()
     
     Corr=dot(matrix(Grad),matrix(HessLen2DInv))
     Corr=Corr.tolist()[0]
-    
+        
     guessScale=[float(i) - float(j) for i, j in zip(guessScale, Corr)] 
     # calculate the new energy
-    NEnergy=Get_Energy(EnergyFileF,cpu,Z,args.charge,args.theory,args.basis,guessScale)
+    NEnergy=EquValue2(guessScale)#Get_Energy(EnergyFileF,cpu,Z,args.charge,args.theory,args.basis,guessScale)
     DEnergy=NEnergy-OEnergy
 
-    #print(Hessian)
-    #print("Hessian")
-    #print(HessLen2DInv)
-    #print("HessianInv")
-    #print(Corr)
-    #print("Corr")
-    #print(Grad)
-    #print("Grad")
-    #print("")
+    print(Hessian)
+    print("Hessian")
+    print(HessLen2DInv)
+    print("HessianInv")
+    print(Corr)
+    print("Corr")
+    print(Grad)
+    print("Grad")
+    print("")
     #break
     if DEnergy <= 0.0:
         ColoRR=bcolors.OKGREEN
