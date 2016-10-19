@@ -79,6 +79,7 @@ def Function(npguessScale):
     global EnergyFileI,cpu,Z,args
     guessScale = npguessScale.tolist()
     Energy = Get_Energy(EnergyFileI,cpu,Z,args.charge,args.theory,args.basis,guessScale)
+    print(guessScale, Energy)
     return(Energy)
 
 
