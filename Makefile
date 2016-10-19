@@ -1,6 +1,4 @@
-all:something
-
-something:
+all:
 	./BasisSet.py -e 1 -j 24
 
 clean:
