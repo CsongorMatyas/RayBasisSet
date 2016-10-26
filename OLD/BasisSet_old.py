@@ -13,7 +13,7 @@ parser.add_argument('-t','--theory',help='Level of theory', required=False, defa
 parser.add_argument('-d','--delta',help='The value of delta', required=False, type=float, default=0.001)
 parser.add_argument('-c','--charge',help='The charge', required=False, type=int, default=0)
 parser.add_argument('-s','--initial',help='Initial scale values', required=False, type=float, nargs='+')
-parser.add_argument('-l','--limit',help='Cutoff limit', required=False, type=float, default=1.0e-6)
+parser.add_argument('-l','--limit',help='Cutoff limit', required=False, type=float, default=-1.0e-6)
 parser.add_argument('-p','--parWith',help='Parallel processing within gaussian input', required=False, type=int, default=1)
 parser.add_argument('-j','--parFile',help='Parallel processing for multiple gaussian files', required=False, type=int, default=4)
 parser.add_argument('-m','--parser',help='Parallel or serial', required=False, default="P")
@@ -68,7 +68,7 @@ file.close()
 
 #>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 DEnergy=9999999999.99
-while abs(DEnergy) > abs(CurrCutOff):
+while DEnergy > CurrCutOff:
     # Calculate the initial energy
     OEnergy=Get_Energy(EnergyFileI,cpu,Z,args.charge,args.theory,args.basis,guessScale)
     
@@ -133,6 +133,14 @@ while abs(DEnergy) > abs(CurrCutOff):
     EPNScales = CreateEEScales(Nr_of_scales, DeltaVal, -DeltaVal, guessScale, Indices)
     ENNScales = CreateEEScales(Nr_of_scales, -DeltaVal, -DeltaVal, guessScale, Indices)
 
+    print(E2PScales)
+    print(E2MScales)
+    print(EPPScales)
+    print(ENPScales)
+    print(EPNScales)
+    print(ENNScales)
+
+    break
     sorted_hessian = []
     sorted_hessian.extend(E2PScales)
     sorted_hessian.extend(E2MScales)
@@ -215,6 +223,7 @@ while abs(DEnergy) > abs(CurrCutOff):
     
     #print(Grad)
     #print(Hessian)
+    #break
     HessLen2DInv = matrix(Hessian).I
     HessLen2DInv=HessLen2DInv.tolist()
     

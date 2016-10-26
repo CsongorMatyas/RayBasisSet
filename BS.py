@@ -192,7 +192,7 @@ def GenerateInput(cpu, Z, Charge, Method, BasisSet, Scaling_factors):
     
 def Get_Energy(FileName, cpu, Z, Charge, Method, BasisSet, guessScale):
     file=open(FileName+'.gjf','w')
-    file.write(GenerateInput(cpu, Z, Charge, Method, BasisSet, Scaling_factors) + '\n\n')
+    file.write(GenerateInput(cpu, Z, Charge, Method, BasisSet, guessScale) + '\n\n')
     file.close()
     
     #subprocess.call('GAUSS_SCRDIR="/nqs/$USER"\n', shell=True)
