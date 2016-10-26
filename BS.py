@@ -152,7 +152,7 @@ def GetSTO(Z, BasisSet):
 ##################################################################################################################################################
 
 def GenerateFirstLine(Method):
-    FirstLine = '# opt freq ' + Method + '/gen gfprint\n'
+    FirstLine = '# ' + Method + '/gen gfprint\n'
     return FirstLine
 
 def GenerateTitle(Z, Scaling_factors):

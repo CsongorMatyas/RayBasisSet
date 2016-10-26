@@ -116,7 +116,7 @@ def GetSTO(Z,basis):
 ##### Input file
 
 def gen_first_line(method):
-	first_line = '# opt freq ' + method + '/gen gfprint\n'
+	first_line = '# ' + method + '/gen gfprint\n'
 	return first_line
 
 def gen_title(Z, scaling_factors):
