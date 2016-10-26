@@ -208,12 +208,64 @@ def Get_Energy(FileName, cpu, Z, Charge, Method, BasisSet, guessScale):
          sys.exit(0)
     return EnergyNUM
 
+def Gradient(DeltaVal, guessScale):
+    result = []
+    sorted_gradient = []
+    for i in range(len(guessScale)):
+        plus = guessScale[:]
+        plus[i] = round(guessScale[i] + DeltaVal, 15)
+        minus = guessScale[:]
+        minus[i] = round(guessScale[i] - DeltaVal, 15)
+        result.append([plus, minus])
+        sorted_gradient.append(plus)
+        sorted_gradient.append(minus)
+    return(result, sorted_gradient)
 
-Z = args.element
-ElementName = GetElementName(Z)
-cpu = args.parWith
-CurrCutOff = args.limit
-DeltaVal = args.delta
+def CreateIndices(Nr_of_scales):
+    Indices = []
+    Trace = []
+    for i in range(Nr_of_scales):
+        for j in range(Nr_of_scales):
+            if j < i:
+               continue
+            elif j == i:
+               Trace.append([i, j])
+            else:
+               Indices.append([i, j])
+    return(Indices, Trace)
+
+def CreateE2Scales(Nr_of_scales, DeltaVal, guessScale):
+    E2Scales = []
+    for i in range(Nr_of_scales):
+        iScales = np.zeros(Nr_of_scales).tolist()
+        for j in range(Nr_of_scales):
+            iScales[j] = guessScale[j]
+        iScales[i] = iScales[i] + 2 * DeltaVal
+        E2Scales.append(iScales)
+    return(E2Scales)
+
+def CreateEEScales(Nr_of_scales, DeltaVal1, DeltaVal2, guessScale, Indices):
+    EEScales = []
+    for (i, j) in Indices:
+        ijScales = np.zeros(Nr_of_scales).tolist()
+        for k in range(Nr_of_scales):
+            ijScales[k] = guessScale[k]
+        ijScales[i] = ijScales[i] + DeltaVal1
+        ijScales[j] = ijScales[j] + DeltaVal2
+        EEScales.append(ijScales)
+    return(EEScales)
+
+def EnergyPar(title,cpu,Z,charge,theory,basis,sto_out,index,ElementName):
+    title2=title+'_'+ElementName.strip()+'_'+args.basis.strip()+'_scale_'+str(index+1)
+    GEnergy=Get_Energy(title2,cpu,Z,charge,theory,basis,sto_out)
+    return [index,GEnergy]
+
+def Initiate():
+    Z = args.element
+    ElementName = GetElementName(Z)
+    cpu = args.parWith
+    CurrCutOff = args.limit
+    DeltaVal = args.delta
 
 print ("Test element is {}".format(ElementName))
 print ("Basis set is {}".format(args.basis))
@@ -258,62 +310,11 @@ Nr_of_scales = len(guessScale)
 
 #>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 DEnergy=9999999999.99
-while True: #abs(DEnergy) > abs(CurrCutOff):
+while abs(DEnergy) > abs(CurrCutOff):
     # Calculate the initial energy
     OEnergy=Get_Energy(EnergyFileI,cpu,Z,args.charge,args.theory,args.basis,guessScale)
     
-    ### Generate Scale values to find Gradiant
-    def Gradient(DeltaVal, guessScale):
-        result = []
-        sorted_gradient = []
-        for i in range(len(guessScale)):
-            plus = guessScale[:]
-            plus[i] = round(guessScale[i] + DeltaVal, 15)
-            minus = guessScale[:]
-            minus[i] = round(guessScale[i] - DeltaVal, 15)
-            result.append([plus, minus])
-            sorted_gradient.append(plus)
-            sorted_gradient.append(minus)
-        return(result, sorted_gradient)
-    
-    Nr_of_scales = len(guessScale)
-
-    def CreateIndices(Nr_of_scales):
-        Indices = []
-        Trace = []
-        for i in range(Nr_of_scales):
-            for j in range(Nr_of_scales):
-                if j < i:
-                   continue
-                elif j == i:
-                   Trace.append([i, j])
-                else:
-                   Indices.append([i, j])
-        return(Indices, Trace)
-    
     Indices, Trace = CreateIndices(Nr_of_scales)
-    
-    def CreateE2Scales(Nr_of_scales, DeltaVal, guessScale):
-        E2Scales = []
-        for i in range(Nr_of_scales):
-            iScales = np.zeros(Nr_of_scales).tolist()
-            for j in range(Nr_of_scales):
-                iScales[j] = guessScale[j]
-            iScales[i] = iScales[i] + 2 * DeltaVal
-            E2Scales.append(iScales)
-        return(E2Scales)
-
-    def CreateEEScales(Nr_of_scales, DeltaVal1, DeltaVal2, guessScale, Indices):
-        EEScales = []
-        for (i, j) in Indices:
-            ijScales = np.zeros(Nr_of_scales).tolist()
-            for k in range(Nr_of_scales):
-                ijScales[k] = guessScale[k]
-            ijScales[i] = ijScales[i] + DeltaVal1
-            ijScales[j] = ijScales[j] + DeltaVal2
-            EEScales.append(ijScales)
-        return(EEScales)
-
     GradientA, sorted_gradient = Gradient(DeltaVal, guessScale)
 
     E2PScales = CreateE2Scales(Nr_of_scales, DeltaVal, guessScale)
@@ -332,25 +333,16 @@ while True: #abs(DEnergy) > abs(CurrCutOff):
     sorted_hessian.extend(ENNScales)
     
     ### Generate INPUT FILE and Run the Job ###
-    # gradiants
-    
-    def EnergyPar(title,cpu,Z,charge,theory,basis,sto_out,index,ElementName):      
-        title2=title+'_'+ElementName.strip()+'_'+args.basis.strip()+'_scale_'+str(index+1)
-        GEnergy=Get_Energy(title2,cpu,Z,charge,theory,basis,sto_out)
-        return [index,GEnergy]
-        
-
     ll=Parallel(n_jobs=args.parFile)(delayed(EnergyPar)('Grad',cpu,Z,args.charge,args.theory,args.basis,sto_out,index,ElementName)
         for index,sto_out in enumerate(sorted_gradient))
     EnergyGrad={} 
     EnergyGrad={t[0]:round(t[1], 15) for t in ll}
-    
-    
+
     # calculate Gradiant
     Grad=[]
     GradMatLen = len(EnergyGrad)
     for val in range(0, GradMatLen, 2):
-        Grad.append(round((float(EnergyGrad[val])-float(EnergyGrad[val + 1]))/(2.0*DeltaVal), 15))
+        Grad.append(round((float(EnergyGrad[val]) - float(EnergyGrad[val + 1])) / (2.0 * DeltaVal), 15))
     
     if any(val==0.0 for val in Grad):
         print(bcolors.FAIL,"\nSTOP STOP: Gradiant contains Zero values",bcolors.ENDC,"\n", Grad)
