@@ -135,21 +135,21 @@ def GetBasisSetCoreValence(BasisSet):
 def GetSTO(Z, BasisSet):
     STO=[]
     Core, Valence = GetBasisSetCoreValence(BasisSet)
-    AtomicCore, AtomicValance = GetElementCoreValence(Z)
+    AtomicCore, AtomicValence = GetElementCoreValence(Z)
     
     for corevalue in Core:
         for atomiccore in AtomicCore:
             STO.append('STO ' + atomiccore + ' ' + str(corevalue))
             
-    for valancevalue in Valance:
-        for atomicvalance in AtomicValance:
-            STO.append('STO ' + atomicvalance + ' ' + str(valancevalue))
+    for valencevalue in Valence:
+        for atomicvalence in AtomicValence:
+            STO.append('STO ' + atomicvalence + ' ' + str(valencevalue))
             
     return STO
 
-#######################################################################################################################################################
+##################################################################################################################################################
 ##### Functions related to generating the Input file
-#######################################################################################################################################################
+##################################################################################################################################################
 
 def GenerateFirstLine(Method):
     FirstLine = '# opt freq ' + Method + '/gen gfprint\n'
