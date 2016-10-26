@@ -255,44 +255,7 @@ for val in guessScale:
 File.close()
 
 Nr_of_scales = len(guessScale)
-npguessScale = np.zeros(Nr_of_scales)
 
-for i in range(Nr_of_scales):
-    npguessScale[i] = float(guessScale[i])
-
-x0 = npguessScale
-
-def Function(npguessScale):
-    global EnergyFileI,cpu,Z,args
-    guessScale = npguessScale.tolist()
-    Energy = Get_Energy(EnergyFileI,cpu,Z,args.charge,args.theory,args.basis,guessScale)
-    print(guessScale, Energy)
-    return(Energy)
-
-###################################################################################################################################################
-
-def Gradient():
-    result = []
-    global DeltaVal
-    global guessScale
-    #sorted_gradient = []
-    for i in range(len(guessScale)):
-        plus = guessScale[:]
-        plus[i] = round(guessScale[i] + DeltaVal, 15)
-        minus = guessScale[:]
-        minus[i] = round(guessScale[i] - DeltaVal, 15)
-        result.append([plus, minus])
-        #sorted_gradient.append(plus)
-        #sorted_gradient.append(minus)
-    return(result)#, sorted_gradient)
-
-GradientA, sorted_gradient = Gradient(DeltaVal, guessScale)
-
-res = minimize(Function, x0, method='Newton-CG', jac=Gradient, options={'xtol': 1e-8, 'disp': True})
-
-print(res.x)
-
-"""
 #>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 DEnergy=9999999999.99
 while True: #abs(DEnergy) > abs(CurrCutOff):
@@ -440,8 +403,9 @@ while True: #abs(DEnergy) > abs(CurrCutOff):
             else:
                 print("Wrong value!")
     
-    #print(Grad)
-    #print(Hessian)
+    print(Grad)
+    print(Hessian)
+    break
     HessLen2DInv = np.matrix(Hessian).I
     HessLen2DInv=HessLen2DInv.tolist()
     
@@ -475,4 +439,4 @@ while True: #abs(DEnergy) > abs(CurrCutOff):
     for val in guessScale:
         file.write(str(val)+'\n')
     file.close()
-"""
+
