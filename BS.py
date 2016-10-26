@@ -269,9 +269,26 @@ def Function(npguessScale):
     print(guessScale, Energy)
     return(Energy)
 
+###################################################################################################################################################
 
+def Gradient():
+    result = []
+    global DeltaVal
+    global guessScale
+    #sorted_gradient = []
+    for i in range(len(guessScale)):
+        plus = guessScale[:]
+        plus[i] = round(guessScale[i] + DeltaVal, 15)
+        minus = guessScale[:]
+        minus[i] = round(guessScale[i] - DeltaVal, 15)
+        result.append([plus, minus])
+        #sorted_gradient.append(plus)
+        #sorted_gradient.append(minus)
+    return(result)#, sorted_gradient)
 
-res = minimize(Function, x0, method='nelder-mead', options={'xtol': 1e-8, 'disp': True})
+GradientA, sorted_gradient = Gradient(DeltaVal, guessScale)
+
+res = minimize(Function, x0, method='Newton-CG', jac=Gradient, options={'xtol': 1e-8, 'disp': True})
 
 print(res.x)
 
