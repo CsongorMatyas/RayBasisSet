@@ -3,7 +3,7 @@ import argparse, sys, os.path
 import subprocess
 from joblib import Parallel, delayed
 from elementMod import *
-from numpy import matrix, dot, reshape, shape, zeros
+from numpy import matrix, dot, reshape, shape, zeros, linalg, diag
 __author__ = 'Ray Group'
  
 parser = argparse.ArgumentParser(description='Basis Sets project')
@@ -68,10 +68,12 @@ file.close()
 
 #>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 DEnergy=9999999999.99
-while DEnergy > CurrCutOff:
+counter=0
+while True: #counter < 2: #DEnergy > CurrCutOff:
+    counter+=1
     # Calculate the initial energy
     OEnergy=Get_Energy(EnergyFileI,cpu,Z,args.charge,args.theory,args.basis,guessScale)
-    
+    print("OEnergy", OEnergy)    
     ### Generate Scale values to find Gradiant
     def Gradient(DeltaVal, guessScale):
         result = []
@@ -140,7 +142,6 @@ while DEnergy > CurrCutOff:
     print(EPNScales)
     print(ENNScales)
 
-    break
     sorted_hessian = []
     sorted_hessian.extend(E2PScales)
     sorted_hessian.extend(E2MScales)
@@ -162,7 +163,7 @@ while DEnergy > CurrCutOff:
         for index,sto_out in enumerate(sorted_gradient))
     EnergyGrad={} 
     EnergyGrad={t[0]:round(t[1], 15) for t in ll}
-    
+    print("Gradiant E", EnergyGrad) 
     
     # calculate Gradiant
     Grad=[]
@@ -172,12 +173,13 @@ while DEnergy > CurrCutOff:
     
     if any(val==0.0 for val in Grad):
         print(bcolors.FAIL,"\nSTOP STOP: Gradiant contains Zero values",bcolors.ENDC,"\n", Grad)
-        sys.exit()
+        # sys.exit()
     #Hessian
     ll=Parallel(n_jobs=args.parFile)(delayed(EnergyPar)('Hess',cpu,Z,args.charge,args.theory,args.basis,sto_out,index,EleName) 
         for index,sto_out in enumerate(sorted_hessian))
     EnergyHess={}
     EnergyHess={t[0]:round(t[1], 15) for t in ll}
+    print("Hess E", EnergyHess) 
         
     
     # calculate Hessian
@@ -221,34 +223,84 @@ while DEnergy > CurrCutOff:
             else:
                 print("Wrong value!")
     
-    #print(Grad)
-    #print(Hessian)
+    #print("gradient:-", Grad)
+    #print("hessian:-", Hessian)
     #break
     HessLen2DInv = matrix(Hessian).I
     HessLen2DInv=HessLen2DInv.tolist()
     
     Corr=dot(matrix(Grad),matrix(HessLen2DInv))
     Corr=Corr.tolist()[0]
+
+    npHessian = zeros((len(Hessian), len(Hessian)))
+    npHessian = matrix(npHessian)
     
-    guessScale=[float(i) - float(j) for i, j in zip(guessScale, Corr)] 
+
+    for i in range(len(Hessian)):
+        for j in range(len(Hessian)):
+            npHessian[i, j] = Hessian[i][j]
+    eW, eV = linalg.eig(npHessian)
+
+    Cond1 = eW[0]
+    Cond2 = eW[1]
+
+    newguessScale= guessScale
+
+    if Cond1 > 0:
+        if Cond2 > 0:
+            newguessScale[0] = guessScale[0] - Corr[0]
+            newguessScale[1] = guessScale[1] - Corr[1]
+        else:
+            newguessScale[0] = guessScale[0] - Corr[0]
+            newguessScale[1] = guessScale[1] + Corr[1]
+    else:
+        if Cond2 > 0:
+            newguessScale[0] = guessScale[0] + Corr[0]
+            newguessScale[1] = guessScale[1] - Corr[1] 
+        else:
+            newguessScale[0] = guessScale[0] + Corr[0]
+            newguessScale[1] = guessScale[1] + Corr[1]
+    print(guessScale)
+    guessScale = newguessScale
+    print(guessScale)
+    
+    #guessScale=[float(i) - float(j) for i, j in zip(guessScale, Corr)] 
     # calculate the new energy
     NEnergy=Get_Energy(EnergyFileF,cpu,Z,args.charge,args.theory,args.basis,guessScale)
     DEnergy=NEnergy-OEnergy
+    
+    npHessian = zeros((len(Hessian), len(Hessian)))
+    npHessian = matrix(npHessian)
+    #print(npHessian)
+        
+    for i in range(len(Hessian)):
+        for j in range(len(Hessian)):
+            npHessian[i, j] = Hessian[i][j]
 
+    #print(npHessian)
     #print(Hessian)
-    #print("Hessian")
-    #print(HessLen2DInv)
-    #print("HessianInv")
-    #print(Corr)
-    #print("Corr")
-    #print(Grad)
-    #print("Grad")
-    #print("")
-    #break
+    #print(type(npHessian))
+
+    eW, eV = linalg.eig(npHessian)
+    
+    print("Eigen value")
+    print(eW)
+    print("Eigen vector")
+    print(eV)
+    print("Hessian")
+    print(Hessian)
+    print("HessianInv")
+    print(HessLen2DInv)
+    print("Corr")
+    print(Corr)
+    print("Grad")
+    print(Grad)
+    print("")
     if DEnergy <= 0.0:
         ColoRR=bcolors.OKGREEN
     else:
         ColoRR=bcolors.FAIL
+        
 
     print(ColoRR, guessScale, DEnergy, NEnergy, OEnergy, bcolors.ENDC)
     #break
