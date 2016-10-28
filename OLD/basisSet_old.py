@@ -70,7 +70,7 @@ file.close()
 #>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 DEnergy=9999999999.99
 counter=0
-Tau = 0.375
+Tau = 0.35 
 while True: #counter < 2: #DEnergy > CurrCutOff:
     counter+=1
     #Calculate the initial energy
@@ -300,25 +300,25 @@ while True: #counter < 2: #DEnergy > CurrCutOff:
     NEnergy=Get_Energy(EnergyFileF,cpu,Z,args.charge,args.theory,args.basis,guessScale)
     DEnergy=NEnergy-OEnergy
 
-    print("npGrad")
-    print(npGrad)
+    #print("npGrad")
+    #print(npGrad)
     npGradT = transpose(npGrad)
-    print("npGradT")
-    print(npGradT)
-    print("npCorr")
-    print(npCorr)
+    #print("npGradT")
+    #print(npGradT)
+    #print("npCorr")
+    #print(npCorr)
     dGT_C = dot(npGradT, npCorr)
-    print("First dot")
-    print(dGT_C)
+    #print("First dot")
+    #print(dGT_C)
     dGT_C = dGT_C.tolist()[0][0]
-    print("To list")
-    print(dGT_C)
+    #print("To list")
+    #print(dGT_C)
  
     dCT_H_C = dot(dot(transpose(npCorr), npHessian), npCorr)
-    print("dCT_H_C")
-    print(dCT_H_C)
+    #print("dCT_H_C")
+    #print(dCT_H_C)
     dCT_H_C = dCT_H_C.tolist()[0][0]
-    print(dCT_H_C)
+    #print(dCT_H_C)
 
     Ro = DEnergy / (dGT_C + 0.5 * dCT_H_C)
     print("Ro")
@@ -331,13 +331,16 @@ while True: #counter < 2: #DEnergy > CurrCutOff:
     
 
     if Ro > 0.75 and Tau < (normCorr * 5.0 / 4.0):
-        print("Tau is doubled")
+        print("Tau is doubled to:")
         Tau = 2.0 * Tau
+        print(Tau)
     elif Ro < 0.25:
         print("Tau = 1/4 |dX|")
         Tau = (1.0 / 4.0) * normCorr
+        print(Tau)
     else:
         print("Tau is not changed")
+        print(Tau)
 
 
     if DEnergy <= 0.0:
@@ -346,7 +349,7 @@ while True: #counter < 2: #DEnergy > CurrCutOff:
         ColoRR=bcolors.FAIL
         
 
-    print(ColoRR, guessScale, DEnergy, NEnergy, OEnergy, bcolors.ENDC)
+    print(ColoRR, counter, guessScale, DEnergy, NEnergy, OEnergy, bcolors.ENDC)
     #break
     # store the new scale values 
     file=open(GuessFile,'w')
