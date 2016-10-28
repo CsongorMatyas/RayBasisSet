@@ -3,7 +3,7 @@ import argparse, sys, os.path
 import subprocess
 from joblib import Parallel, delayed
 from elementMod import *
-from numpy import matrix, dot, reshape, shape, zeros, linalg, diag
+from numpy import matrix, dot, reshape, shape, zeros, linalg, diag, sqrt, transpose
 __author__ = 'Ray Group'
  
 parser = argparse.ArgumentParser(description='Basis Sets project')
@@ -16,7 +16,8 @@ parser.add_argument('-s','--initial',help='Initial scale values', required=False
 parser.add_argument('-l','--limit',help='Cutoff limit', required=False, type=float, default=-1.0e-6)
 parser.add_argument('-p','--parWith',help='Parallel processing within gaussian input', required=False, type=int, default=1)
 parser.add_argument('-j','--parFile',help='Parallel processing for multiple gaussian files', required=False, type=int, default=4)
-parser.add_argument('-m','--parser',help='Parallel or serial', required=False, default="P")
+parser.add_argument('-g','--gamma',help='Base gamma coefficient value', required=False, type=float, default=0.1)
+
 args = parser.parse_args()
 
 
@@ -69,9 +70,10 @@ file.close()
 #>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 DEnergy=9999999999.99
 counter=0
+Tau = 0.375
 while True: #counter < 2: #DEnergy > CurrCutOff:
     counter+=1
-    # Calculate the initial energy
+    #Calculate the initial energy
     OEnergy=Get_Energy(EnergyFileI,cpu,Z,args.charge,args.theory,args.basis,guessScale)
     print("OEnergy", OEnergy)    
     ### Generate Scale values to find Gradiant
@@ -134,13 +136,15 @@ while True: #counter < 2: #DEnergy > CurrCutOff:
     ENPScales = CreateEEScales(Nr_of_scales, -DeltaVal, DeltaVal, guessScale, Indices)
     EPNScales = CreateEEScales(Nr_of_scales, DeltaVal, -DeltaVal, guessScale, Indices)
     ENNScales = CreateEEScales(Nr_of_scales, -DeltaVal, -DeltaVal, guessScale, Indices)
-
+    
+    """
     print(E2PScales)
     print(E2MScales)
     print(EPPScales)
     print(ENPScales)
     print(EPNScales)
     print(ENNScales)
+    """
 
     sorted_hessian = []
     sorted_hessian.extend(E2PScales)
@@ -163,7 +167,7 @@ while True: #counter < 2: #DEnergy > CurrCutOff:
         for index,sto_out in enumerate(sorted_gradient))
     EnergyGrad={} 
     EnergyGrad={t[0]:round(t[1], 15) for t in ll}
-    print("Gradiant E", EnergyGrad) 
+    #print("Gradiant E", EnergyGrad) 
     
     # calculate Gradiant
     Grad=[]
@@ -171,15 +175,15 @@ while True: #counter < 2: #DEnergy > CurrCutOff:
     for val in range(0, GradMatLen, 2):
         Grad.append(round((float(EnergyGrad[val])-float(EnergyGrad[val + 1]))/(2.0*DeltaVal), 15))
     
-    if any(val==0.0 for val in Grad):
-        print(bcolors.FAIL,"\nSTOP STOP: Gradiant contains Zero values",bcolors.ENDC,"\n", Grad)
-        # sys.exit()
+    if sqrt(sum(map(lambda x:x*x,Grad))) < 1.0e-8:
+        print(bcolors.FAIL,"\nSTOP STOP:Sum of Gradiant`s squares is Zero ",bcolors.ENDC,"\n", Grad)
+        sys.exit()
     #Hessian
     ll=Parallel(n_jobs=args.parFile)(delayed(EnergyPar)('Hess',cpu,Z,args.charge,args.theory,args.basis,sto_out,index,EleName) 
         for index,sto_out in enumerate(sorted_hessian))
     EnergyHess={}
     EnergyHess={t[0]:round(t[1], 15) for t in ll}
-    print("Hess E", EnergyHess) 
+    #print("Hess E", EnergyHess) 
         
     
     # calculate Hessian
@@ -226,67 +230,59 @@ while True: #counter < 2: #DEnergy > CurrCutOff:
     #print("gradient:-", Grad)
     #print("hessian:-", Hessian)
     #break
-    HessLen2DInv = matrix(Hessian).I
-    HessLen2DInv=HessLen2DInv.tolist()
-    
-    Corr=dot(matrix(Grad),matrix(HessLen2DInv))
-    Corr=Corr.tolist()[0]
 
     npHessian = zeros((len(Hessian), len(Hessian)))
     npHessian = matrix(npHessian)
-    
 
     for i in range(len(Hessian)):
         for j in range(len(Hessian)):
             npHessian[i, j] = Hessian[i][j]
     eW, eV = linalg.eig(npHessian)
-
-    Cond1 = eW[0]
-    Cond2 = eW[1]
-
-    newguessScale= guessScale
-
-    if Cond1 > 0:
-        if Cond2 > 0:
-            newguessScale[0] = guessScale[0] - Corr[0]
-            newguessScale[1] = guessScale[1] - Corr[1]
-        else:
-            newguessScale[0] = guessScale[0] - Corr[0]
-            newguessScale[1] = guessScale[1] + Corr[1]
-    else:
-        if Cond2 > 0:
-            newguessScale[0] = guessScale[0] + Corr[0]
-            newguessScale[1] = guessScale[1] - Corr[1] 
-        else:
-            newguessScale[0] = guessScale[0] + Corr[0]
-            newguessScale[1] = guessScale[1] + Corr[1]
-    print(guessScale)
-    guessScale = newguessScale
-    print(guessScale)
+    ew = min(eW)
     
-    #guessScale=[float(i) - float(j) for i, j in zip(guessScale, Corr)] 
-    # calculate the new energy
-    NEnergy=Get_Energy(EnergyFileF,cpu,Z,args.charge,args.theory,args.basis,guessScale)
-    DEnergy=NEnergy-OEnergy
-    
-    npHessian = zeros((len(Hessian), len(Hessian)))
-    npHessian = matrix(npHessian)
-    #print(npHessian)
-        
-    for i in range(len(Hessian)):
-        for j in range(len(Hessian)):
-            npHessian[i, j] = Hessian[i][j]
+    print("Hessian")
+    print(Hessian)
+    print("npHessian")
+    print(npHessian)
+    print(len(npHessian))
 
-    #print(npHessian)
-    #print(Hessian)
-    #print(type(npHessian))
-
-    eW, eV = linalg.eig(npHessian)
-    
-    print("Eigen value")
+    print("First eW")
     print(eW)
-    print("Eigen vector")
-    print(eV)
+    print("First ew")
+    print(ew)
+
+    loop = 1
+
+    while loop > 0:
+        if ew > 0.0:
+            loop = -1
+        else:
+            Lambda = ew - Tau #0.1 #+ (ew / 10.0)
+            LHessian = npHessian.copy()
+            print("Hessian")
+            print(npHessian)
+            for i in range(len(npHessian)):
+                LHessian[i, i] = npHessian[i, i] - Lambda
+            print("LHessian")
+            print(LHessian)
+            npHessian = LHessian.copy()
+            eW, eV = linalg.eig(npHessian)
+            ew = min(eW)
+            print("Lambda")
+            print(Lambda)
+            print("Smallest eigenvalue")
+            print(ew)
+            print("Eigenvalues")
+            print(eW)
+            print("")
+
+    HessLen2DInv = npHessian.I
+    npGrad = transpose(matrix(Grad))
+    npCorr=dot(HessLen2DInv, npGrad)
+    Corr=transpose(npCorr).tolist()[0]
+
+    guessScale=[float(i) - float(j) for i, j in zip(guessScale, Corr)] 
+    
     print("Hessian")
     print(Hessian)
     print("HessianInv")
@@ -295,7 +291,55 @@ while True: #counter < 2: #DEnergy > CurrCutOff:
     print(Corr)
     print("Grad")
     print(Grad)
+    print("New guess scale")
+    print(guessScale)
     print("")
+
+
+    # calculate the new energy
+    NEnergy=Get_Energy(EnergyFileF,cpu,Z,args.charge,args.theory,args.basis,guessScale)
+    DEnergy=NEnergy-OEnergy
+
+    print("npGrad")
+    print(npGrad)
+    npGradT = transpose(npGrad)
+    print("npGradT")
+    print(npGradT)
+    print("npCorr")
+    print(npCorr)
+    dGT_C = dot(npGradT, npCorr)
+    print("First dot")
+    print(dGT_C)
+    dGT_C = dGT_C.tolist()[0][0]
+    print("To list")
+    print(dGT_C)
+ 
+    dCT_H_C = dot(dot(transpose(npCorr), npHessian), npCorr)
+    print("dCT_H_C")
+    print(dCT_H_C)
+    dCT_H_C = dCT_H_C.tolist()[0][0]
+    print(dCT_H_C)
+
+    Ro = DEnergy / (dGT_C + 0.5 * dCT_H_C)
+    print("Ro")
+    print(Ro)
+    print(type(Ro))
+    print("DEnergy")
+    print(DEnergy)
+    
+    normCorr = linalg.norm(npCorr)
+    
+
+    if Ro > 0.75 and Tau < (normCorr * 5.0 / 4.0):
+        print("Tau is doubled")
+        Tau = 2.0 * Tau
+    elif Ro < 0.25:
+        print("Tau = 1/4 |dX|")
+        Tau = (1.0 / 4.0) * normCorr
+    else:
+        print("Tau is not changed")
+
+
     if DEnergy <= 0.0:
         ColoRR=bcolors.OKGREEN
     else:
@@ -309,3 +353,28 @@ while True: #counter < 2: #DEnergy > CurrCutOff:
     for val in guessScale:
         file.write(str(val)+'\n')
     file.close()
+
+
+
+    """
+    Cond1 = eW[0]
+    Cond2 = eW[1]
+
+    newguessScale = guessScale
+
+    if Cond1 > 0:
+        if Cond2 > 0:
+            newguessScale[0] = guessScale[0] - Corr[0]
+            newguessScale[1] = guessScale[1] - Corr[1]
+        else:
+            newguessScale[1] = guessScale[1] - (Corr[1] * args.gamma)
+    else:
+        if Cond2 > 0:
+            newguessScale[0] = guessScale[0] - (Corr[0] * args.gamma)
+        else:
+            newguessScale[0] = guessScale[0] - (Corr[0] * args.gamma)
+            newguessScale[1] = guessScale[1] - (Corr[1] * args.gamma)
+    print(guessScale)
+    guessScale = newguessScale
+    print(guessScale)
+    """
