@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 import numpy as np
-import argparse, sys, os, subprocess, joblib
+import argparse, sys, os, subprocess, joblib, math
 #from scipy.optimize import minimize
 
 __author__ = "Raymond Poirier's Group - Ahmad Alrawashdeh, Ibrahim Awad, Csongor Matyas"
@@ -194,9 +194,9 @@ def GenerateInput(CPU, Z, Charge, Method, BasisSet, Scaling_factors):
 #Functions related to energy and gradient / hessian
 ############################################################################################################################
 
-def Get_Energy(FileName, CPU, Z, Charge, Method, BasisSet, guessScale):
+def Get_Energy(FileName, CPU, Z, Charge, Method, BasisSet, Scales):
     file=open(FileName+'.gjf','w')
-    file.write(GenerateInput(CPU, Z, Charge, Method, BasisSet, guessScale) + '\n\n')
+    file.write(GenerateInput(CPU, Z, Charge, Method, BasisSet, Scales) + '\n\n')
     file.close()
     
     #subprocess.call('GAUSS_SCRDIR="/nqs/$USER"\n', shell=True)
@@ -212,14 +212,14 @@ def Get_Energy(FileName, CPU, Z, Charge, Method, BasisSet, guessScale):
          sys.exit(0)
     return EnergyNUM
 
-def GetGradientScales(Delta, guessScale):
+def GetGradientScales(Delta, Scales):
     Gradient_scales = []
     Sorted_Gradient_scales = []
-    for i in range(len(guessScale)):
-        plus = guessScale[:]
-        plus[i] = round(guessScale[i] + Delta, 15)
-        minus = guessScale[:]
-        minus[i] = round(guessScale[i] - Delta, 15)
+    for i in range(len(Scales)):
+        plus = Scales[:]
+        plus[i] = round(Scales[i] + Delta, 15)
+        minus = Scales[:]
+        minus[i] = round(Scales[i] - Delta, 15)
         Gradient_scales.append([plus, minus])
         Sorted_Gradient_scales.append(plus)
         Sorted_Gradient_scales.append(minus)
@@ -238,34 +238,34 @@ def CreateIndices(Nr_of_scales):
                Indices.append([i, j])
     return(Indices, Diagonal)
 
-def CreateE2Scales(Nr_of_scales, Delta, guessScale):
+def CreateE2Scales(Nr_of_scales, Delta, Scales):
     E2Scales = []
     for i in range(Nr_of_scales):
         iScales = np.zeros(Nr_of_scales).tolist()
         for j in range(Nr_of_scales):
-            iScales[j] = guessScale[j]
+            iScales[j] = Scales[j]
         iScales[i] = iScales[i] + 2 * Delta
         E2Scales.append(iScales)
     return(E2Scales)
 
-def CreateEEScales(Nr_of_scales, Delta1, Delta2, guessScale, Indices):
+def CreateEEScales(Nr_of_scales, Delta1, Delta2, Scales, Indices):
     EEScales = []
     for (i, j) in Indices:
         ijScales = np.zeros(Nr_of_scales).tolist()
         for k in range(Nr_of_scales):
-            ijScales[k] = guessScale[k]
+            ijScales[k] = Scales[k]
         ijScales[i] = ijScales[i] + Delta1
         ijScales[j] = ijScales[j] + Delta2
         EEScales.append(ijScales)
     return(EEScales)
 
-def GetHessianScales(Nr_of_scales, Delta, guessScale, Indices):
-    E2PScales = CreateE2Scales(Nr_of_scales, Delta, guessScale)
-    E2MScales = CreateE2Scales(Nr_of_scales, -Delta, guessScale)
-    EPPScales = CreateEEScales(Nr_of_scales, Delta, Delta, guessScale, Indices)
-    ENPScales = CreateEEScales(Nr_of_scales, -Delta, Delta, guessScale, Indices)
-    EPNScales = CreateEEScales(Nr_of_scales, Delta, -Delta, guessScale, Indices)
-    ENNScales = CreateEEScales(Nr_of_scales, -Delta, -Delta, guessScale, Indices)
+def GetHessianScales(Nr_of_scales, Delta, Scales, Indices):
+    E2PScales = CreateE2Scales(Nr_of_scales, Delta, Scales)
+    E2MScales = CreateE2Scales(Nr_of_scales, -Delta, Scales)
+    EPPScales = CreateEEScales(Nr_of_scales, Delta, Delta, Scales, Indices)
+    ENPScales = CreateEEScales(Nr_of_scales, -Delta, Delta, Scales, Indices)
+    EPNScales = CreateEEScales(Nr_of_scales, Delta, -Delta, Scales, Indices)
+    ENNScales = CreateEEScales(Nr_of_scales, -Delta, -Delta, Scales, Indices)
 
     Sorted_Hessian_scales = []
     Sorted_Hessian_scales.extend(E2PScales)
@@ -310,27 +310,27 @@ def Initiate(arguments):
     if arguments.Scales is not None:
         if stoLen == len(arguments.Scales):
             print("The guess values ", arguments.Scales)
-            guessScale = arguments.Scales
+            Scales = arguments.Scales
         else:
             print(bcolors.FAIL,"\nSTOP STOP: number of guess values should be ", stoLen,bcolors.ENDC)
             sys.exit()
     elif os.path.isfile(GuessFile):
-            guessScale=[]
+            Scales=[]
             File = open(GuessFile, 'r')
             for line in File:
-                guessScale.append(float(line.rstrip('\n')))
+                Scales.append(float(line.rstrip('\n')))
             File.close()
-            print("The guess values (From the File) are ", guessScale)
+            print("The guess values (From the File) are ", Scales)
     else:
-            guessScale = [1.0] * stoLen
-            print("The guess values (Default Values) are ", guessScale)
-    Nr_of_scales = len(guessScale)
+            Scales = [1.0] * stoLen
+            print("The guess values (Default Values) are ", Scales)
+    Nr_of_scales = len(Scales)
 
-    return(Z, ElementName, CPU, Limit, Delta, GuessFile, EnergyFileI, EnergyFileF, sto, guessScale, Nr_of_scales)
+    return(Z, ElementName, CPU, Limit, Delta, GuessFile, EnergyFileI, EnergyFileF, sto, Scales, Nr_of_scales)
 
-def WriteGuessScales(GuessFile, guessScale):
+def WriteScales(GuessFile, Scales):
     File = open(GuessFile,'w')
-    for val in guessScale:
+    for val in Scales:
         File.write(str(val) + '\n')
     File.close()
 
@@ -340,14 +340,16 @@ def GetGradientEnergies(arguments, CPU, Z, ElementName, Delta, Nr_of_scales, Sor
     GradientEnergyDictionary={} 
     GradientEnergyDictionary={t[0]:round(t[1], 15) for t in ll}
 
-    Gradient=[]
+    GradientList=[]
     for val in range(0, len(GradientEnergyDictionary), 2):
-        Gradient.append(round((float(GradientEnergyDictionary[val]) - float(GradientEnergyDictionary[val + 1])) / (2.0 * Delta), 15))
-        
-    if any(val==0.0 for val in Gradient):
-        print(bcolors.FAIL,"\nSTOP STOP: Gradiant contains Zero values", bcolors.ENDC, "\n", Gradient)
+        GradientList.append(round((float(GradientEnergyDictionary[val]) - float(GradientEnergyDictionary[val + 1])) / (2.0 * Delta), 15))
+    
+    Gradient = np.transpose(np.matrix(GradientList))
+
+    if any(val==0.0 for val in GradientList):
+        print(bcolors.FAIL,"\nSTOP STOP: Gradiant contains Zero values", bcolors.ENDC, "\n", GradientList)
         sys.exit(0)
-    return(GradientEnergyDictionary, Gradient)
+    return(GradientEnergyDictionary, GradientList, Gradient)
 
 def GetHessianEnergies(arguments, CPU, Z, ElementName, Delta, Nr_of_scales, Sorted_Hessian_scales, EPPScales, E0):
     ll=joblib.Parallel(n_jobs=arguments.ParallelProc)(joblib.delayed(EnergyParallel)('Hess',CPU,Z,arguments.Charge,arguments.Method,arguments.BasisSet,sto_out,index,ElementName) 
@@ -377,88 +379,162 @@ def GetHessianEnergies(arguments, CPU, Z, ElementName, Delta, Nr_of_scales, Sort
     for i in range(len(HessianEPP)):
         HessianUpT.append((HessianEPP[i] - HessianENP[i] - HessianEPN[i] + HessianENN[i]) / ((2.0*Delta)**2))
 
-    Hessian = np.zeros((Nr_of_scales, Nr_of_scales)).tolist()
+    HessianList = np.zeros((Nr_of_scales, Nr_of_scales)).tolist()
     
     for i in range(Nr_of_scales):
         for j in range(Nr_of_scales):
             if i == j:
-                Hessian[i][i] = HessianDiagonal[i]
+                HessianList[i][i] = HessianDiagonal[i]
                 continue
             elif i < j:
-                Hessian[i][j] = HessianUpT[i * (Nr_of_scales - i - 1) + j - 1]
+                HessianList[i][j] = HessianUpT[i * (Nr_of_scales - i - 1) + j - 1]
                 continue
             elif i > j:
-                Hessian[i][j] = HessianUpT[j * (Nr_of_scales - j - 1) + i - 1]
+                HessianList[i][j] = HessianUpT[j * (Nr_of_scales - j - 1) + i - 1]
                 continue
             else:
                 print("Wrong value!")
-    return(HessianEnergyDictionary, HessianEnergies, Hessian)
+    Hessian = np.zeros((len(HessianList), len(HessianList)))
+    Hessian = np.matrix(Hessian)
+
+    for i in range(len(HessianList)):
+        for j in range(len(HessianList)):
+            Hessian[i, j] = HessianList[i][j]
+
+    return(HessianEnergyDictionary, HessianEnergies, HessianList, Hessian)
 
 def Main():
     arguments = Arguments()
-    Z, ElementName, CPU, Limit, Delta, GuessFile, EnergyFileI, EnergyFileF, sto, guessScale, Nr_of_scales = Initiate(arguments)
-    WriteGuessScales(GuessFile, guessScale)
+    Z, ElementName, CPU, Limit, Delta, GuessFile, EnergyFileI, EnergyFileF, sto, Scales, Nr_of_scales = Initiate(arguments)
+    WriteScales(GuessFile, Scales)
 
-    DEnergy=9999999999.99
     E0 = 0.0
-    while abs(DEnergy) > abs(Limit):
+    Tau = 0.35
+    Convergence_criteria = 100.0
+
+    while Convergence_criteria > Limit:
         #Calculating the initial energy
         if E0 == 0.0:
-            E0 = Get_Energy(EnergyFileI,CPU,Z,arguments.Charge,arguments.Method,arguments.BasisSet,guessScale)
+            E0 = Get_Energy(EnergyFileI,CPU,Z,arguments.Charge,arguments.Method,arguments.BasisSet,Scales)
         else:
             continue
         
         #Generating scales for the gradient and hessian
         Indices, Diagonal = CreateIndices(Nr_of_scales)
-        Gradient_scales, Sorted_Gradient_scales = GetGradientScales(Delta, guessScale)
-        E2PScales, E2MScales, EPPScales, ENPScales, EPNScales, ENNScales, Sorted_Hessian_scales = GetHessianScales(Nr_of_scales, Delta, guessScale, Indices)
+        Gradient_scales, Sorted_Gradient_scales = GetGradientScales(Delta, Scales)
+        E2PScales, E2MScales, EPPScales, ENPScales, EPNScales, ENNScales, Sorted_Hessian_scales = GetHessianScales(Nr_of_scales, Delta, Scales, Indices)
 
         #Generating Gaussian input file and running them
         #Gradient
-        GradientEnergyDictionary, Gradient = GetGradientEnergies(arguments, CPU, Z, ElementName, Delta, Nr_of_scales, Sorted_Gradient_scales)
+        GradientEnergyDictionary, GradientList, Gradient = GetGradientEnergies(arguments, CPU, Z, ElementName, Delta, Nr_of_scales, Sorted_Gradient_scales)
         
         #Hessian
-        HessianEnergyDictionary, HessianEnergies, Hessian = GetHessianEnergies(arguments, CPU, Z, ElementName, Delta, Nr_of_scales, Sorted_Hessian_scales, EPPScales, E0)
+        HessianEnergyDictionary, HessianEnergies, HessianList, Hessian = GetHessianEnergies(arguments, CPU, Z, ElementName, Delta, Nr_of_scales, Sorted_Hessian_scales, EPPScales, E0)
 
-        print(Gradient)
+        eW, eV = np.linalg.eig(Hessian)
+        ew = min(eW)
+
+        print("Hessian")
         print(Hessian)
-        break
-        HessLen2DInv = np.matrix(Hessian).I
-        HessLen2DInv=HessLen2DInv.tolist()
+        print("npHessian")
+        print(Hessian)
+        print(len(Hessian))
+
+        print("First eW")
+        print(eW)
+        print("First ew")
+        print(ew)
+
+        loop = 1
+
+        while loop > 0:
+            if ew > 0.0:
+                loop = -1
+            else:
+                Lambda = ew - Tau #0.1 #+ (ew / 10.0)
+                ShiftedHessian = Hessian.copy()
+                print("Hessian")
+                print(Hessian)
+                for i in range(len(Hessian)):
+                    ShiftedHessian[i, i] = Hessian[i, i] - Lambda
+                print("ShiftedHessian")
+                print(ShiftedHessian)
+                Hessian = ShiftedHessian.copy()
+                eW, eV = np.linalg.eig(Hessian)
+                ew = min(eW)
+                print("Lambda")
+                print(Lambda)
+                print("Smallest eigenvalue")
+                print(ew)
+                print("Eigenvalues")
+                print(eW)
+                print("")
+
+        HessianInverse = Hessian.I
         
-        Corr=np.dot(np.matrix(Gradient),np.matrix(HessLen2DInv))
-        Corr=Corr.tolist()[0]
+        dX = np.dot(HessianInverse, Gradient)
+        dXList = np.transpose(dX).tolist()[0]
+
+        Scales=[float(i) - float(j) for i, j in zip(Scales, dXList)]
         
-        guessScale=[float(i) - float(j) for i, j in zip(guessScale, Corr)]
+        print("Hessian")
+        print(Hessian)
+        print("HessianInverse")
+        print(HessianInverse)
+        print("dX")
+        print(dX)
+        print("Gradient")
+        print(Gradient)
+        print("New guess scale")
+        print(Scales)
+        print("")
 
         #Calculating the new energy
-        NEnergy=Get_Energy(EnergyFileF,CPU,Z,arguments.Charge,arguments.Method,arguments.BasisSet,guessScale)
+        NEnergy=Get_Energy(EnergyFileF,CPU,Z,arguments.Charge,arguments.Method,arguments.BasisSet,Scales)
 
         DEnergy=NEnergy-E0
 
-        #print("Hessian")
-        #print(Hessian)
-        #print("HessianInv")
-        #print(HessLen2DInv)
-        #print("Corr")
-        #print(Corr)
-        #print("Gradient")
-        #print(Gradient)
-        #print("")
-        #break
+        Ro = DEnergy / (np.dot(np.transpose(Gradient), dX) + 0.5 * np.dot(np.dot(np.transpose(dX), Hessian), dX))
+
+        print("Ro")
+        print(Ro)
+        print(type(Ro))
+        print("DEnergy")
+        print(DEnergy)
+        
+        magnitude_dX = np.linalg.norm(dX)
+        
+        if Ro > 0.75 and Tau < (magnitude_dX * 5.0 / 4.0):
+            print("Tau is doubled to:")
+            Tau = 2.0 * Tau
+            print(Tau)
+        elif Ro < 0.25:
+            print("Tau = 1/4 |dX|")
+            Tau = (1.0 / 4.0) * magnitude_dX
+            print(Tau)
+        else:
+            print("Tau is not changed")
+            print(Tau)
 
         if DEnergy <= 0.0:
             ColoRR=bcolors.OKGREEN
         else:
             ColoRR=bcolors.FAIL
 
-        print(ColoRR, guessScale, Gradient, DEnergy, NEnergy, E0, bcolors.ENDC)
+        print(ColoRR, Scales, Gradient, DEnergy, NEnergy, E0, bcolors.ENDC)
 
         #Saving the new E0
         E0 = NEnergy
 
         #Storing the new scale values
-        WriteGuessScales(GuessFile, guessScale) 
+        WriteScales(GuessFile, Scales)
+
+        SumOfSquaredGradientValues = 0.0
+
+        for i in range(len(GradientList)):
+            SumOfSquaredGradientValues += (GradientList[i] * GradientList[i]) 
+
+        Convergence_criteria = math.sqrt(SumOfSquaredGradientValues)
 
 if __name__ == "__main__":
     Main()
