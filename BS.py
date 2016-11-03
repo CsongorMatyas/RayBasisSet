@@ -1,25 +1,25 @@
 #!/usr/bin/env python
 import numpy as np
-from scipy.optimize import minimize
-import argparse, sys, os.path, subprocess
-from joblib import Parallel, delayed
+import argparse, sys, os, subprocess, joblib
+#from scipy.optimize import minimize
 
 __author__ = "Raymond Poirier's Group - Ahmed Alravashdeh, Ibrahim Awad, Csongor Matyas"
 
 def Arguments():
     parser = argparse.ArgumentParser(description='Basis Sets project')
-    parser.add_argument('-e','--element', help='Input element atomic number', type=int, required=True)
-    parser.add_argument('-b','--BasisSet',help='Basis set', required=False, default="6-31G")
-    parser.add_argument('-m','--Method',help='Level of theory', required=False, default="UHF")
-    parser.add_argument('-d','--delta',help='The value of delta', required=False, type=float, default=0.001)
-    parser.add_argument('-c','--charge',help='The charge', required=False, type=int, default=0)
-    parser.add_argument('-s','--initial',help='Initial scale values', required=False, type=float, nargs='+')
-    parser.add_argument('-l','--limit',help='Cutoff limit', required=False, type=float, default=1.0e-6)
-    parser.add_argument('-p','--parWith',help='Parallel processing within gaussian input', required=False, type=int, default=1)##############Need better name
-    parser.add_argument('-j','--parFile',help='Parallel processing for multiple gaussian files', required=False, type=int, default=4) #######Need better name
+    parser.add_argument('-e','--Element',     required=True, type=int,  help='Input element atomic number')
+    parser.add_argument('-c','--Charge',      required=False,type=int,  help='The charge',                       default=0)
+    parser.add_argument('-m','--Method',      required=False,type=str,  help='Level of theory',                  default="UHF")
+    parser.add_argument('-b','--BasisSet',    required=False,type=str,  help='Basis set',                        default="6-31G")
+    parser.add_argument('-P','--GaussianProc',required=False,type=int,  help='Number of processors for Gaussian',default=2)
+    parser.add_argument('-p','--ParallelProc',required=False,type=int,  help='Total number of processors used',  default=4)
+    parser.add_argument('-s','--Scales',      required=False,type=float,help='Initial scale values',             nargs='+')
+    parser.add_argument('-D','--Delta',       required=False,type=float,help='The value of Delta',               default=0.001)
+    parser.add_argument('-l','--Limit',       required=False,type=float,help='Error limit',                      default=1.0e-6)
+    parser.add_argument('-G','--Gamma',       required=False,type=float,help='Base gamma coefficient value',     default=0.1)
 
-    args = parser.parse_args()
-    return(args)
+    arguments = parser.parse_args()
+    return(arguments)
 
 class bcolors:
     HEADER = '\033[95m'
@@ -42,14 +42,14 @@ def GetElementSymbol(Z):
     elif Z> 92:
         print('Error: the atomic number is greater than 92 (Z>92)\nProgram Exit ):')
         sys.exit(0)
-    element=['H ',                                                                       'He', 
+    Element=['H ',                                                                       'He', 
     'Li','Be',                                                  'B ','C ','N ','O ','F ','Ne', 
     'Na','Mg',                                                  'Al','Si','P ','S ','Cl','Ar', 
     'K ','Ca','Sc','Ti','V ','Cr','Mn','Fe','Co','Ni','Cu','Zn','Ga','Ge','As','Se','Br','Kr', 
     'Rb','Sr','Y ','Zr','Nb','Mo','Tc','Ru','Rh','Pd','Ag','Cd','In','Sn','Sb','Te','I ','Xe', 
     'Cs','Ba','La','Ce','Pr','Nd','Pm','Sm','Eu','Gd','Tb','Dy','Ho','Er','Tm','Yb','Lu','Hf', 
     'Ta','W ','Re','Os','Ir','Pt','Au','Hg','Tl','Pb','Bi','Po','At','Rn','Fr','Ra','Ac','Th','Pa','U ']
-    return element[Z - 1]
+    return Element[Z - 1]
 
 
 def GetElementName(Z):
@@ -59,7 +59,7 @@ def GetElementName(Z):
     elif Z > 92:
         print('Error: the atomic number is greater than 92 (Z>92)\nProgram Exit ):')
         sys.exit(0)
-    element=['HYDROGEN    ','HELIUM      ','LITHIUM     ','BERYLLIUM   ', 
+    Element=['HYDROGEN    ','HELIUM      ','LITHIUM     ','BERYLLIUM   ', 
     'BORON       ','CARBON      ','NITROGEN    ','OXYGEN      ', 
     'FLUORINE    ','NEON        ','SODIUM      ','MAGNESIUM   ', 
     'ALUMINUM    ','SILICON     ','PHOSPHORUS  ','SULFUR      ', 
@@ -83,7 +83,7 @@ def GetElementName(Z):
     'Bismuth     ','Polonium    ','Astatine    ','Radon       ', 
     'Francium    ','Radium      ','Actinium    ','Thorium     ', 
     'Protactinium','Uranium     ']
-    return element[Z - 1]
+    return Element[Z - 1]
 
 def GetElementGroupPeriod(Z):
     if Z == 0:
@@ -177,8 +177,8 @@ def GenerateCartesianCoordinates(Z):
     CartesianCoordinates = GetElementSymbol(Z).strip() + ' 0\n'
     return CartesianCoordinates
     
-def GenerateInput(cpu, Z, Charge, Method, BasisSet, Scaling_factors):
-    inputtext = '%NPROCS=' + str(cpu) + '\n' + GenerateFirstLine(Method)
+def GenerateInput(CPU, Z, Charge, Method, BasisSet, Scaling_factors):
+    inputtext = '%NPROCS=' + str(CPU) + '\n' + GenerateFirstLine(Method)
     inputtext += GenerateTitle(Z, Scaling_factors)
     inputtext += GenerateChargeMultiplicity(Z, Charge)
     inputtext += GenerateZMatrix(Z)
@@ -191,12 +191,12 @@ def GenerateInput(cpu, Z, Charge, Method, BasisSet, Scaling_factors):
     return inputtext
 
 ############################################################################################################################
-#Functions related to energy and gradien / hessian
+#Functions related to energy and gradient / hessian
 ############################################################################################################################
 
-def Get_Energy(FileName, cpu, Z, Charge, Method, BasisSet, guessScale):
+def Get_Energy(FileName, CPU, Z, Charge, Method, BasisSet, guessScale):
     file=open(FileName+'.gjf','w')
-    file.write(GenerateInput(cpu, Z, Charge, Method, BasisSet, guessScale) + '\n\n')
+    file.write(GenerateInput(CPU, Z, Charge, Method, BasisSet, guessScale) + '\n\n')
     file.close()
     
     #subprocess.call('GAUSS_SCRDIR="/nqs/$USER"\n', shell=True)
@@ -259,41 +259,41 @@ def CreateEEScales(Nr_of_scales, Delta1, Delta2, guessScale, Indices):
         EEScales.append(ijScales)
     return(EEScales)
 
-def EnergyPar(title,cpu,Z,charge,Method,BasisSet,sto_out,index,ElementName):
-    title2=title+'_'+ElementName.strip()+'_'+args.BasisSet.strip()+'_scale_'+str(index+1)
-    GEnergy=Get_Energy(title2,cpu,Z,charge,Method,BasisSet,sto_out)
-    return [index,GEnergy]
+def EnergyParallel(Title, CPU, Z, Charge, Method, BasisSet, sto_out, index, ElementName):
+    Title = Title+'_'+ElementName.strip()+'_'+arguments.BasisSet.strip()+'_scale_'+str(index+1)
+    Energy = Get_Energy(Title, CPU, Z, Charge, Method, BasisSet, sto_out)
+    return(index, Energy)
 
 ##################################################################################################################################
 #Functions to be used by Main
 ##################################################################################################################################
 
-def Initiate(args):
-    Z = args.element
+def Initiate(arguments):
+    Z = arguments.Element
     ElementName = GetElementName(Z)
-    cpu = args.parWith
-    Limit = args.limit
-    Delta = args.delta
+    CPU = arguments.GaussianProc
+    Limit = arguments.Limit
+    Delta = arguments.Delta
 
     print ("Test element is {}".format(ElementName))
-    print ("Basis set is {}".format(args.BasisSet))
-    print ("Level of theory is {}".format(args.Method))
-    print ("The value of Delta is {}".format(args.delta))
-    print ("The cutoff is {}".format(args.limit))
+    print ("Basis set is {}".format(arguments.BasisSet))
+    print ("Level of theory is {}".format(arguments.Method))
+    print ("The value of Delta is {}".format(arguments.Delta))
+    print ("The cutoff is {}".format(arguments.Limit))
 
     ## files names  ##
-    fileName = str(Z) + '_' + GetElementSymbol(Z).strip() + '_' + args.BasisSet.strip()
+    fileName = str(Z) + '_' + GetElementSymbol(Z).strip() + '_' + arguments.BasisSet.strip()
     GuessFile = 'Guess_' + fileName + '.txt'
     EnergyFileI = 'EnergyI_' + fileName
     EnergyFileF = 'EnergyF_' + fileName
 
-    sto = GetSTO(Z, args.BasisSet)
+    sto = GetSTO(Z, arguments.BasisSet)
     stoLen = len(sto)
 
-    if args.initial is not None:
-        if stoLen == len(args.initial):
-            print("The guess values ", args.initial)
-            guessScale = args.initial
+    if arguments.Scales is not None:
+        if stoLen == len(arguments.Scales):
+            print("The guess values ", arguments.Scales)
+            guessScale = arguments.Scales
         else:
             print(bcolors.FAIL,"\nSTOP STOP: number of guess values should be ", stoLen,bcolors.ENDC)
             sys.exit()
@@ -309,23 +309,23 @@ def Initiate(args):
             print("The guess values (Default Values) are ", guessScale)
     Nr_of_scales = len(guessScale)
 
-    return(Z, ElementName, cpu, Limit, Delta, GuessFile, EnergyFileI, EnergyFileF, sto, guessScale, Nr_of_scales)
+    return(Z, ElementName, CPU, Limit, Delta, GuessFile, EnergyFileI, EnergyFileF, sto, guessScale, Nr_of_scales)
 
-def WriteGuessScale(GuessFile, guessScale):
+def WriteGuessScales(GuessFile, guessScale):
     File = open(GuessFile,'w')
     for val in guessScale:
         File.write(str(val) + '\n')
     File.close()
 
 def Main():
-    args = Arguments()
-    Z, ElementName, cpu, Limit, Delta, GuessFile, EnergyFileI, EnergyFileF, sto, guessScale, Nr_of_scales = Initiate(args)
-    WriteGuessScale(GuessFile, guessScale)
+    arguments = Arguments()
+    Z, ElementName, CPU, Limit, Delta, GuessFile, EnergyFileI, EnergyFileF, sto, guessScale, Nr_of_scales = Initiate(arguments)
+    WriteGuessScales(GuessFile, guessScale)
 
     DEnergy=9999999999.99
     while abs(DEnergy) > abs(Limit):
         # Calculate the initial energy
-        E0 = Get_Energy(EnergyFileI,cpu,Z,args.charge,args.Method,args.BasisSet,guessScale)
+        E0 = Get_Energy(EnergyFileI,CPU,Z,arguments.Charge,arguments.Method,arguments.BasisSet,guessScale)
         
         Indices, Trace = CreateIndices(Nr_of_scales)
         GradientA, sorted_gradient = Gradient(Delta, guessScale)
@@ -346,7 +346,7 @@ def Main():
         sorted_hessian.extend(ENNScales)
         
         ### Generate INPUT FILE and Run the Job ###
-        ll=Parallel(n_jobs=args.parFile)(delayed(EnergyPar)('Grad',cpu,Z,args.charge,args.Method,args.BasisSet,sto_out,index,ElementName)
+        ll=joblib.Parallel(n_jobs=arguments.ParallelProc)(joblib.delayed(EnergyParallel)('Grad',CPU,Z,arguments.Charge,arguments.Method,arguments.BasisSet,sto_out,index,ElementName)
             for index,sto_out in enumerate(sorted_gradient))
         EnergyGrad={} 
         EnergyGrad={t[0]:round(t[1], 15) for t in ll}
@@ -358,17 +358,14 @@ def Main():
             Grad.append(round((float(EnergyGrad[val]) - float(EnergyGrad[val + 1])) / (2.0 * Delta), 15))
         
         if any(val==0.0 for val in Grad):
-            print(bcolors.FAIL,"\nSTOP STOP: Gradiant contains Zero values",bcolors.ENDC,"\n", Grad)
-            sys.exit()
+            print(bcolors.FAIL,"\nSTOP STOP: Gradiant contains Zero values", bcolors.ENDC, "\n", Grad)
+            sys.exit(0)
+
         #Hessian
-        ll=Parallel(n_jobs=args.parFile)(delayed(EnergyPar)('Hess',cpu,Z,args.charge,args.Method,args.BasisSet,sto_out,index,ElementName) 
+        ll=joblib.Parallel(n_jobs=arguments.ParallelProc)(joblib.delayed(EnergyParallel)('Hess',CPU,Z,arguments.Charge,arguments.Method,arguments.BasisSet,sto_out,index,ElementName) 
             for index,sto_out in enumerate(sorted_hessian))
         EnergyHess={}
         EnergyHess={t[0]:round(t[1], 15) for t in ll}
-            
-        
-        # calculate Hessian
-        # one dim hessian
         
         HessianEnergies = []
 
@@ -419,7 +416,7 @@ def Main():
         
         guessScale=[float(i) - float(j) for i, j in zip(guessScale, Corr)] 
         # calculate the new energy
-        NEnergy=Get_Energy(EnergyFileF,cpu,Z,args.charge,args.Method,args.BasisSet,guessScale)
+        NEnergy=Get_Energy(EnergyFileF,CPU,Z,arguments.Charge,arguments.Method,arguments.BasisSet,guessScale)
         DEnergy=NEnergy-E0
 
         #print(Hessian)
@@ -440,7 +437,7 @@ def Main():
         print(ColoRR, guessScale, Grad, DEnergy, NEnergy, E0, bcolors.ENDC)
 
         # store the new scale values
-        WriteGuessScale(GuessFile, guessScale) 
+        WriteGuessScales(GuessFile, guessScale) 
 
 if __name__ == "__main__":
     Main()
