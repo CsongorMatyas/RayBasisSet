@@ -212,31 +212,31 @@ def Get_Energy(FileName, CPU, Z, Charge, Method, BasisSet, guessScale):
          sys.exit(0)
     return EnergyNUM
 
-def Gradient(Delta, guessScale):
-    result = []
-    sorted_gradient = []
+def GetGradientScales(Delta, guessScale):
+    Gradient_scales = []
+    Sorted_Gradient_scales = []
     for i in range(len(guessScale)):
         plus = guessScale[:]
         plus[i] = round(guessScale[i] + Delta, 15)
         minus = guessScale[:]
         minus[i] = round(guessScale[i] - Delta, 15)
-        result.append([plus, minus])
-        sorted_gradient.append(plus)
-        sorted_gradient.append(minus)
-    return(result, sorted_gradient)
+        Gradient_scales.append([plus, minus])
+        Sorted_Gradient_scales.append(plus)
+        Sorted_Gradient_scales.append(minus)
+    return(Gradient_scales, Sorted_Gradient_scales)
 
 def CreateIndices(Nr_of_scales):
     Indices = []
-    Trace = []
+    Diagonal = []
     for i in range(Nr_of_scales):
         for j in range(Nr_of_scales):
             if j < i:
                continue
             elif j == i:
-               Trace.append([i, j])
+               Diagonal.append([i, j])
             else:
                Indices.append([i, j])
-    return(Indices, Trace)
+    return(Indices, Diagonal)
 
 def CreateE2Scales(Nr_of_scales, Delta, guessScale):
     E2Scales = []
@@ -258,6 +258,23 @@ def CreateEEScales(Nr_of_scales, Delta1, Delta2, guessScale, Indices):
         ijScales[j] = ijScales[j] + Delta2
         EEScales.append(ijScales)
     return(EEScales)
+
+def GetHessianScales(Nr_of_scales, Delta, guessScale, Indices):
+    E2PScales = CreateE2Scales(Nr_of_scales, Delta, guessScale)
+    E2MScales = CreateE2Scales(Nr_of_scales, -Delta, guessScale)
+    EPPScales = CreateEEScales(Nr_of_scales, Delta, Delta, guessScale, Indices)
+    ENPScales = CreateEEScales(Nr_of_scales, -Delta, Delta, guessScale, Indices)
+    EPNScales = CreateEEScales(Nr_of_scales, Delta, -Delta, guessScale, Indices)
+    ENNScales = CreateEEScales(Nr_of_scales, -Delta, -Delta, guessScale, Indices)
+
+    Sorted_Hessian_scales = []
+    Sorted_Hessian_scales.extend(E2PScales)
+    Sorted_Hessian_scales.extend(E2MScales)
+    Sorted_Hessian_scales.extend(EPPScales)
+    Sorted_Hessian_scales.extend(ENPScales)
+    Sorted_Hessian_scales.extend(EPNScales)
+    Sorted_Hessian_scales.extend(ENNScales)
+    return(E2PScales, E2MScales, EPPScales, ENPScales, EPNScales, ENNScales, Sorted_Hessian_scales)
 
 def EnergyParallel(Title, CPU, Z, Charge, Method, BasisSet, sto_out, index, ElementName):
     Title = Title+'_'+ElementName.strip()+'_'+arguments.BasisSet.strip()+'_scale_'+str(index+1)
@@ -317,126 +334,130 @@ def WriteGuessScales(GuessFile, guessScale):
         File.write(str(val) + '\n')
     File.close()
 
+def GetGradientEnergies(arguments, CPU, Z, ElementName, Sorted_Gradient_scales):
+    ll=joblib.Parallel(n_jobs=arguments.ParallelProc)(joblib.delayed(EnergyParallel)('Grad',CPU,Z,arguments.Charge,arguments.Method,arguments.BasisSet,sto_out,index,ElementName)
+        for index,sto_out in enumerate(Sorted_Gradient_scales))
+    GradientEnergyDictionary={} 
+    GradientEnergyDictionary={t[0]:round(t[1], 15) for t in ll}
+
+    Gradient=[]
+    for val in range(0, len(GradientEnergyDictionary), 2):
+        Gradient.append(round((float(GradientEnergyDictionary[val]) - float(GradientEnergyDictionary[val + 1])) / (2.0 * Delta), 15))
+        
+    if any(val==0.0 for val in Gradient):
+        print(bcolors.FAIL,"\nSTOP STOP: Gradiant contains Zero values", bcolors.ENDC, "\n", Gradient)
+        sys.exit(0)
+    return(GradientEnergyDictionary, Gradient)
+
+def GetHessianEnergies(arguments, CPU, Z, ElementName, Sorted_Hessian_scales):
+    ll=joblib.Parallel(n_jobs=arguments.ParallelProc)(joblib.delayed(EnergyParallel)('Hess',CPU,Z,arguments.Charge,arguments.Method,arguments.BasisSet,sto_out,index,ElementName) 
+        for index,sto_out in enumerate(Sorted_Hessian_scales))
+    HessianEnergyDictionary={}
+    HessianEnergyDictionary={t[0]:round(t[1], 15) for t in ll}
+    
+    HessianEnergies = []
+
+    for i in range(len(Sorted_Hessian_scales)):
+        HessianEnergies.append(HessianEnergyDictionary[i])
+ 
+    HessianE2P = HessianEnergies[ : Nr_of_scales]
+    HessianE2N = HessianEnergies[Nr_of_scales : 2 * Nr_of_scales]
+    HessianEPP = HessianEnergies[2 * Nr_of_scales : 2 * Nr_of_scales + len(EPPScales)]
+    HessianENP = HessianEnergies[2 * Nr_of_scales + len(EPPScales) : 2 * Nr_of_scales + 2 * len(EPPScales)]
+    HessianEPN = HessianEnergies[2 * Nr_of_scales + 2 * len(EPPScales) : 2 * Nr_of_scales + 3 * len(EPPScales)]
+    HessianENN = HessianEnergies[2 * Nr_of_scales + 3 * len(EPPScales) : ]
+
+    HessianDiagonal = []
+
+    for i in range(Nr_of_scales):
+        HessianDiagonal.append((HessianE2P[i] + HessianE2N[i] - 2*E0) /((2.0*Delta)**2))
+
+    HessianUpT = []
+
+    for i in range(len(HessianEPP)):
+        HessianUpT.append((HessianEPP[i] - HessianENP[i] - HessianEPN[i] + HessianENN[i]) / ((2.0*Delta)**2))
+
+    Hessian = np.zeros((Nr_of_scales, Nr_of_scales)).tolist()
+    
+    for i in range(Nr_of_scales):
+        for j in range(Nr_of_scales):
+            if i == j:
+                Hessian[i][i] = HessianDiagonal[i]
+                continue
+            elif i < j:
+                Hessian[i][j] = HessianUpT[i * (Nr_of_scales - i - 1) + j - 1]
+                continue
+            elif i > j:
+                Hessian[i][j] = HessianUpT[j * (Nr_of_scales - j - 1) + i - 1]
+                continue
+            else:
+                print("Wrong value!")
+    return(HessianEnergyDictionary, HessianEnergies, Hessian)
+
 def Main():
     arguments = Arguments()
     Z, ElementName, CPU, Limit, Delta, GuessFile, EnergyFileI, EnergyFileF, sto, guessScale, Nr_of_scales = Initiate(arguments)
     WriteGuessScales(GuessFile, guessScale)
 
     DEnergy=9999999999.99
+    E0 = 0.0
     while abs(DEnergy) > abs(Limit):
-        # Calculate the initial energy
-        E0 = Get_Energy(EnergyFileI,CPU,Z,arguments.Charge,arguments.Method,arguments.BasisSet,guessScale)
+        #Calculating the initial energy
+        if E0 = 0.0:
+            E0 = Get_Energy(EnergyFileI,CPU,Z,arguments.Charge,arguments.Method,arguments.BasisSet,guessScale)
+        else:
+            continue
         
-        Indices, Trace = CreateIndices(Nr_of_scales)
-        GradientA, sorted_gradient = Gradient(Delta, guessScale)
+        #Generating scales for the gradient and hessian
+        Indices, Diagonal = CreateIndices(Nr_of_scales)
+        Gradient_scales, Sorted_Gradient_scales = GetGradientScales(Delta, guessScale)
+        E2PScales, E2MScales, EPPScales, ENPScales, EPNScales, ENNScales, Sorted_Hessian_scales = GetHessianScales(Nr_of_scales, Delta, guessScale, Indices)
 
-        E2PScales = CreateE2Scales(Nr_of_scales, Delta, guessScale)
-        E2MScales = CreateE2Scales(Nr_of_scales, -Delta, guessScale)
-        EPPScales = CreateEEScales(Nr_of_scales, Delta, Delta, guessScale, Indices)
-        ENPScales = CreateEEScales(Nr_of_scales, -Delta, Delta, guessScale, Indices)
-        EPNScales = CreateEEScales(Nr_of_scales, Delta, -Delta, guessScale, Indices)
-        ENNScales = CreateEEScales(Nr_of_scales, -Delta, -Delta, guessScale, Indices)
-
-        sorted_hessian = []
-        sorted_hessian.extend(E2PScales)
-        sorted_hessian.extend(E2MScales)
-        sorted_hessian.extend(EPPScales)
-        sorted_hessian.extend(ENPScales)
-        sorted_hessian.extend(EPNScales)
-        sorted_hessian.extend(ENNScales)
+        #Generating Gaussian input file and running them
+        #Gradient
+        GradientEnergyDictionary, Gradient = GetGradientEnergies(arguments, CPU, Z, ElementName, Sorted_Gradient_scales)
         
-        ### Generate INPUT FILE and Run the Job ###
-        ll=joblib.Parallel(n_jobs=arguments.ParallelProc)(joblib.delayed(EnergyParallel)('Grad',CPU,Z,arguments.Charge,arguments.Method,arguments.BasisSet,sto_out,index,ElementName)
-            for index,sto_out in enumerate(sorted_gradient))
-        EnergyGrad={} 
-        EnergyGrad={t[0]:round(t[1], 15) for t in ll}
-
-        # calculate Gradiant
-        Grad=[]
-        GradMatLen = len(EnergyGrad)
-        for val in range(0, GradMatLen, 2):
-            Grad.append(round((float(EnergyGrad[val]) - float(EnergyGrad[val + 1])) / (2.0 * Delta), 15))
-        
-        if any(val==0.0 for val in Grad):
-            print(bcolors.FAIL,"\nSTOP STOP: Gradiant contains Zero values", bcolors.ENDC, "\n", Grad)
-            sys.exit(0)
-
         #Hessian
-        ll=joblib.Parallel(n_jobs=arguments.ParallelProc)(joblib.delayed(EnergyParallel)('Hess',CPU,Z,arguments.Charge,arguments.Method,arguments.BasisSet,sto_out,index,ElementName) 
-            for index,sto_out in enumerate(sorted_hessian))
-        EnergyHess={}
-        EnergyHess={t[0]:round(t[1], 15) for t in ll}
-        
-        HessianEnergies = []
+        HessianEnergyDictionary, HessianEnergies, Hessian = GetHessianEnergies(arguments, CPU, Z, ElementName, Sorted_Hessian_scales)
 
-        for i in range(len(sorted_hessian)):
-            HessianEnergies.append(EnergyHess[i])
-     
-        HessianE2P = HessianEnergies[ : Nr_of_scales]
-        HessianE2N = HessianEnergies[Nr_of_scales : 2 * Nr_of_scales]
-        HessianEPP = HessianEnergies[2 * Nr_of_scales : 2 * Nr_of_scales + len(EPPScales)]
-        HessianENP = HessianEnergies[2 * Nr_of_scales + len(EPPScales) : 2 * Nr_of_scales + 2 * len(EPPScales)]
-        HessianEPN = HessianEnergies[2 * Nr_of_scales + 2 * len(EPPScales) : 2 * Nr_of_scales + 3 * len(EPPScales)]
-        HessianENN = HessianEnergies[2 * Nr_of_scales + 3 * len(EPPScales) : ]
-
-        HessianTrace = []
-
-        for i in range(Nr_of_scales):
-            HessianTrace.append((HessianE2P[i] + HessianE2N[i] - 2*E0) /((2.0*Delta)**2))
-
-        HessianUpT = []
-
-        for i in range(len(HessianEPP)):
-            HessianUpT.append((HessianEPP[i] - HessianENP[i] - HessianEPN[i] + HessianENN[i]) / ((2.0*Delta)**2))
-
-        Hessian = np.zeros((Nr_of_scales, Nr_of_scales)).tolist()
-        
-        for i in range(Nr_of_scales):
-            for j in range(Nr_of_scales):
-                if i == j:
-                    Hessian[i][i] = HessianTrace[i]
-                    continue
-                elif i < j:
-                    Hessian[i][j] = HessianUpT[i * (Nr_of_scales - i - 1) + j - 1]
-                    continue
-                elif i > j:
-                    Hessian[i][j] = HessianUpT[j * (Nr_of_scales - j - 1) + i - 1]
-                    continue
-                else:
-                    print("Wrong value!")
-        
-        print(Grad)
+        print(Gradient)
         print(Hessian)
         break
         HessLen2DInv = np.matrix(Hessian).I
         HessLen2DInv=HessLen2DInv.tolist()
         
-        Corr=np.dot(np.matrix(Grad),np.matrix(HessLen2DInv))
+        Corr=np.dot(np.matrix(Gradient),np.matrix(HessLen2DInv))
         Corr=Corr.tolist()[0]
         
-        guessScale=[float(i) - float(j) for i, j in zip(guessScale, Corr)] 
-        # calculate the new energy
+        guessScale=[float(i) - float(j) for i, j in zip(guessScale, Corr)]
+
+        #Calculating the new energy
         NEnergy=Get_Energy(EnergyFileF,CPU,Z,arguments.Charge,arguments.Method,arguments.BasisSet,guessScale)
+
         DEnergy=NEnergy-E0
 
-        #print(Hessian)
         #print("Hessian")
-        #print(HessLen2DInv)
+        #print(Hessian)
         #print("HessianInv")
-        #print(Corr)
+        #print(HessLen2DInv)
         #print("Corr")
-        #print(Grad)
-        #print("Grad")
+        #print(Corr)
+        #print("Gradient")
+        #print(Gradient)
         #print("")
         #break
+
         if DEnergy <= 0.0:
             ColoRR=bcolors.OKGREEN
         else:
             ColoRR=bcolors.FAIL
 
-        print(ColoRR, guessScale, Grad, DEnergy, NEnergy, E0, bcolors.ENDC)
+        print(ColoRR, guessScale, Gradient, DEnergy, NEnergy, E0, bcolors.ENDC)
 
-        # store the new scale values
+        #Saving the new E0
+        E0 = NEnergy
+
+        #Storing the new scale values
         WriteGuessScales(GuessFile, guessScale) 
 
 if __name__ == "__main__":
