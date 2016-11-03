@@ -3,7 +3,7 @@ import numpy as np
 import argparse, sys, os, subprocess, joblib
 #from scipy.optimize import minimize
 
-__author__ = "Raymond Poirier's Group - Ahmed Alravashdeh, Ibrahim Awad, Csongor Matyas"
+__author__ = "Raymond Poirier's Group - Ahmad Alrawashdeh, Ibrahim Awad, Csongor Matyas"
 
 def Arguments():
     parser = argparse.ArgumentParser(description='Basis Sets project')
@@ -60,29 +60,29 @@ def GetElementName(Z):
         print('Error: the atomic number is greater than 92 (Z>92)\nProgram Exit ):')
         sys.exit(0)
     Element=['HYDROGEN    ','HELIUM      ','LITHIUM     ','BERYLLIUM   ', 
-    'BORON       ','CARBON      ','NITROGEN    ','OXYGEN      ', 
-    'FLUORINE    ','NEON        ','SODIUM      ','MAGNESIUM   ', 
-    'ALUMINUM    ','SILICON     ','PHOSPHORUS  ','SULFUR      ', 
-    'CHLORINE    ','ARGON       ','POTASSIUM   ','CALCIUM     ', 
-    'SCANDIUM    ','TITANIUM    ','VANADIUM    ','CHROMIUM    ', 
-    'MANGANESE   ','IRON        ','COBALT      ','NICKEL      ', 
-    'COPPER      ','ZINC        ','GALLIUM     ','GERMANIUM   ', 
-    'ARSENIC     ','SELENIUM    ','BROMINE     ','KRYPTON     ', 
-    'RUBIDIUM    ','STRONTIUM   ','YTTRIUM     ','ZIRCONIUM   ', 
-    'NIOBIUM     ','MOLYBDENUM  ','TECHNETIUM  ','RUTHENIUM   ', 
-    'RHODIUM     ','PALLADIUM   ','SILVER      ','CADMIUM     ', 
-    'INDIUM      ','TIN         ','ANTIMONY    ','TELLURIUM   ', 
-    'IODINE      ','XENON       ','Cesium      ','Barium      ', 
-    'Lanthanum   ','Cerium      ','Praseodymium', 
-    'Neodymium   ','Promethium  ','Samarium    ','Europium    ', 
-    'Gadolinium  ','Terbium     ','Dysprosium  ','Holmium     ', 
-    'Erbium      ','Thulium     ','Ytterbium   ', 
-    'Lutetium    ','Hafnium     ','Tantalum    ','Tungsten    ', 
-    'Rhenium     ','Osmium      ','Iridium     ','Platinum    ', 
-    'Gold        ','Mercury     ','Thallium    ','Lead        ', 
-    'Bismuth     ','Polonium    ','Astatine    ','Radon       ', 
-    'Francium    ','Radium      ','Actinium    ','Thorium     ', 
-    'Protactinium','Uranium     ']
+             'BORON       ','CARBON      ','NITROGEN    ','OXYGEN      ', 
+             'FLUORINE    ','NEON        ','SODIUM      ','MAGNESIUM   ', 
+             'ALUMINUM    ','SILICON     ','PHOSPHORUS  ','SULFUR      ', 
+             'CHLORINE    ','ARGON       ','POTASSIUM   ','CALCIUM     ', 
+             'SCANDIUM    ','TITANIUM    ','VANADIUM    ','CHROMIUM    ', 
+             'MANGANESE   ','IRON        ','COBALT      ','NICKEL      ', 
+             'COPPER      ','ZINC        ','GALLIUM     ','GERMANIUM   ', 
+             'ARSENIC     ','SELENIUM    ','BROMINE     ','KRYPTON     ', 
+             'RUBIDIUM    ','STRONTIUM   ','YTTRIUM     ','ZIRCONIUM   ', 
+             'NIOBIUM     ','MOLYBDENUM  ','TECHNETIUM  ','RUTHENIUM   ', 
+             'RHODIUM     ','PALLADIUM   ','SILVER      ','CADMIUM     ', 
+             'INDIUM      ','TIN         ','ANTIMONY    ','TELLURIUM   ', 
+             'IODINE      ','XENON       ','Cesium      ','Barium      ', 
+             'Lanthanum   ','Cerium      ','Praseodymium', 
+             'Neodymium   ','Promethium  ','Samarium    ','Europium    ', 
+             'Gadolinium  ','Terbium     ','Dysprosium  ','Holmium     ', 
+             'Erbium      ','Thulium     ','Ytterbium   ', 
+             'Lutetium    ','Hafnium     ','Tantalum    ','Tungsten    ', 
+             'Rhenium     ','Osmium      ','Iridium     ','Platinum    ', 
+             'Gold        ','Mercury     ','Thallium    ','Lead        ', 
+             'Bismuth     ','Polonium    ','Astatine    ','Radon       ', 
+             'Francium    ','Radium      ','Actinium    ','Thorium     ', 
+             'Protactinium','Uranium     ']
     return Element[Z - 1]
 
 def GetElementGroupPeriod(Z):
@@ -277,7 +277,7 @@ def GetHessianScales(Nr_of_scales, Delta, guessScale, Indices):
     return(E2PScales, E2MScales, EPPScales, ENPScales, EPNScales, ENNScales, Sorted_Hessian_scales)
 
 def EnergyParallel(Title, CPU, Z, Charge, Method, BasisSet, sto_out, index, ElementName):
-    Title = Title+'_'+ElementName.strip()+'_'+arguments.BasisSet.strip()+'_scale_'+str(index+1)
+    Title = Title+'_'+ElementName.strip()+'_'+BasisSet.strip()+'_scale_'+str(index+1)
     Energy = Get_Energy(Title, CPU, Z, Charge, Method, BasisSet, sto_out)
     return(index, Energy)
 
@@ -334,7 +334,7 @@ def WriteGuessScales(GuessFile, guessScale):
         File.write(str(val) + '\n')
     File.close()
 
-def GetGradientEnergies(arguments, CPU, Z, ElementName, Sorted_Gradient_scales):
+def GetGradientEnergies(arguments, CPU, Z, ElementName, Delta, Nr_of_scales, Sorted_Gradient_scales):
     ll=joblib.Parallel(n_jobs=arguments.ParallelProc)(joblib.delayed(EnergyParallel)('Grad',CPU,Z,arguments.Charge,arguments.Method,arguments.BasisSet,sto_out,index,ElementName)
         for index,sto_out in enumerate(Sorted_Gradient_scales))
     GradientEnergyDictionary={} 
@@ -349,7 +349,7 @@ def GetGradientEnergies(arguments, CPU, Z, ElementName, Sorted_Gradient_scales):
         sys.exit(0)
     return(GradientEnergyDictionary, Gradient)
 
-def GetHessianEnergies(arguments, CPU, Z, ElementName, Sorted_Hessian_scales):
+def GetHessianEnergies(arguments, CPU, Z, ElementName, Delta, Nr_of_scales, Sorted_Hessian_scales, EPPScales, E0):
     ll=joblib.Parallel(n_jobs=arguments.ParallelProc)(joblib.delayed(EnergyParallel)('Hess',CPU,Z,arguments.Charge,arguments.Method,arguments.BasisSet,sto_out,index,ElementName) 
         for index,sto_out in enumerate(Sorted_Hessian_scales))
     HessianEnergyDictionary={}
@@ -403,7 +403,7 @@ def Main():
     E0 = 0.0
     while abs(DEnergy) > abs(Limit):
         #Calculating the initial energy
-        if E0 = 0.0:
+        if E0 == 0.0:
             E0 = Get_Energy(EnergyFileI,CPU,Z,arguments.Charge,arguments.Method,arguments.BasisSet,guessScale)
         else:
             continue
@@ -415,10 +415,10 @@ def Main():
 
         #Generating Gaussian input file and running them
         #Gradient
-        GradientEnergyDictionary, Gradient = GetGradientEnergies(arguments, CPU, Z, ElementName, Sorted_Gradient_scales)
+        GradientEnergyDictionary, Gradient = GetGradientEnergies(arguments, CPU, Z, ElementName, Delta, Nr_of_scales, Sorted_Gradient_scales)
         
         #Hessian
-        HessianEnergyDictionary, HessianEnergies, Hessian = GetHessianEnergies(arguments, CPU, Z, ElementName, Sorted_Hessian_scales)
+        HessianEnergyDictionary, HessianEnergies, Hessian = GetHessianEnergies(arguments, CPU, Z, ElementName, Delta, Nr_of_scales, Sorted_Hessian_scales, EPPScales, E0)
 
         print(Gradient)
         print(Hessian)
