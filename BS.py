@@ -409,15 +409,14 @@ def Main():
     WriteScales(GuessFile, Scales)
 
     E0 = 0.0
-    Tau = 0.35
+    Tau = -1.0
     Convergence_criteria = 100.0
 
     while Convergence_criteria > Limit:
+
         #Calculating the initial energy
         if E0 == 0.0:
             E0 = Get_Energy(EnergyFileI,CPU,Z,arguments.Charge,arguments.Method,arguments.BasisSet,Scales)
-        else:
-            continue
         
         #Generating scales for the gradient and hessian
         Indices, Diagonal = CreateIndices(Nr_of_scales)
@@ -434,89 +433,124 @@ def Main():
         eW, eV = np.linalg.eig(Hessian)
         ew = min(eW)
 
+        print("Gradient")
+        print(Gradient)
         print("Hessian")
         print(Hessian)
-        print("npHessian")
-        print(Hessian)
-        print(len(Hessian))
-
         print("First eW")
         print(eW)
         print("First ew")
         print(ew)
 
-        loop = 1
-
-        while loop > 0:
-            if ew > 0.0:
-                loop = -1
-            else:
-                Lambda = ew - Tau #0.1 #+ (ew / 10.0)
-                ShiftedHessian = Hessian.copy()
-                print("Hessian")
-                print(Hessian)
-                for i in range(len(Hessian)):
-                    ShiftedHessian[i, i] = Hessian[i, i] - Lambda
-                print("ShiftedHessian")
-                print(ShiftedHessian)
-                Hessian = ShiftedHessian.copy()
-                eW, eV = np.linalg.eig(Hessian)
-                ew = min(eW)
-                print("Lambda")
+        if ew < 0.0:
+            if Tau == -1.0:
+                Lambda = - ew
+                dX = -np.dot(Hessian.I, Gradient)
+                print("Initial dX")
+                print(dX)
+                MaxTauSquare = (np.dot(np.transpose(dX), Gradient) + np.dot(np.dot(np.transpose(dX), Hessian), dX)).tolist()[0][0] / Lambda
+                print("dXT*G dXT*H*dX")
+                print(np.dot(np.transpose(dX), Gradient), np.dot(np.dot(np.transpose(dX), Hessian), dX))
+                print("G H*dX")
+                print(Gradient, np.dot(Hessian, dX))
+                print("MaxTauSquare was calculated")
+                print(MaxTauSquare)
+                MaxTau = math.sqrt(MaxTauSquare)
+                print("MaxTau")
+                print(MaxTau)
+                Tau = MaxTau / 2.0
+                print("Tau is guessed")
+                print(Tau)
+                print("Lambda guess is")
                 print(Lambda)
-                print("Smallest eigenvalue")
-                print(ew)
-                print("Eigenvalues")
-                print(eW)
-                print("")
+                Lambda = (np.dot(np.transpose(dX), Gradient) + np.dot(np.dot(np.transpose(dX), Hessian), dX)).tolist()[0][0] / (Tau * Tau)
+                print("New lambda")
+                print(Lambda)
+                ShiftedHessian = Hessian + Lambda * np.identity(len(Gradient))
+                dX = - np.dot((Hessian + Lambda * np.identity(len(Gradient))).I, Gradient)
+                print("New dX")
+                print(dX)
+                dXList = np.transpose(dX).tolist()[0]
+                Scales=[float(i) + float(j) for i, j in zip(Scales, dXList)]
+                print("New Scales")
+                print(Scales)
+                NEnergy=Get_Energy(EnergyFileF,CPU,Z,arguments.Charge,arguments.Method,arguments.BasisSet,Scales)
+                DEnergy=E0-NEnergy
+                print("Old and new energy, DEnergy")
+                print(E0, NEnergy, DEnergy)
+                Ro = (DEnergy / (np.dot(np.transpose(Gradient), dX) + 0.5 * np.dot(np.dot(np.transpose(dX), ShiftedHessian), dX))).tolist()[0][0]
+                print("Ro")
+                print(Ro)
+                magnitude_dX = np.linalg.norm(dX)
+                
+                if Ro > 0.75 and Tau < (magnitude_dX * 5.0 / 4.0):
+                    print("Tau is doubled to:")
+                    Tau = 2.0 * Tau
+                    print(Tau)
+                elif Ro < 0.25:
+                    print("Tau = 1/4 |dX|")
+                    Tau = (1.0 / 4.0) * magnitude_dX
+                    print(Tau)
+                else:
+                    print("Tau is not changed")
+                    print(Tau)
 
-        HessianInverse = Hessian.I
-        
-        dX = np.dot(HessianInverse, Gradient)
-        dXList = np.transpose(dX).tolist()[0]
+                
+            else:
+                Lambda = (np.dot(np.transpose(dX), Gradient) + np.dot(np.dot(np.transpose(dX), Hessian), dX)).tolist()[0][0] / (Tau * Tau)
+                print("New lambda")
+                print(Lambda)
+                dX = - np.dot((Hessian + Lambda * np.identity(len(Gradient))).I, Gradient)
+                print("New dX")
+                print(dX)
+                dXList = np.transpose(dX).tolist()[0]
+                Scales=[float(i) + float(j) for i, j in zip(Scales, dXList)]
+                print("New Scales")
+                print(Scales)
+                NEnergy=Get_Energy(EnergyFileF,CPU,Z,arguments.Charge,arguments.Method,arguments.BasisSet,Scales)
+                DEnergy=E0-NEnergy
+                print("Old and new energy, DEnergy")
+                print(E0, NEnergy, DEnergy)
+                Ro = (DEnergy / (np.dot(np.transpose(Gradient), dX) + 0.5 * np.dot(np.dot(np.transpose(dX), Hessian), dX))).tolist()[0][0]
+                print("Ro")
+                print(Ro)
+                magnitude_dX = np.linalg.norm(dX)
 
-        Scales=[float(i) - float(j) for i, j in zip(Scales, dXList)]
-        
-        print("Hessian")
-        print(Hessian)
-        print("HessianInverse")
-        print(HessianInverse)
-        print("dX")
-        print(dX)
-        print("Gradient")
-        print(Gradient)
-        print("New guess scale")
-        print(Scales)
-        print("")
-
-        #Calculating the new energy
-        NEnergy=Get_Energy(EnergyFileF,CPU,Z,arguments.Charge,arguments.Method,arguments.BasisSet,Scales)
-
-        DEnergy=NEnergy-E0
-
-        Ro = DEnergy / (np.dot(np.transpose(Gradient), dX) + 0.5 * np.dot(np.dot(np.transpose(dX), Hessian), dX))
-
-        print("Ro")
-        print(Ro)
-        print(type(Ro))
-        print("DEnergy")
-        print(DEnergy)
-        
-        magnitude_dX = np.linalg.norm(dX)
-        
-        if Ro > 0.75 and Tau < (magnitude_dX * 5.0 / 4.0):
-            print("Tau is doubled to:")
-            Tau = 2.0 * Tau
-            print(Tau)
-        elif Ro < 0.25:
-            print("Tau = 1/4 |dX|")
-            Tau = (1.0 / 4.0) * magnitude_dX
-            print(Tau)
+                if Ro > 0.75 and Tau < (magnitude_dX * 5.0 / 4.0):
+                    print("Tau is doubled to:")
+                    Tau = 2.0 * Tau
+                    print(Tau)
+                elif Ro < 0.25:
+                    print("Tau = 1/4 |dX|")
+                    Tau = (1.0 / 4.0) * magnitude_dX
+                    print(Tau)
+                else:
+                    print("Tau is not changed")
+                    print(Tau)
         else:
-            print("Tau is not changed")
-            print(Tau)
+            dX = -np.dot(Hessian.I, Gradient)
+            dXList = np.transpose(dX).tolist()[0]
 
-        if DEnergy <= 0.0:
+            Scales=[float(i) + float(j) for i, j in zip(Scales, dXList)]
+        
+            print("Hessian")
+            print(Hessian)
+            print("HessianInverse")
+            print(Hessian.I)
+            print("dX")
+            print(dX)
+            print("Gradient")
+            print(Gradient)
+            print("New guess scale")
+            print(Scales)
+            print("")
+
+            #Calculating the new energy
+            NEnergy=Get_Energy(EnergyFileF,CPU,Z,arguments.Charge,arguments.Method,arguments.BasisSet,Scales)
+            DEnergy=E0-NEnergy
+
+
+        if DEnergy >= 0.0:
             ColoRR=bcolors.OKGREEN
         else:
             ColoRR=bcolors.FAIL
@@ -533,8 +567,10 @@ def Main():
 
         for i in range(len(GradientList)):
             SumOfSquaredGradientValues += (GradientList[i] * GradientList[i]) 
-
+        
+        print(SumOfSquaredGradientValues)      
         Convergence_criteria = math.sqrt(SumOfSquaredGradientValues)
+        print("CC=",Convergence_criteria)      
 
 if __name__ == "__main__":
     Main()
