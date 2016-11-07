@@ -1,6 +1,5 @@
 all:
-	./BasisSet.py -e 1 -j 24
+	./BasisSet.py -e 1 -p 24
 
 clean:
-	rm -f *.log *.out *.gjf *.txt
-	rm -rf __pycache__
+	rm -rf *.log *.out *.gjf *.txt Gau*.* __pycache__
