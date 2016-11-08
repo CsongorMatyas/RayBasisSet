@@ -12,8 +12,8 @@ def Arguments():
     parser.add_argument('-c','--Charge',        required=False,type=int,  help='The charge',                       default=0)
     parser.add_argument('-m','--Method',        required=False,type=str,  help='Level of theory',                  default="UHF")
     parser.add_argument('-b','--BasisSet',      required=False,type=str,  help='Basis set',                        default="6-31G")
-    parser.add_argument('-P','--GaussianProc',  required=False,type=int,  help='Number of processors for Gaussian',default=2)
-    parser.add_argument('-p','--ParallelProc',  required=False,type=int,  help='Total number of processors used',  default=4)
+    parser.add_argument('-P','--GaussianProc',  required=False,type=int,  help='Number of processors for Gaussian',default=1)
+    parser.add_argument('-p','--ParallelProc',  required=False,type=int,  help='Total number of processors used',  default=1)
     parser.add_argument('-s','--Scales',        required=False,type=float,help='Initial scale values',             nargs='+')
     parser.add_argument('-D','--Delta',         required=False,type=float,help='The value of Delta',               default=0.001)
     parser.add_argument('-l','--Limit',         required=False,type=float,help='Error limit',                      default=1.0e-6)
@@ -109,14 +109,14 @@ def GetElementGroupPeriod(arguments):
 def GetElementMultiplicity(arguments):
     Group, Period = GetElementGroupPeriod(arguments)
     g = Group - arguments.Charge #Everything after this should be checked, or we should find a formula that will calculate multiplicity instead
-    if g in [1,3,7,17]:
-        return 2
-    elif g in [2,8,18]:
+    if g in [2,4,10,12,18,20,36,38,54,56,86]:
         return 1
-    elif g in [4,6,16]:
+    elif g in [1,3,5,9,11,13,17,19,31,35,37,49,53,55,81,85]:
+        return 2
+    elif g in [6,8,14,16,32,34,50,52,82,84]:
         return 3
-    elif g in [5,15]:
-        return 4 #############What if g is 9, 10, 11, 12, 13, 14 or >18?
+    elif g in [7,15,33,51,83]:
+        return 4
 
 def GetElementCoreValence(arguments):
     ElementsOrbitals = [['1S'],['2S','2P'],['3S','3P'],['4S','3D','4P'],['5S','4D','5P'],['6S','4F','5D','6P'],['7S','5F','6D','7P']]
@@ -209,13 +209,26 @@ def Get_Energy(FileName, arguments, Scale_values):
     Energy = subprocess.check_output('grep "SCF Done:" ' + FileName + '.out | tail -1|awk \'{ print $5 }\'', shell=True)
     Energy = Energy.decode('ascii').rstrip('\n')
     if Energy != "":
-         EnergyNUM=float(Energy)
+        EnergyNUM=float(Energy)
+        return EnergyNUM
 
     else:
-         print(bcolors.FAIL,"\n STOP STOP: Gaussian job did not terminate normally", bcolors.ENDC)
-         print(bcolors.FAIL,"File Name: ", FileName, bcolors.ENDC, "\n\n GOOD LUCK NEXT TIME!!!")
-         sys.exit(0)
-    return EnergyNUM
+        file=open(FileName+'.gjf','w')
+        file.write(GenerateInput(arguments, Scale_values) + '\n\n')
+        file.close()
+
+        subprocess.call('g09 < '+ FileName + '.gjf > ' + FileName + '.out\n', shell=True)
+        Energy = subprocess.check_output('grep "SCF Done:" ' + FileName + '.out | tail -1|awk \'{ print $5 }\'', shell=True)
+        Energy = Energy.decode('ascii').rstrip('\n')
+        if Energy != "":
+            EnergyNUM=float(Energy)
+            return EnergyNUM
+        else:
+            print(bcolors.FAIL,"\n STOP STOP: Gaussian job did not terminate normally", bcolors.ENDC)
+            print(bcolors.FAIL,"File Name: ", FileName, bcolors.ENDC, "\n\n GOOD LUCK NEXT TIME!!!")
+            sys.exit(0)
+            return EnergyNUM
+    
 
 def GetGradientScales(arguments, Scales):
     Gradient_scales = []
