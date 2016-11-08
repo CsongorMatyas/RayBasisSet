@@ -381,9 +381,11 @@ def GetGradient(Scales):
     Gradient = np.transpose(np.matrix(GradientList))
     #Gradient = np.transpose(Gradient)
 
+    """
     if any(val==0.0 for val in GradientList):
         print(bcolors.FAIL,"\nSTOP STOP: Gradient contains Zero values", bcolors.ENDC, "\n", GradientList)
         sys.exit(0)
+    """
     return(Gradient)
 
 def GetHessian(Scales):
