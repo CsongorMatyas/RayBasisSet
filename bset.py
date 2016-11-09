@@ -8,15 +8,15 @@ __author__ = "Raymond Poirier's Group - Ahmad Alrawashdeh, Ibrahim Awad, Csongor
 def Arguments():
     parser = argparse.ArgumentParser(description='Basis Sets project')
     parser.add_argument('-e','--Element',     required=True, type=int,  help='Input element atomic number')
-    parser.add_argument('-c','--Charge',      required=False,type=int,  help='The charge',                       default=0)
-    parser.add_argument('-m','--Method',      required=False,type=str,  help='Level of theory',                  default="UHF")
-    parser.add_argument('-b','--BasisSet',    required=False,type=str,  help='Basis set',                        default="6-31G")
-    parser.add_argument('-P','--GaussianProc',required=False,type=int,  help='Number of processors for Gaussian',default=2)
-    parser.add_argument('-p','--ParallelProc',required=False,type=int,  help='Total number of processors used',  default=4)
-    parser.add_argument('-s','--Scales',      required=False,type=float,help='Initial scale values',             nargs='+')
-    parser.add_argument('-D','--Delta',       required=False,type=float,help='The value of Delta',               default=0.001)
-    parser.add_argument('-l','--Limit',       required=False,type=float,help='Error limit',                      default=1.0e-6)
-    parser.add_argument('-G','--Gamma',       required=False,type=float,help='Base gamma coefficient value',     default=0.1)
+    parser.add_argument('-c','--Charge',      required=False,type=int,  help='The charge',                            default=0)
+    parser.add_argument('-m','--Method',      required=False,type=str,  help='Level of theory',                       default="UHF")
+    parser.add_argument('-b','--BasisSet',    required=False,type=str,  help='Basis set',                             default="6-31G")
+    parser.add_argument('-P','--GaussianProc',required=False,type=int,  help='Number of processors for Gaussian',     default=1)
+    parser.add_argument('-p','--ParallelProc',required=False,type=int,  help='Total number of processors used',       default=1)
+    parser.add_argument('-s','--Scales',      required=False,type=float,help='Initial scale values',                  nargs='+')
+    parser.add_argument('-D','--Delta',       required=False,type=float,help='The value of Delta',                    default=0.001)
+    parser.add_argument('-l','--Limit',       required=False,type=float,help='Error limit',                           default=1.0e-4)
+    parser.add_argument('-G','--Gamma',       required=False,type=float,help='Base gamma coefficient value',          default=0.1)
 
     arguments = parser.parse_args()
     return(arguments)
@@ -31,6 +31,7 @@ class bcolors:
     BOLD = '\033[1m'
     UNDERLINE = '\033[4m'
 
+np.set_printoptions(precision=6)
 ##################################################################################################################################################
 #Get functions
 ##################################################################################################################################################
@@ -103,14 +104,14 @@ def GetElementGroupPeriod(Z):
 def GetElementMultiplicity(Z, Charge):
     Group, Period = GetElementGroupPeriod(Z)
     g = Group - Charge #Everything after this should be checked, or we should find a formula that will calculate multiplicity instead
-    if g in [1,3,7,17]:
-        return 2
-    elif g in [2,8,18]:
+    if g in [2,4,10,12,18,20,36,38,54,56,86]:
         return 1
-    elif g in [4,6,16]:
+    elif g in [1,3,5,9,11,13,17,19,31,35,37,49,53,55,81,85]:
+        return 2
+    elif g in [6,8,14,16,32,34,50,52,82,84]:
         return 3
-    elif g in [5,15]:
-        return 4 #############What if g is 9, 10, 11, 12, 13, 14 or >18?
+    elif g in [7,15,33,51,83]:
+        return 4
 
 def GetElementCoreValence(Z):
     ElementsOrbitals = [['1S'],['2S','2P'],['3S','3P'],['4S','3D','4P'],['5S','4D','5P'],['6S','4F','5D','6P'],['7S','5F','6D','7P']]
@@ -193,7 +194,6 @@ def GenerateInput(CPU, Z, Charge, Method, BasisSet, Scaling_factors):
 ############################################################################################################################
 #Functions related to energy and gradient / hessian
 ############################################################################################################################
-
 def Get_Energy(FileName, CPU, Z, Charge, Method, BasisSet, Scales):
     file=open(FileName+'.gjf','w')
     file.write(GenerateInput(CPU, Z, Charge, Method, BasisSet, Scales) + '\n\n')
@@ -201,16 +201,28 @@ def Get_Energy(FileName, CPU, Z, Charge, Method, BasisSet, Scales):
     
     #subprocess.call('GAUSS_SCRDIR="/nqs/$USER"\n', shell=True)
     subprocess.call('g09 < '+ FileName + '.gjf > ' + FileName + '.out\n', shell=True)
-    Energy = subprocess.check_output('grep "SCF Done:" ' + FileName + '.out | tail -1|awk \'{ print $5 }\'', shell=True)
+    Energy = subprocess.check_output('grep "SCF Done:" ' + FileName + '.out | tail -1 | awk \'{ print $5 }\'', shell=True)
     Energy = Energy.decode('ascii').rstrip('\n')
     if Energy != "":
-         EnergyNUM=float(Energy)
+        EnergyNUM=float(Energy)
+        return EnergyNUM
 
     else:
-         print(bcolors.FAIL,"\n STOP STOP: Gaussian is stupid, Sorry for that :(", bcolors.ENDC)
-         print(bcolors.FAIL,"File Name: ", FileName, bcolors.ENDC, "\n\n GOOD LUCK NEXT TIME!!!")
-         sys.exit(0)
-    return EnergyNUM
+        file=open(FileName+'.gjf','w')
+        file.write(GenerateInput(CPU, Z, Charge, Method, BasisSet, Scales) + '\n\n')
+        file.close()
+
+        subprocess.call('g09 < '+ FileName + '.gjf > ' + FileName + '.out\n', shell=True)
+        Energy = subprocess.check_output('grep "SCF Done:" ' + FileName + '.out | tail -1|awk \'{ print $5 }\'', shell=True)
+        Energy = Energy.decode('ascii').rstrip('\n')
+        if Energy != "":
+            EnergyNUM=float(Energy)
+            return EnergyNUM
+        else:
+            print(bcolors.FAIL,"\n STOP STOP: Gaussian job did not terminate normally", bcolors.ENDC)
+            print(bcolors.FAIL,"File Name: ", FileName, bcolors.ENDC, "\n\n GOOD LUCK NEXT TIME!!!")
+            sys.exit(0)
+            return EnergyNUM
 
 def GetGradientScales(Delta, Scales):
     Gradient_scales = []
@@ -328,6 +340,7 @@ def Initiate(arguments):
 
     return(Z, ElementName, CPU, Limit, Delta, GuessFile, EnergyFileI, EnergyFileF, sto, Scales, Nr_of_scales)
 
+
 def WriteScales(GuessFile, Scales):
     File = open(GuessFile,'w')
     for val in Scales:
@@ -346,9 +359,6 @@ def GetGradientEnergies(arguments, CPU, Z, ElementName, Delta, Nr_of_scales, Sor
     
     Gradient = np.transpose(np.matrix(GradientList))
 
-#    if any(val==0.0 for val in GradientList):
-#        print(bcolors.OKBLUE,"\nSTOP Optimization Terminates Normally", bcolors.ENDC, "\n", GradientList)
-#        sys.exit(0)
     return(GradientEnergyDictionary, GradientList, Gradient)
 
 def GetHessianEnergies(arguments, CPU, Z, ElementName, Delta, Nr_of_scales, Sorted_Hessian_scales, EPPScales, E0):
@@ -412,13 +422,18 @@ def Main():
     Tau = -1.0
     Convergence_criteria = 100.0
     counter = 0
+    Ctrl = 1000.0
+    R0 = 0.0
+#   ____________________________________________ while loop ____________________________________________
+
     while Convergence_criteria > Limit:
         
         counter += 1 
         #Calculating the initial energy
         if E0 == 0.0:
             E0 = Get_Energy(EnergyFileI,CPU,Z,arguments.Charge,arguments.Method,arguments.BasisSet,Scales)
-        
+            DEnergy=np.absolute(E0)
+            print("Eo =",'% 12.6f' % E0, " --  Initial DEnergy =", '% 12.6f' % DEnergy)
         #Generating scales for the gradient and hessian
         Indices, Diagonal = CreateIndices(Nr_of_scales)
         Gradient_scales, Sorted_Gradient_scales = GetGradientScales(Delta, Scales)
@@ -434,121 +449,103 @@ def Main():
         eW, eV = np.linalg.eig(Hessian)
         ew = min(eW)
 
-        print("Gradient")
-        print(Gradient)
-        print("Hessian")
-        print(Hessian)
-        print("First eW")
-        print(eW)
-        print("First ew")
-        print(ew)
-
+       # print("Gradient")
+       # print(Gradient)
+       # print("Hessian")
+       # print(Hessian)
+        print()
+        print(bcolors.OKBLUE,"Step", counter, "---------------",bcolors.ENDC)
+        print()
+        print("   Eigenvalues of Hes:","[",', '.join('%8.6f' % i for i in eW),"]")
+        print("   Minimum eigenvalue:", '%8.6f' % ew)
+        print()
+        if DEnergy <= 0.0750 and Ro < 1.250 and  Ro > 0.90: Ctrl = Ctrl/10.0
+        if Ctrl > 10.0 and DEnergy < 1.0e-4 and Convergence_criteria < 0.01: Ctrl = 1.0
+        if Ctrl < 1.0 and (Ro > 1.250 or  Ro < 0.90): Ctrl = 1.0
+        if Ctrl < 1.0 and Ro < 1.250 and  Ro > 0.90: 
+            Ctrl = 0.250
+            if Convergence_criteria < 0.050 and DEnergy < 1.0e-3: 
+                Ctrl = 0.1250
+                if Convergence_criteria < 1.0e-3 and DEnergy < 1.0e-5: Ctrl = Ctrl/2.0
         if ew < 9.0e-3:
             if Tau == -1.0:
-                Lambda = (- ew) + 50
+                Lambda = (- ew) + Ctrl
+                print(bcolors.OKGREEN,"  * Ctrl:",Ctrl, bcolors.ENDC)
                 ShiftedHessian = Hessian + Lambda * np.identity(len(Gradient))
                 dX = -np.dot(ShiftedHessian.I, Gradient)
-                print("Initial dX:",dX)
+               # print("Initial dX:",dX)
                 MaxTauSquare = np.dot(np.transpose(dX), dX).tolist()[0][0] 
-                print("MaxTauSquare was calculated")
-                print(MaxTauSquare)
+               # print("MaxTauSquare was calculated")
+               # print(MaxTauSquare)
                 Tau = math.sqrt(MaxTauSquare)
-                print("Tau =", Tau)
                 dXList = np.transpose(dX).tolist()[0]
                 Scales=[float(i) + float(j) for i, j in zip(Scales, dXList)]
-                print("New Scales")
-                print(Scales)
+               # print("   New Scales:","[",', '.join('%8.6f' % i for i in Scales),"]")
                 NEnergy=Get_Energy(EnergyFileF,CPU,Z,arguments.Charge,arguments.Method,arguments.BasisSet,Scales)
                 DEnergy=E0-NEnergy
-                print("Old and new energy, DEnergy")
-                print(E0, NEnergy, DEnergy)
-                Ro = (DEnergy / -(np.dot(np.transpose(Gradient), dX) + 0.5 * np.dot(np.dot(np.transpose(dX), Hessian), dX)).tolist()[0][0])
-                print("Ro")
-                print(Ro)
-                magnitude_dX = np.linalg.norm(dX)
-                print("magnitude_dX =",magnitude_dX)
-                if Ro > 0.75 and Tau < (magnitude_dX * 5.0 / 4.0):
-                    print("Tau is doubled to:")
-                    Tau = 2.0 * Tau
-                    print(Tau)
-                elif Ro < 0.25:
-                    print("Tau = 1/4 |dX|")
-                    Tau = (1.0 / 4.0) * magnitude_dX
-                    print(Tau)
+               # print("Old and new energy, DEnergy")
+               # print(E0, NEnergy, DEnergy)
+                if -(np.dot(np.transpose(Gradient), dX) + 0.5 * np.dot(np.dot(np.transpose(dX), Hessian), dX)).tolist()[0][0] == 0.0:
+                    Ro = 0.0
                 else:
-                    print("Tau is not changed")
-                    print(Tau)
+                    Ro = (DEnergy / -(np.dot(np.transpose(Gradient), dX) + 0.5 * np.dot(np.dot(np.transpose(dX), Hessian), dX)).tolist()[0][0])
+                print("   Rho:       ",'% 12.6f' % float(Ro))
+                magnitude_dX = np.linalg.norm(dX)
+               # print("magnitude_dX =",magnitude_dX)
                 
             else:
-                Lambda = (- ew) + 10
-                print("New lambda")
-                print(Lambda)
+                Lambda = (- ew) + Ctrl
+                print(bcolors.OKGREEN, "  * Ctrl:",Ctrl, bcolors.ENDC)
+                print("   lambda:    ",'% 12.6f' % float(Lambda))
                 ShiftedHessian = Hessian + Lambda * np.identity(len(Gradient))
                 dX = -np.dot(ShiftedHessian.I, Gradient)
-                print("New dX")
-                print(dX)
                 MaxTauSquare = np.dot(np.transpose(dX), dX).tolist()[0][0] 
-                print("MaxTauSquare was calculated")
-                print(MaxTauSquare)
+               # print("MaxTauSquare was calculated")
+               # print(MaxTauSquare)
                 Tau = math.sqrt(MaxTauSquare)
-                print("Tau =", Tau)
                 dXList = np.transpose(dX).tolist()[0]
                 Scales=[float(i) + float(j) for i, j in zip(Scales, dXList)]
-                print("New Scales")
-                print(Scales)
+                #print("   New Scales:","[",', '.join('%8.6f' % i for i in Scales),"]")
                 NEnergy=Get_Energy(EnergyFileF,CPU,Z,arguments.Charge,arguments.Method,arguments.BasisSet,Scales)
                 DEnergy=E0-NEnergy
-                print("Old and new energy, DEnergy")
-                print(E0, NEnergy, DEnergy)
-                Ro = (DEnergy / -(np.dot(np.transpose(Gradient), dX) + 0.5 * np.dot(np.dot(np.transpose(dX), Hessian), dX)).tolist()[0][0])
-                print("Ro")
-                print(Ro)
-                magnitude_dX = np.linalg.norm(dX)
-                print("magnitude_dX =",magnitude_dX)
-
-                if Ro > 0.75 and Tau < (magnitude_dX * 5.0 / 4.0):
-                    print("Tau is doubled to:")
-                    Tau = 2.0 * Tau
-                    print(Tau)
-                elif Ro < 0.25:
-                    print("Tau = 1/4 |dX|")
-                    Tau = (1.0 / 4.0) * magnitude_dX
-                    print(Tau)
+               # print("Old and new energy, DEnergy")
+               # print(E0, NEnergy, DEnergy)
+                if -(np.dot(np.transpose(Gradient), dX) + 0.5 * np.dot(np.dot(np.transpose(dX), Hessian), dX)).tolist()[0][0] == 0.0:
+                    Ro = 0.0
                 else:
-                    print("Tau is not changed")
-                    print(Tau)
+                    Ro = (DEnergy / -(np.dot(np.transpose(Gradient), dX) + 0.5 * np.dot(np.dot(np.transpose(dX), Hessian), dX)).tolist()[0][0])
+                print("   Rho:       ",'% 12.6f' % float(Ro))
+                magnitude_dX = np.linalg.norm(dX)
+               # print("magnitude_dX =",magnitude_dX)
+
         else:
             dX = -np.dot(Hessian.I, Gradient)
             dXList = np.transpose(dX).tolist()[0]
 
             Scales=[float(i) + float(j) for i, j in zip(Scales, dXList)]
         
-            print("Hessian")
-            print(Hessian)
-            print("HessianInverse")
-            print(Hessian.I)
-            print("dX")
-            print(dX)
-            print("Gradient")
-            print(Gradient)
-            print("New guess scale")
-            print(Scales)
-            print("")
+          #  print("Hessian")
+          #  print(Hessian)
+          #  print("HessianInverse")
+          #  print(Hessian.I)
+          #  print("dX")
+          #  print(dX)
+          #  print("Gradient")
+          #  print(Gradient)
+          #  print("New guess scale")
+          #  print(Scales)
+          #  print("")
 
             #Calculating the new energy
             NEnergy=Get_Energy(EnergyFileF,CPU,Z,arguments.Charge,arguments.Method,arguments.BasisSet,Scales)
             DEnergy=E0-NEnergy
+            if -(np.dot(np.transpose(Gradient), dX) + 0.5 * np.dot(np.dot(np.transpose(dX), Hessian), dX)).tolist()[0][0] == 0.0:
+                Ro = 0.0
+            else:
+                Ro = (DEnergy / -(np.dot(np.transpose(Gradient), dX) + 0.5 * np.dot(np.dot(np.transpose(dX), Hessian), dX)).tolist()[0][0])
+            print("   lambda:    ",'% 12.6f' % float(ew))
+            print("   Rho:       ",'% 12.6f' % float(Ro))
 
-
-        if DEnergy >= 0.0:
-            ColoRR=bcolors.OKGREEN
-        else:
-            ColoRR=bcolors.FAIL
-
-        print(ColoRR, counter, Scales, DEnergy, NEnergy, E0, bcolors.ENDC)
-
-        #Saving the new E0
-        E0 = NEnergy
 
         #Storing the new scale values
         WriteScales(GuessFile, Scales)
@@ -557,11 +554,26 @@ def Main():
         for i in range(len(GradientList)):
             SumOfSquaredGradientValues += (GradientList[i] * GradientList[i]) 
         Convergence_criteria = math.sqrt(SumOfSquaredGradientValues)
-        print("CC= ",Convergence_criteria)      
+        print(bcolors.BOLD,"  RGS:       ",'% 12.6f' % float(Convergence_criteria), bcolors.ENDC)      
+
+        if DEnergy >= 0.0:
+            ColoRR=bcolors.OKGREEN
+        else:
+            ColoRR=bcolors.FAIL
+        print()   
+        print(ColoRR,"  New Scale:","[",' '.join('%10.6f' % i for i in Scales),"]") #"   ",np.array(Scales))
+        print("   Initial E:","", '% 12.6f' % float(E0))
+        print("   Final E  :","", '% 12.6f' % float(NEnergy))
+        print("   Delta E  :","", '% 12.6f' % float(DEnergy), bcolors.ENDC)
+        print()   
+
+        #Saving the new E0
+        E0 = NEnergy
+
         if (Convergence_criteria <= Limit):
-            print("\nThe gradient is", GradientList)
-            print("CC= ",Convergence_criteria)      
-            print(bcolors.OKBLUE,"\nSTOP:\n     -- Optimization Terminates Normally --")
+            print(bcolors.OKGREEN,"STOP:", bcolors.ENDC)
+            print("The gradient is", "[",', '.join('%8.6f' % i for i in GradientList),"]", "and RGS = ",'% 9.6f' % float(Convergence_criteria))      
+            print(bcolors.OKBLUE,"\n                        -- Optimization Terminated Normally --")
             print()
 
 if __name__ == "__main__":
