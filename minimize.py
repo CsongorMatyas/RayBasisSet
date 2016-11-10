@@ -158,16 +158,11 @@ def GetSTO(arguments):
 ##################################################################################################################################################
 
 def GenerateFirstLine(arguments):
-    FirstLine = '# ' + arguments.Method + '/gen gfprint\n'
+    FirstLine = '# ' + arguments.Method + '/gen gfinput\n'
     return FirstLine
 
 def GenerateTitle(arguments, Scale_values):
-    all_factors = ''
-
-    for i in range(len(Scale_values)):
-        all_factors = all_factors + str(Scale_values[i]) + '_'
-
-    Title = "\n" + arguments.ElementName.strip() + "_" + all_factors + "\n\n"
+    Title = "\n" + arguments.ElementName.strip() + "\n\n"
     return Title
 
 def GenerateChargeMultiplicity(arguments):
