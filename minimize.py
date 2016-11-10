@@ -476,11 +476,11 @@ def Main():
 
     x0 = np.array(arguments.Scales)
 
-    #result = minimize(Function, x0, method='CG', options={'gtol': arguments.Limit, 'disp': True}) #6 iterations 117 function eval 26 gradient eval
+    result = minimize(Function, x0, method='CG', options={'gtol': arguments.Limit, 'disp': True}) #6 iterations 117 function eval 26 gradient eval
     #51 sec E = -0.49587724265
     #result = minimize(Function, x0, method='Nelder-Mead', options={'disp': True}) #39 iterations 72 function eval
     #32 sec E = -0.495879191425
-    result = minimize(Function, x0, jac=GetGradient, method='L-BFGS-B', options={'gtol': arguments.Limit, 'disp': True}) #13 iterations 21 function eval
+    #result = minimize(Function, x0, jac=GetGradient, method='L-BFGS-B', options={'gtol': arguments.Limit, 'disp': True}) #13 iterations 21 function eval
     #45 sec E = -0.49587945111600001
     ###result = minimize(Function, x0, jac=GetGradient, method='Newton-CG', options={'xtol': arguments.Limit, 'disp': True})
     ##result = minimize(Function, x0, jac=GetGradient, method='TNC', options={'disp': True})
