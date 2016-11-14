@@ -7,28 +7,28 @@ __author__ = "Raymond Poirier's Group - Ahmad Alrawashdeh, Ibrahim Awad, Csongor
 
 def Arguments():
     parser = argparse.ArgumentParser(description='Basis Sets project')
-    parser.add_argument('-e','--Element',     required=True, type=int,  help='Input element atomic number')
-    parser.add_argument('-c','--Charge',      required=False,type=int,  help='The charge',                            default=0)
-    parser.add_argument('-m','--Method',      required=False,type=str,  help='Level of theory',                       default="UHF")
+    parser.add_argument('-e','--Element',     required=True, type=int,  help='Input element atomic number'                           )
+    parser.add_argument('-c','--Charge',      required=False,type=int,  help='The charge',                            default=0      )
+    parser.add_argument('-m','--Method',      required=False,type=str,  help='Level of theory',                       default="UHF"  )
     parser.add_argument('-b','--BasisSet',    required=False,type=str,  help='Basis set',                             default="6-31G")
-    parser.add_argument('-P','--GaussianProc',required=False,type=int,  help='Number of processors for Gaussian',     default=1)
-    parser.add_argument('-p','--ParallelProc',required=False,type=int,  help='Total number of processors used',       default=1)
-    parser.add_argument('-s','--Scales',      required=False,type=float,help='Initial scale values',                  nargs='+')
-    parser.add_argument('-D','--Delta',       required=False,type=float,help='The value of Delta',                    default=0.001)
-    parser.add_argument('-l','--Limit',       required=False,type=float,help='Error limit',                           default=1.0e-4)
-    parser.add_argument('-G','--Gamma',       required=False,type=float,help='Base gamma coefficient value',          default=0.1)
+    parser.add_argument('-P','--GaussianProc',required=False,type=int,  help='Number of processors for Gaussian',     default=1      )
+    parser.add_argument('-p','--ParallelProc',required=False,type=int,  help='Total number of processors used',       default=1      )
+    parser.add_argument('-s','--Scales',      required=False,type=float,help='Initial scale values',                  nargs='+'      )
+    parser.add_argument('-D','--Delta',       required=False,type=float,help='The value of Delta',                    default=0.001  )
+    parser.add_argument('-l','--Limit',       required=False,type=float,help='Error limit',                           default=1.0e-4 )
+    parser.add_argument('-G','--Gamma',       required=False,type=float,help='Base gamma coefficient value',          default=0.1    )
 
     arguments = parser.parse_args()
     return(arguments)
 
 class bcolors:
-    HEADER = '\033[95m'
-    OKBLUE = '\033[94m'
-    OKGREEN = '\033[92m'
-    WARNING = '\033[93m'
-    FAIL = '\033[91m'
-    ENDC = '\033[0m'
-    BOLD = '\033[1m'
+    HEADER    = '\033[95m'
+    OKBLUE    = '\033[94m'
+    OKGREEN   = '\033[92m'
+    WARNING   = '\033[93m'
+    FAIL      = '\033[91m'
+    ENDC      = '\033[0m'
+    BOLD      = '\033[1m'
     UNDERLINE = '\033[4m'
 
 np.set_printoptions(precision=6)
@@ -38,10 +38,10 @@ np.set_printoptions(precision=6)
 
 def GetElementSymbol(Z):
     if Z < 1:
-        print('Error: the atomic number is less than one (Z<1)\nProgram Exit ):')
+        print('Error: the atomic number is less than one (Z < 1)\nProgram Exit')
         sys.exit(0)
-    elif Z> 92:
-        print('Error: the atomic number is greater than 92 (Z>92)\nProgram Exit ):')
+    elif Z > 92:
+        print('Error: the atomic number is greater than 92 (Z > 92)\nProgram Exit')
         sys.exit(0)
     Element=['H ',                                                                       'He', 
     'Li','Be',                                                  'B ','C ','N ','O ','F ','Ne', 
@@ -55,10 +55,10 @@ def GetElementSymbol(Z):
 
 def GetElementName(Z):
     if Z < 1:
-        print('Error: the atomic number is less than one (Z<1)\nProgram Exit ):')
+        print('Error: the atomic number is less than one (Z < 1)\nProgram Exit')
         sys.exit(0)
     elif Z > 92:
-        print('Error: the atomic number is greater than 92 (Z>92)\nProgram Exit ):')
+        print('Error: the atomic number is greater than 92 (Z > 92)\nProgram Exit')
         sys.exit(0)
     Element=['HYDROGEN    ','HELIUM      ','LITHIUM     ','BERYLLIUM   ', 
              'BORON       ','CARBON      ','NITROGEN    ','OXYGEN      ', 
@@ -86,9 +86,9 @@ def GetElementName(Z):
              'Protactinium','Uranium     ']
     return Element[Z - 1]
 
-def GetElementGroupPeriod(Z):
+def GetElementGroupPeriod(Z):          # Valid for representative elements, only.
     if Z == 0:
-        print('Error: the atomic number is less than one (Z<1)\nProgram Exit ):')
+        print('Error: the atomic number is less than one (Z < 1)\nProgram Exit')
         sys.exit(0)
     ElementOrder = [2, 8, 8, 18, 18, 36, 36]
     Period = 1
@@ -98,49 +98,43 @@ def GetElementGroupPeriod(Z):
             Group  += ElementOrder[i]
             Period += 1
     Group = Z - Group
+    if (Z > 30 and Z < 37) or (Z > 48  and Z <  55): Group = Group - 10
+    if (Z > 80 and Z < 87) or (Z > 112 and Z < 119): Group = Group - 24
     return(Group, Period)
-
    
 def GetElementMultiplicity(Z, Charge):
-    N_el = Z - Charge #Everything after this should be checked, or we should find a formula that will calculate multiplicity instead
-    if   N_el in [0,2,4,10,12,18,20,36,38,54,56,86]:return 1
-    elif N_el in [1,3,5,9,11,13,17,19,31,35,37,49,53,55,81,85]:return 2
-    elif N_el in [6,8,14,16,32,34,50,52,82,84]:return 3
-    elif N_el in [7,15,33,51,83]:return 4
+    N_el = Z - Charge
+    if   N_el in [0,2,4,10,12,18,20,36,38,54,56,86]            :return 1
+    elif N_el in [1,3,5,9,11,13,17,19,31,35,37,49,53,55,81,85] :return 2
+    elif N_el in [6,8,14,16,32,34,50,52,82,84]                 :return 3
+    elif N_el in [7,15,33,51,83]                               :return 4
 
-def GetElementCoreValence(Z):
-    ElementsOrbitals = [['1S'],['2S','2P'],['3S','3P'],['4S','3D','4P'],['5S','4D','5P'],['6S','4F','5D','6P'],['7S','5F','6D','7P']]
-    Group, Period = GetElementGroupPeriod(Z)
-    
-    AtomicCore=[]
-    for sto in range(0, Period - 1):
-        for psto in ElementsOrbitals[sto]:
-            AtomicCore.append(psto)
-    
-    AtomicValance=[]
-    for vsto in ElementsOrbitals[Period - 1]:
-        AtomicValance.append(vsto)
-                                                #These also have to be checked
-    return(AtomicCore, AtomicValance)
-
-def GetBasisSetCoreValence(BasisSet):
-    Core = BasisSet[:BasisSet.find('-')]
-    Valence = BasisSet[BasisSet.find('-') + 1 : BasisSet.find('G')]  #RE is needed here :(
-    return Core, Valence
+def GetElementCoreValence(Z):    # have to be extended 
+    if Z in [0,1,2]                          : return ([],['1S'])
+    elif Z in [3,4]                          : return (['1S'],['2S'])
+    elif Z in [5,6,7,8,9,10]                 : return (['1S'],['2S','2P'])
+    elif Z in [11,12]                        : return (['1S','2S','2P'],['3S'])
+    elif Z in [13,14,15,16,17,18]            : return (['1S','2S','2P'],['3S','3P'])
+    elif Z in [19,20]                        : return (['1S','2S','2P','3S','3P'],['4S'])
+    elif Z in [21,22,23,24,25,26,27,28,29,30]: return([],[])
+    elif Z in [31,32,33,34,35,36]            : return (['1S','2S','2P','3S','3P','3D'],['4S','4P'])
+    else                                     : return([],[])
+   
+def GetBasisSetCoreValence(Z):
+    if   Z < 19                         : return ('6','31')
+    elif Z in [19,20,31,32,33,34,35,36] : return ('6','6')
+    else                                : return ('','')
 
 def GetSTO(Z, BasisSet):
     STO=[]
-    Core, Valence = GetBasisSetCoreValence(BasisSet)
+    Core, Valence = GetBasisSetCoreValence(Z)
     AtomicCore, AtomicValence = GetElementCoreValence(Z)
-    
     for corevalue in Core:
         for atomiccore in AtomicCore:
             STO.append('STO ' + atomiccore + ' ' + str(corevalue))
-            
     for valencevalue in Valence:
         for atomicvalence in AtomicValence:
             STO.append('STO ' + atomicvalence + ' ' + str(valencevalue))
-            
     return STO
 
 ##################################################################################################################################################
@@ -175,7 +169,6 @@ def GenerateInput(CPU, Z, Charge, Method, BasisSet, Scaling_factors):
     inputtext += GenerateChargeMultiplicity(Z, Charge)
     inputtext += GenerateZMatrix(Z)
     inputtext += GenerateCartesianCoordinates(Z)
-
     sto = GetSTO(Z, BasisSet)
     for index, sto_out in enumerate(sto):
         inputtext += sto_out + ' ' + str(Scaling_factors[index])+'\n'
@@ -190,14 +183,13 @@ def Get_Energy(FileName, CPU, Z, Charge, Method, BasisSet, Scales):
     file.write(GenerateInput(CPU, Z, Charge, Method, BasisSet, Scales) + '\n\n')
     file.close()
     
-    #subprocess.call('GAUSS_SCRDIR="/nqs/$USER"\n', shell=True)
+    # Subprocess.call('GAUSS_SCRDIR="/nqs/$USER"\n', shell=True)
     subprocess.call('g09 < '+ FileName + '.gjf > ' + FileName + '.out\n', shell=True)
     Energy = subprocess.check_output('grep "SCF Done:" ' + FileName + '.out | tail -1 | awk \'{ print $5 }\'', shell=True)
     Energy = Energy.decode('ascii').rstrip('\n')
     if Energy != "":
         EnergyNUM=float(Energy)
         return EnergyNUM
-
     else:
         file=open(FileName+'.gjf','w')
         file.write(GenerateInput(CPU, Z, Charge, Method, BasisSet, Scales) + '\n\n')
@@ -413,28 +405,34 @@ def Main():
     Ctrl = 1000.0
     RGS =  100.0
     E0  =  0.0
-    Tau = -1.0
     Rho   =  0.0
+    skip   =  0
     counter  =  0
+
+# Calculating the initial energy:
+    if E0 == 0.0:
+        E0 = Get_Energy(EnergyFileI,CPU,Z,arguments.Charge,arguments.Method,arguments.BasisSet,Scales)
+        DEnergy=np.absolute(E0)
+        print("Eo =",'% 12.6f' % E0, " --  Initial DEnergy =", '% 12.6f' % DEnergy)
+
+# Generate Gaussian input files and run them, then calculate Hessian:
+    Indices, Diagonal = CreateIndices(Nr_of_scales)
+    E2PScales, E2MScales, EPPScales, ENPScales, EPNScales, ENNScales, Sorted_Hessian_scales = GetHessianScales(Nr_of_scales, Delta, Scales, Indices)
+    HessianEnergyDictionary, HessianEnergies, HessianList, Hessian = GetHessianEnergies(arguments, CPU, Z, ElementName, Delta, Nr_of_scales, Sorted_Hessian_scales, EPPScales, E0)
+
+#    for i in range(1,87):
+#       Group, Period = GetElementGroupPeriod(i) 
+#       print("Z: ",i, "group: ",Group, "Period",Period)
 
 # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> while loop <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
     while RGS > Limit:
         counter += 1 
 
-# Calculating the initial energy:
-        if E0 == 0.0:
-            E0 = Get_Energy(EnergyFileI,CPU,Z,arguments.Charge,arguments.Method,arguments.BasisSet,Scales)
-            DEnergy=np.absolute(E0)
-            print("Eo =",'% 12.6f' % E0, " --  Initial DEnergy =", '% 12.6f' % DEnergy)
-
-# Generating scales for the gradient and hessian:
+# Generating scales for the gradient:
         Indices, Diagonal = CreateIndices(Nr_of_scales)
         Gradient_scales, Sorted_Gradient_scales = GetGradientScales(Delta, Scales)
-        E2PScales, E2MScales, EPPScales, ENPScales, EPNScales, ENNScales, Sorted_Hessian_scales = GetHessianScales(Nr_of_scales, Delta, Scales, Indices)
-
-# Generate Gaussian input files for (Gradient and Hessian) and run them:
+# Generate Gaussian input files and run them, then calculate Gradient:
         GradientEnergyDictionary, GradientList, Gradient = GetGradientEnergies(arguments, CPU, Z, ElementName, Delta, Nr_of_scales, Sorted_Gradient_scales)
-        HessianEnergyDictionary, HessianEnergies, HessianList, Hessian = GetHessianEnergies(arguments, CPU, Z, ElementName, Delta, Nr_of_scales, Sorted_Hessian_scales, EPPScales, E0)
 
 # Calculate Hessian eigenvalues:
         eW, eV = np.linalg.eig(Hessian)
@@ -453,46 +451,27 @@ def Main():
         if Ctrl > 10.0 and DEnergy < 1.0e-4 and RGS < 0.01: Ctrl = 1.0
         if Ctrl < 1.0 and (Rho > 1.250 or (Rho < 0.90 and Rho > 0.250)): Ctrl = 1.0
         if Ctrl < 1.0 and (Rho < 1.250 and Rho > 0.90): 
-            Ctrl = 0.50
-            if RGS < 0.0050 and DEnergy < 1.0e-3: 
-                Ctrl = Ctrl/2.0
-                if (Rho < 1.05 and  Rho > 0.95): Ctrl = Ctrl/8.0
+            Ctrl = 0.250
+            if RGS < 0.0050 and DEnergy < 1.0e-3: Ctrl = Ctrl/2.0
         if Rho < 0.250: Ctrl = Ctrl * 10.0
+        if Ctrl > 1000.0: Ctrl = 1000.0
 
-
+# Make dx = -inv(H - λI)g if, at least, one of the Hesian eigen values < zero, else dx = -inv(H)g: 
         if ew < 9.0e-3:
-            if Tau == -1.0:
-                Lambda = (- ew) + Ctrl
-                print(bcolors.OKGREEN,"  * Ctrl:",Ctrl, bcolors.ENDC)
-                print("   lambda:    ",'% 12.6f' % float(Lambda))
-                ShiftedHessian = Hessian + Lambda * np.identity(len(Gradient))
-                dX = -np.dot(ShiftedHessian.I, Gradient)
-                dXList = np.transpose(dX).tolist()[0]
-                Scales=[float(i) + float(j) for i, j in zip(Scales, dXList)]
-                NEnergy=Get_Energy(EnergyFileF,CPU,Z,arguments.Charge,arguments.Method,arguments.BasisSet,Scales)
-                DEnergy=E0-NEnergy
-                if -(np.dot(np.transpose(Gradient), dX) + 0.5 * np.dot(np.dot(np.transpose(dX), Hessian), dX)).tolist()[0][0] == 0.0:
-                    Rho = 0.0
-                else:
-                    Rho = (DEnergy / -(np.dot(np.transpose(Gradient), dX) + 0.5 * np.dot(np.dot(np.transpose(dX), Hessian), dX)).tolist()[0][0])
-                print("   Rho:       ",'% 12.6f' % float(Rho))
-                magnitude_dX = np.linalg.norm(dX)
+            Lambda = (- ew) + Ctrl
+            ShiftedHessian = Hessian + Lambda * np.identity(len(Gradient))
+            dX = -np.dot(ShiftedHessian.I, Gradient)
+            dXList = np.transpose(dX).tolist()[0]
+            Scales=[float(i) + float(j) for i, j in zip(Scales, dXList)]
+            NEnergy=Get_Energy(EnergyFileF,CPU,Z,arguments.Charge,arguments.Method,arguments.BasisSet,Scales)
+            DEnergy=E0-NEnergy
+            if -(np.dot(np.transpose(Gradient), dX) + 0.5 * np.dot(np.dot(np.transpose(dX), Hessian), dX)).tolist()[0][0] == 0.0:
+                Rho = 0.0
             else:
-                Lambda = (- ew) + Ctrl
-                print(bcolors.OKGREEN, "  * Ctrl:",Ctrl, bcolors.ENDC)
-                print("   lambda:    ",'% 12.6f' % float(Lambda))
-                ShiftedHessian = Hessian + Lambda * np.identity(len(Gradient))
-                dX = -np.dot(ShiftedHessian.I, Gradient)
-                dXList = np.transpose(dX).tolist()[0]
-                Scales=[float(i) + float(j) for i, j in zip(Scales, dXList)]
-                NEnergy=Get_Energy(EnergyFileF,CPU,Z,arguments.Charge,arguments.Method,arguments.BasisSet,Scales)
-                DEnergy=E0-NEnergy
-                if -(np.dot(np.transpose(Gradient), dX) + 0.5 * np.dot(np.dot(np.transpose(dX), Hessian), dX)).tolist()[0][0] == 0.0:
-                    Rho = 0.0
-                else:
-                    Rho = (DEnergy / -(np.dot(np.transpose(Gradient), dX) + 0.5 * np.dot(np.dot(np.transpose(dX), Hessian), dX)).tolist()[0][0])
-                print("   Rho:       ",'% 12.6f' % float(Rho))
-                magnitude_dX = np.linalg.norm(dX)
+                Rho = (DEnergy / -(np.dot(np.transpose(Gradient), dX) + 0.5 * np.dot(np.dot(np.transpose(dX), Hessian), dX)).tolist()[0][0])
+            print(bcolors.OKGREEN, "  * Ctrl:",Ctrl, bcolors.ENDC)
+            print("   lambda:    ",'% 12.6f' % float(Lambda))
+            print("   Rho:       ",'% 12.6f' % float(Rho))
         else:
             dX = -np.dot(Hessian.I, Gradient)
             dXList = np.transpose(dX).tolist()[0]
@@ -506,7 +485,43 @@ def Main():
             print("   lambda:    ",'% 12.6f' % float(ew))
             print("   Rho:       ",'% 12.6f' % float(Rho))
 
-# calculate the root of the sum for squares of gradient components:  
+# Update Hessian -------------------------------------
+        if skip == 0: G0 = Gradient
+        if skip == 1:
+            dG         = Gradient - G0
+            zd         = dG - np.dot(Hessian, dX)
+            norm_dX    = np.linalg.norm(dX)
+            norm_dG    = np.linalg.norm(dG)
+            norm_zd    = np.linalg.norm(zd)
+            condition1 = (np.dot(np.transpose(zd), dX)).tolist()[0][0] / (norm_zd * norm_dX)
+            condition2 = (np.dot(np.transpose(dG), dX)).tolist()[0][0] / (norm_dG * norm_dX)
+# 1) Murtagh-Sargent, symmetric rank one (SR1) update:
+            if   condition1 < -0.1: 
+                Hessian = Hessian + ((np.dot(zd, np.transpose(zd))) / (np.dot(np.transpose(zd), dX)))
+# 2) Broyden-Fletcher-Goldfarb-Shanno (BFGS) update:
+            elif condition2 >  0.1:
+                dGdGt = ((np.dot(dG, np.transpose(dG))) / (np.dot(np.transpose(dG), dX)))
+                xHHx  = (np.dot(np.dot(Hessian, dX), np.dot(np.transpose(dX), Hessian)) /  np.dot(np.dot(np.transpose(dX), Hessian), dX))
+                Hessian = Hessian + (dGdGt - xHHx)
+# 3) Powell-symmetric-Broyden (PSB) update:
+            else: 
+                dG_Hx = (np.dot(zd, np.transpose(dX)) + np.dot(dX, np.transpose(zd))) / (np.dot(np.transpose(dX), dX))
+                xzdxx = np.dot(np.dot(dX, np.transpose(zd)),  np.dot(dX, np.transpose(dX))) / (np.dot(np.transpose(dX), dX) * np.dot(np.transpose(dX), dX))
+                Hessian = Hessian + (dG_Hx - xzdxx) 
+
+        #    print("dG",dG)
+        #    print("zd",zd)
+        #    print("norm_dX",norm_dX)
+        #    print("norm_dG",norm_dG)
+        #    print("norm_zd",norm_zd)
+        #    print("condition1",condition1)
+        #    print("condition2",condition2)
+        #    print("dGdGt",dGdGt)
+        #    print("xHHx",xHHx)
+        #    print("dG_Hx",dG_Hx)
+        #    print("xzdxx",xzdxx)
+
+# calculate the root for the sum of squares of gradient components:  
         Sum_G_Sq = 0.0
         for i in range(len(GradientList)):
             Sum_G_Sq += (GradientList[i] * GradientList[i]) 
@@ -523,9 +538,11 @@ def Main():
         print("   Delta E  :","", '% 12.6f' % float(DEnergy), bcolors.ENDC)
         print()   
 
-# Saving the new E0 and new scale values:
+# Saving the new E0, G0, and new scale values:
         WriteScales(GuessFile, Scales)
         E0 = NEnergy
+        G0 = Gradient
+        skip = 1
 
 # Print to the output if the convergence criteria met, and exit: 
         if (RGS <= Limit):
