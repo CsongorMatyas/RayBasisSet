@@ -6,18 +6,28 @@ from scipy.optimize import minimize #, differential_evolution
 __author__ = "Raymond Poirier's Group - Ahmad Alrawashdeh, Ibrahim Awad, Csongor Matyas"
 
 def Arguments():
-    parser = argparse.ArgumentParser(description='Basis Sets optimizing project - Using Newton method')
+    parser = argparse.ArgumentParser(description='Basis Sets optimizing project - Using various minimizing methods')
+
     parser.add_argument('-o','--OutputFile', nargs='?', type=argparse.FileType('w'), default=sys.stdout, help='Name of the output file (string)')
+
     parser.add_argument('-e','--Element',       required=True, type=int,  help='Input element atomic number')
     parser.add_argument('-c','--Charge',        required=False,type=int,  help='The charge',                       default=0)
-    parser.add_argument('-m','--Method',        required=False,type=str,  help='Level of theory',                  default="UHF")
-    parser.add_argument('-b','--BasisSet',      required=False,type=str,  help='Basis set',                        default="6-31G")
+
+    parser.add_argument('-m','--OptMethod',     required=False,type=str,  help='Optimization method',              default='UHF',
+                        choices=['UHF', 'ROHF', 'HF', 'B3LYP', 'MP2'])
+    parser.add_argument('-M','--MinMethod',     required=False,type=str,  help='Minimization method',              default='en',
+                        choices=['en', 'own', 'combined', 'differential_evolution', 
+                        'CG', 'Nelder-Mead', 'L-BFGS-B', 'Newton-CG', 'TNC', 'SLSQP', 'trust-ncg'])
+    parser.add_argument('-b','--BasisSet',      required=False,type=str,  help='Basis set',                        default='6-31G',
+                        choices=['6-31G', '6-311G', '6-31G(d,p)'])
+
     parser.add_argument('-P','--GaussianProc',  required=False,type=int,  help='Number of processors for Gaussian',default=1)
     parser.add_argument('-p','--ParallelProc',  required=False,type=int,  help='Total number of processors used',  default=1)
     parser.add_argument('-s','--Scales',        required=False,type=float,help='Initial scale values',             nargs='+')
+    parser.add_argument('-r','--Ranges',        required=False,type=float,help='Range of each scale value',        nargs='+')
     parser.add_argument('-D','--Delta',         required=False,type=float,help='The value of Delta',               default=0.001)
     parser.add_argument('-l','--Limit',         required=False,type=float,help='Error limit',                      default=1.0e-6)
-    #parser.add_argument('-G','--Gamma',         required=False,type=float,help='Base gamma coefficient value',     default=0.1)
+
 
     parser.add_argument('-X','--NumberOfScales',required=False,type=float,help='DO NOT GIVE! Will be calculated! - Number of scales used')
     parser.add_argument('-Y','--GuessFile',     required=False,type=str  ,help='DO NOT GIVE! Will be calculated! - File that stores recent scales')
@@ -36,6 +46,9 @@ class bcolors:
     ENDC = '\033[0m'
     BOLD = '\033[1m'
     UNDERLINE = '\033[4m'
+
+class a:
+    arg = None
 
 ##################################################################################################################################################
 #Get functions
@@ -107,15 +120,14 @@ def GetElementGroupPeriod(arguments):
 
    
 def GetElementMultiplicity(arguments):
-    Group, Period = GetElementGroupPeriod(arguments)
-    g = Group - arguments.Charge #Everything after this should be checked, or we should find a formula that will calculate multiplicity instead
-    if g in [2,4,10,12,18,20,36,38,54,56,86]:
+    z = arguments.Element - arguments.Charge #Everything after this should be checked, or we should find a formula that will calculate multiplicity instead
+    if z in [2,4,10,12,18,20,36,38,54,56,86]:
         return 1
-    elif g in [1,3,5,9,11,13,17,19,31,35,37,49,53,55,81,85]:
+    elif z in [1,3,5,9,11,13,17,19,31,35,37,49,53,55,81,85]:
         return 2
-    elif g in [6,8,14,16,32,34,50,52,82,84]:
+    elif z in [6,8,14,16,32,34,50,52,82,84]:
         return 3
-    elif g in [7,15,33,51,83]:
+    elif z in [7,15,33,51,83]:
         return 4
 
 def GetElementCoreValence(arguments):
@@ -158,7 +170,7 @@ def GetSTO(arguments):
 ##################################################################################################################################################
 
 def GenerateFirstLine(arguments):
-    FirstLine = '# ' + arguments.Method + '/gen gfinput\n'
+    FirstLine = '# ' + arguments.OptMethod + '/gen gfinput\n'
     return FirstLine
 
 def GenerateTitle(arguments, Scale_values):
@@ -303,7 +315,7 @@ def Initiate(arguments):
     
     print ("Test element is {}".format(arguments.ElementName))
     print ("Basis set is {}".format(arguments.BasisSet))
-    print ("Level of theory is {}".format(arguments.Method))
+    print ("Level of theory is {}".format(arguments.OptMethod))
     print ("The value of Delta is {}".format(arguments.Delta))
     print ("The cutoff is {}".format(arguments.Limit))
 
@@ -451,6 +463,15 @@ def GetHessian(Scales):
 
     return Hessian
 
+def Function(Scales):
+    global arguments
+    Scales_text = ""
+    for i in range(arguments.NumberOfScales):
+        Scales_text += "_" + str(Scales[i])
+    Energy = Get_Energy(arguments.ElementName.strip() + Scales_text, arguments, Scales)
+    print(Scales.tolist(), Energy)
+    return Energy
+
 def Main():
     global arguments
     arguments = Arguments()
@@ -461,72 +482,31 @@ def Main():
 
     #Calculating the initial energy
     arguments.E0 = Get_Energy(EnergyFileI,arguments, arguments.Scales)
-    
-    #Gradient = GetGradient(Scales)
-    #Hessian = GetHessian(Scales)
-
-    def Function(Scales):
-        global arguments
-        Scales_text = ""
-        for i in range(arguments.NumberOfScales):
-            Scales_text += "_" + str(Scales[i])
-        Energy = Get_Energy(arguments.ElementName.strip() + Scales_text, arguments, Scales)
-        print(Scales.tolist(), Energy)
-        return Energy
 
     x0 = np.array(arguments.Scales)
 
-    result = minimize(Function, x0, method='CG', options={'gtol': arguments.Limit, 'disp': True}) #6 iterations 117 function eval 26 gradient eval
+    if arguments.Ranges != None:
+        x_r = np.array(arguments.Ranges)
+        x_r = np.reshape(x_r, (arguments.NumberOfScales, 2))
+    
+
+    #result = minimize(Function, x0, method='CG', options={'gtol': arguments.Limit, 'disp': True}) #6 iterations 117 function eval 26 gradient eval
     #51 sec E = -0.49587724265
     #result = minimize(Function, x0, method='Nelder-Mead', options={'disp': True}) #39 iterations 72 function eval
     #32 sec E = -0.495879191425
     #result = minimize(Function, x0, jac=GetGradient, method='L-BFGS-B', options={'gtol': arguments.Limit, 'disp': True}) #13 iterations 21 function eval
     #45 sec E = -0.49587945111600001
     ###result = minimize(Function, x0, jac=GetGradient, method='Newton-CG', options={'xtol': arguments.Limit, 'disp': True})
-    ##result = minimize(Function, x0, jac=GetGradient, method='TNC', options={'disp': True})
-    ##result = minimize(Function, x0, method='COBYLA', options={'disp': True})
-    #result = minimize(Function, x0, method='SLSQP', options={'ftol': arguments.Limit, 'disp': True}) #3 iterations 12 function eval 3 gradient eval -0.494978
-    ###result = minimize(Function, x0, jac=GetGradient, hess=GetHessian, method='dogleg', options={'disp': True})
+    
+    result = minimize(Function, x0, jac=GetGradient, bounds=x_r ,method='TNC', options={'disp': True}) #Finds local minima by checking every direction
+    #1 min 18 sec E = -0.495879450836 - Scales [1.1737637977430455, 0.7185664444458553]
+    
+    #result = minimize(Function, x0, method='SLSQP', bounds=x_r, options={'ftol': arguments.Limit, 'disp': True}) #3 iterations 12 function eval 3 gradient eval -0.494978
     ##result = minimize(Function, x0, jac=GetGradient, hess=GetHessian, method='trust-ncg', options={'disp': True})
-
-    """
-    x0_n = np.zeros((arguments.NumberOfScales, 2))
-    for i in range(arguments.NumberOfScales):
-        x0_n[i, 0] = 0.1
-        x0_n[i, 1] = 20
-    print(x0_n)
-
-
-    result = differential_evolution(Function, x0_n)
-    """
-
+    #result = differential_evolution(Function, x_r)
 
     print(result.x)
-    sys.exit(0)
-
-    #Calculating the new energy
-    NEnergy=Get_Energy(EnergyFileF,arguments, arguments.Scales)
-    DEnergy=NEnergy-arguments.E0
-
-    if DEnergy <= 0.0:
-        ColoRR=bcolors.OKGREEN
-    else:
-        ColoRR=bcolors.FAIL
-
-    print(ColoRR, arguments.Scales, Gradient, DEnergy, NEnergy, arguments.E0, bcolors.ENDC)
-
-    #Saving the new E0
-    arguments.E0 = NEnergy
-
-    #Storing the new scale values
-    WriteScales(arguments)
-
-    SumOfSquaredGradientValues = 0.0
-
-    for i in range(arguments.NumberOfScales):
-        SumOfSquaredGradientValues += (Gradient[i] * Gradient[i]) 
-
-    Convergence_criteria = math.sqrt(SumOfSquaredGradientValues)
+ 
 
 if __name__ == "__main__":
     Main()
