@@ -494,11 +494,11 @@ def Main():
     #51 sec E = -0.49587724265
     #result = minimize(Function, x0, method='Nelder-Mead', options={'disp': True}) #39 iterations 72 function eval
     #32 sec E = -0.495879191425
-    #result = minimize(Function, x0, jac=GetGradient, method='L-BFGS-B', options={'gtol': arguments.Limit, 'disp': True}) #13 iterations 21 function eval
+    result = minimize(Function, x0, jac=GetGradient, method='L-BFGS-B', options={'gtol': arguments.Limit, 'disp': True}) #13 iterations 21 function eval
     #45 sec E = -0.49587945111600001
     ###result = minimize(Function, x0, jac=GetGradient, method='Newton-CG', options={'xtol': arguments.Limit, 'disp': True})
     
-    result = minimize(Function, x0, jac=GetGradient, bounds=x_r ,method='TNC', options={'disp': True}) #Finds local minima by checking every direction
+    #result = minimize(Function, x0, jac=GetGradient, bounds=x_r ,method='TNC', options={'disp': True}) #Finds local minima by checking every direction
     #1 min 18 sec E = -0.495879450836 - Scales [1.1737637977430455, 0.7185664444458553]
     
     #result = minimize(Function, x0, method='SLSQP', bounds=x_r, options={'ftol': arguments.Limit, 'disp': True}) #3 iterations 12 function eval 3 gradient eval -0.494978

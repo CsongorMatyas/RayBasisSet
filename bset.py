@@ -86,9 +86,9 @@ def GetElementName(Z):
              'Protactinium','Uranium     ']
     return Element[Z - 1]
 
-def GetElementGroupPeriod(Z):
+def GetElementGroupPeriod(Z):          # Valid for representative elements, only.
     if Z == 0:
-        print('Error: the atomic number is less than one (Z<1)\nProgram Exit ):')
+        print('Error: the atomic number is less than one (Z < 1)\nProgram Exit')
         sys.exit(0)
     ElementOrder = [2, 8, 8, 18, 18, 36, 36]
     Period = 1
@@ -98,39 +98,36 @@ def GetElementGroupPeriod(Z):
             Group  += ElementOrder[i]
             Period += 1
     Group = Z - Group
+    if (Z > 30 and Z < 37) or (Z > 48  and Z <  55): Group = Group - 10
+    if (Z > 80 and Z < 87) or (Z > 112 and Z < 119): Group = Group - 24
     return(Group, Period)
 
-   
 def GetElementMultiplicity(Z, Charge):
-    N_el = Z - Charge #Everything after this should be checked, or we should find a formula that will calculate multiplicity instead
-    if   N_el in [0,2,4,10,12,18,20,36,38,54,56,86]:return 1
-    elif N_el in [1,3,5,9,11,13,17,19,31,35,37,49,53,55,81,85]:return 2
-    elif N_el in [6,8,14,16,32,34,50,52,82,84]:return 3
-    elif N_el in [7,15,33,51,83]:return 4
+    N_el = Z - Charge
+    if   N_el in [0,2,4,10,12,18,20,36,38,54,56,86]            :return 1
+    elif N_el in [1,3,5,9,11,13,17,19,31,35,37,49,53,55,81,85] :return 2
+    elif N_el in [6,8,14,16,32,34,50,52,82,84]                 :return 3
+    elif N_el in [7,15,33,51,83]                               :return 4
 
-def GetElementCoreValence(Z):
-    ElementsOrbitals = [['1S'],['2S','2P'],['3S','3P'],['4S','3D','4P'],['5S','4D','5P'],['6S','4F','5D','6P'],['7S','5F','6D','7P']]
-    Group, Period = GetElementGroupPeriod(Z)
-    
-    AtomicCore=[]
-    for sto in range(0, Period - 1):
-        for psto in ElementsOrbitals[sto]:
-            AtomicCore.append(psto)
-    
-    AtomicValance=[]
-    for vsto in ElementsOrbitals[Period - 1]:
-        AtomicValance.append(vsto)
-                                                #These also have to be checked
-    return(AtomicCore, AtomicValance)
+def GetElementCoreValence(Z):    # have to be extended
+    if Z in [0,1,2]                          : return ([],['1S'])
+    elif Z in [3,4]                          : return (['1S'],['2S'])
+    elif Z in [5,6,7,8,9,10]                 : return (['1S'],['2S','2P'])
+    elif Z in [11,12]                        : return (['1S','2S','2P'],['3S'])
+    elif Z in [13,14,15,16,17,18]            : return (['1S','2S','2P'],['3S','3P'])
+    elif Z in [19,20]                        : return (['1S','2S','2P','3S','3P'],['4S'])
+    elif Z in [21,22,23,24,25,26,27,28,29,30]: return([],[])
+    elif Z in [31,32,33,34,35,36]            : return (['1S','2S','2P','3S','3P','3D'],['4S','4P'])
+    else                                     : return([],[])
 
-def GetBasisSetCoreValence(BasisSet):
-    Core = BasisSet[:BasisSet.find('-')]
-    Valence = BasisSet[BasisSet.find('-') + 1 : BasisSet.find('G')]  #RE is needed here :(
-    return Core, Valence
+def GetBasisSetCoreValence(Z):
+    if   Z < 19                         : return ('6','31')
+    elif Z in [19,20,31,32,33,34,35,36] : return ('6','6')
+    else                                : return ('','')
 
 def GetSTO(Z, BasisSet):
     STO=[]
-    Core, Valence = GetBasisSetCoreValence(BasisSet)
+    Core, Valence = GetBasisSetCoreValence(Z)
     AtomicCore, AtomicValence = GetElementCoreValence(Z)
     
     for corevalue in Core:
