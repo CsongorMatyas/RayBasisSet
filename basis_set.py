@@ -402,12 +402,12 @@ def Main():
     WriteScales(GuessFile, Scales)
 
 # Initial values:
-    Ctrl = 1000.0
-    RGS =  100.0
-    E0  =  0.0
-    Rho   =  0.0
-    skip   =  0
-    counter  =  0
+    Ctrl   =1000.0
+    RGS    =100.0
+    E0     =0.0
+    Rho    =0.0
+    skip   =0
+    counter=0
 
 # Calculating the initial energy:
     if E0 == 0.0:
@@ -434,6 +434,59 @@ def Main():
 # Generate Gaussian input files and run them, then calculate Gradient:
         GradientEnergyDictionary, GradientList, Gradient = GetGradientEnergies(arguments, CPU, Z, ElementName, Delta, Nr_of_scales, Sorted_Gradient_scales)
 
+# Update Hessian -------------------------------------
+        if skip == 0: G0 = Gradient
+        if skip == 1:
+            dG         = Gradient - G0
+            zd         = dG - np.dot(Hessian, dX)
+            norm_dX    = np.linalg.norm(dX)
+            norm_dG    = np.linalg.norm(dG)
+            norm_zd    = np.linalg.norm(zd)
+            condition1 = (np.dot(np.transpose(zd), dX)).tolist()[0][0] / (norm_zd * norm_dX)
+            condition2 = (np.dot(np.transpose(dG), dX)).tolist()[0][0] / (norm_dG * norm_dX)
+# 1) Murtagh-Sargent, symmetric rank one (SR1) update:
+            if   condition1 < -0.1:
+                print('-----------1) Murtagh-Sargent, symmetric rank one (SR1) update')
+                #print('z_zT', np.dot(zd, np.transpose(zd)))
+                #print('zT_dX', np.dot(np.transpose(zd), dX))
+                Hessian = Hessian + ((np.dot(zd, np.transpose(zd))) / (np.dot(np.transpose(zd), dX)))
+# 2) Broyden-Fletcher-Goldfarb-Shanno (BFGS) update:
+            elif condition2 >  0.1:
+                print('-----------2) Broyden-Fletcher-Goldfarb-Shanno (BFGS) update')
+                #print('OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO')
+                #print('dG_dGT', (np.dot(dG, np.transpose(dG))))
+                #print('dGT_dX', (np.dot(np.transpose(dG), dX)))
+                dGdGt = ((np.dot(dG, np.transpose(dG))) / (np.dot(np.transpose(dG), dX)))
+                HxxtH  = (np.dot(np.dot(np.dot(Hessian, dX), np.transpose(dX)), Hessian)) /  np.dot(np.dot(np.transpose(dX), Hessian), dX)
+                #print('change', dGdGt - HxxtH)
+                Hessian = Hessian + (dGdGt - HxxtH)
+# 3) Powell-symmetric-Broyden (PSB) update:
+            else:
+                print('-----------3) Powell-symmetric-Broyden (PSB) update')
+                #print('dXzT + zdXT', np.dot(dX, np.transpose(zd)) + np.dot(zd, np.transpose(dX)))
+                #print('dXTdX', np.dot(np.transpose(dX), dX))
+                dG_Hx = (  np.dot(dX, np.transpose(zd)) + np.dot(zd, np.transpose(dX)) ) / (np.dot(np.transpose(dX), dX))
+                #print('np.dot(np.transpose(dX), zd)', np.dot(np.transpose(dX), zd))
+                #print('np.dot(dX, np.transpose(dX))', np.dot(dX, np.transpose(dX)))
+                #print('*', np.dot(np.transpose(dX), zd).tolist()[0][0] *  np.dot(dX, np.transpose(dX)) )
+                #print('np.dot(np.transpose(dX), dX)', np.dot(np.transpose(dX), dX))
+                #print('square', np.dot(np.transpose(dX), dX) * np.dot(np.transpose(dX), dX))
+                dxtzdxx = np.dot(np.transpose(dX), zd).tolist()[0][0] * np.dot(dX, np.transpose(dX)) / (np.dot(np.transpose(dX), dX) * np.dot(np.transpose(dX), dX))
+                #print('change', dG_Hx - dxtzdxx)
+                Hessian = Hessian + (dG_Hx - dxtzdxx)
+
+        #    print("dG",dG)
+        #    print("zd",zd)
+        #    print("norm_dX",norm_dX)
+        #    print("norm_dG",norm_dG)
+        #    print("norm_zd",norm_zd)
+        #    print("condition1",condition1)
+        #    print("condition2",condition2)
+        #    print("dGdGt",dGdGt)
+        #    print("xHHx",xHHx)
+        #    print("dG_Hx",dG_Hx)
+        #    print("xzdxx",xzdxx)
+
 # Calculate Hessian eigenvalues:
         eW, eV = np.linalg.eig(Hessian)
         ew = min(eW)
@@ -452,7 +505,9 @@ def Main():
         if Ctrl < 1.0 and (Rho > 1.250 or (Rho < 0.90 and Rho > 0.250)): Ctrl = 1.0
         if Ctrl < 1.0 and (Rho < 1.250 and Rho > 0.90): 
             Ctrl = 0.250
-            if RGS < 0.0050 and DEnergy < 1.0e-3: Ctrl = Ctrl/2.0
+            if RGS < 0.0050 and DEnergy < 1.0e-3: 
+                Ctrl = Ctrl/2.0
+                if RGS < 0.0009: Ctrl = Ctrl/20.0
         if Rho < 0.250: Ctrl = Ctrl * 10.0
         if Ctrl > 1000.0: Ctrl = 1000.0
 
@@ -462,7 +517,31 @@ def Main():
             ShiftedHessian = Hessian + Lambda * np.identity(len(Gradient))
             dX = -np.dot(ShiftedHessian.I, Gradient)
             dXList = np.transpose(dX).tolist()[0]
+            LastScales = Scales.copy()
             Scales=[float(i) + float(j) for i, j in zip(Scales, dXList)]
+
+            #'''
+            if min(Scales) < 0:
+                # Generate Gaussian input files and run them, then calculate Hessian:
+                Indices, Diagonal = CreateIndices(Nr_of_scales)
+                E2PScales, E2MScales, EPPScales, ENPScales, EPNScales, ENNScales, Sorted_Hessian_scales = GetHessianScales(Nr_of_scales, Delta, LastScales, Indices)
+                HessianEnergyDictionary, HessianEnergies, HessianList, Hessian = GetHessianEnergies(arguments, CPU, Z, ElementName, Delta, Nr_of_scales, Sorted_Hessian_scales, EPPScales, E0)
+
+                eW, eV = np.linalg.eig(Hessian)
+                ew = min(eW)
+
+                if ew < 9.0e-3:
+                    Lambda = (- ew) + Ctrl
+                    ShiftedHessian = Hessian + Lambda * np.identity(len(Gradient))
+                    dX = -np.dot(ShiftedHessian.I, Gradient)
+                    dXList = np.transpose(dX).tolist()[0]
+                    Scales=[float(i) + float(j) for i, j in zip(LastScales, dXList)]
+                else:
+                    dX = -np.dot(Hessian.I, Gradient)
+                    dXList = np.transpose(dX).tolist()[0]
+                    Scales=[float(i) + float(j) for i, j in zip(LastScales, dXList)]
+            #'''
+
             NEnergy=Get_Energy(EnergyFileF,CPU,Z,arguments.Charge,arguments.Method,arguments.BasisSet,Scales)
             DEnergy=E0-NEnergy
             if -(np.dot(np.transpose(Gradient), dX) + 0.5 * np.dot(np.dot(np.transpose(dX), Hessian), dX)).tolist()[0][0] == 0.0:
@@ -475,7 +554,31 @@ def Main():
         else:
             dX = -np.dot(Hessian.I, Gradient)
             dXList = np.transpose(dX).tolist()[0]
+            LastScales = Scales.copy()
             Scales=[float(i) + float(j) for i, j in zip(Scales, dXList)]
+
+            #'''
+            if min(Scales) < 0:
+                # Generate Gaussian input files and run them, then calculate Hessian:
+                Indices, Diagonal = CreateIndices(Nr_of_scales)
+                E2PScales, E2MScales, EPPScales, ENPScales, EPNScales, ENNScales, Sorted_Hessian_scales = GetHessianScales(Nr_of_scales, Delta, LastScales, Indices)
+                HessianEnergyDictionary, HessianEnergies, HessianList, Hessian = GetHessianEnergies(arguments, CPU, Z, ElementName, Delta, Nr_of_scales, Sorted_Hessian_scales, EPPScales, E0)
+
+                eW, eV = np.linalg.eig(Hessian)
+                ew = min(eW)
+
+                if ew < 9.0e-3:
+                    Lambda = (- ew) + Ctrl
+                    ShiftedHessian = Hessian + Lambda * np.identity(len(Gradient))
+                    dX = -np.dot(ShiftedHessian.I, Gradient)
+                    dXList = np.transpose(dX).tolist()[0]
+                    Scales=[float(i) + float(j) for i, j in zip(LastScales, dXList)]
+                else:
+                    dX = -np.dot(Hessian.I, Gradient)
+                    dXList = np.transpose(dX).tolist()[0]
+                    Scales=[float(i) + float(j) for i, j in zip(LastScales, dXList)]
+            #'''
+
             NEnergy=Get_Energy(EnergyFileF,CPU,Z,arguments.Charge,arguments.Method,arguments.BasisSet,Scales)
             DEnergy=E0-NEnergy
             if -(np.dot(np.transpose(Gradient), dX) + 0.5 * np.dot(np.dot(np.transpose(dX), Hessian), dX)).tolist()[0][0] == 0.0:
@@ -484,42 +587,6 @@ def Main():
                 Rho = (DEnergy / -(np.dot(np.transpose(Gradient), dX) + 0.5 * np.dot(np.dot(np.transpose(dX), Hessian), dX)).tolist()[0][0])
             print("   lambda:    ",'% 12.6f' % float(ew))
             print("   Rho:       ",'% 12.6f' % float(Rho))
-
-# Update Hessian -------------------------------------
-        if skip == 0: G0 = Gradient
-        if skip == 1:
-            dG         = Gradient - G0
-            zd         = dG - np.dot(Hessian, dX)
-            norm_dX    = np.linalg.norm(dX)
-            norm_dG    = np.linalg.norm(dG)
-            norm_zd    = np.linalg.norm(zd)
-            condition1 = (np.dot(np.transpose(zd), dX)).tolist()[0][0] / (norm_zd * norm_dX)
-            condition2 = (np.dot(np.transpose(dG), dX)).tolist()[0][0] / (norm_dG * norm_dX)
-# 1) Murtagh-Sargent, symmetric rank one (SR1) update:
-            if   condition1 < -0.1: 
-                Hessian = Hessian + ((np.dot(zd, np.transpose(zd))) / (np.dot(np.transpose(zd), dX)))
-# 2) Broyden-Fletcher-Goldfarb-Shanno (BFGS) update:
-            elif condition2 >  0.1:
-                dGdGt = ((np.dot(dG, np.transpose(dG))) / (np.dot(np.transpose(dG), dX)))
-                xHHx  = (np.dot(np.dot(Hessian, dX), np.dot(np.transpose(dX), Hessian)) /  np.dot(np.dot(np.transpose(dX), Hessian), dX))
-                Hessian = Hessian + (dGdGt - xHHx)
-# 3) Powell-symmetric-Broyden (PSB) update:
-            else: 
-                dG_Hx = (np.dot(zd, np.transpose(dX)) + np.dot(dX, np.transpose(zd))) / (np.dot(np.transpose(dX), dX))
-                xzdxx = np.dot(np.dot(dX, np.transpose(zd)),  np.dot(dX, np.transpose(dX))) / (np.dot(np.transpose(dX), dX) * np.dot(np.transpose(dX), dX))
-                Hessian = Hessian + (dG_Hx - xzdxx) 
-
-        #    print("dG",dG)
-        #    print("zd",zd)
-        #    print("norm_dX",norm_dX)
-        #    print("norm_dG",norm_dG)
-        #    print("norm_zd",norm_zd)
-        #    print("condition1",condition1)
-        #    print("condition2",condition2)
-        #    print("dGdGt",dGdGt)
-        #    print("xHHx",xHHx)
-        #    print("dG_Hx",dG_Hx)
-        #    print("xzdxx",xzdxx)
 
 # calculate the root for the sum of squares of gradient components:  
         Sum_G_Sq = 0.0
