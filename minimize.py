@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import numpy as np
 import argparse, sys, os, subprocess, joblib, math
-from scipy.optimize import minimize, differential_evolution
+from scipy.optimize import minimize#, differential_evolution
 
 __author__ = "Raymond Poirier's Group - Ahmad Alrawashdeh, Ibrahim Awad, Csongor Matyas"
 
@@ -575,7 +575,6 @@ def Main(arguments):
             a.Warnings.append('Ranges (min / max) for each scale value must be given for this method with the option "-r".\nlen(R) = 2 * len(S) condition not met!')
             ErrorTermination()
 
-<<<<<<< HEAD
     elif a.MinMethod == 'NCG':
         ###result = minimize(Function, x0, jac=GetGradient, method='Newton-CG', options={'xtol': a.Limit, 'disp': True})
         pass
@@ -583,18 +582,6 @@ def Main(arguments):
     elif a.MinMethod == 'SLS':
         #result = minimize(Function, x0, method='SLSQP', bounds=x_r, options={'ftol': a.Limit, 'disp': True})
         pass
-=======
-    #result = minimize(Function, x0, method='CG', options={'gtol': arguments.Limit, 'disp': True}) #6 iterations 117 function eval 26 gradient eval
-    #51 sec E = -0.49587724265
-    #result = minimize(Function, x0, method='Nelder-Mead', options={'disp': True}) #39 iterations 72 function eval
-    #32 sec E = -0.495879191425
-    result = minimize(Function, x0, jac=GetGradient, method='L-BFGS-B', options={'gtol': arguments.Limit, 'disp': True}) #13 iterations 21 function eval
-    #45 sec E = -0.49587945111600001
-    ###result = minimize(Function, x0, jac=GetGradient, method='Newton-CG', options={'xtol': arguments.Limit, 'disp': True})
-    
-    #result = minimize(Function, x0, jac=GetGradient, bounds=x_r ,method='TNC', options={'disp': True}) #Finds local minima by checking every direction
-    #1 min 18 sec E = -0.495879450836 - Scales [1.1737637977430455, 0.7185664444458553]
->>>>>>> 90174a21b9421b60377c46a2cd73ffac7fbe04b0
     
     elif a.MinMethod == 'TR':
         ##result = minimize(Function, x0, jac=GetGradient, hess=GetHessian, method='trust-ncg', options={'disp': True})
