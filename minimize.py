@@ -1,9 +1,42 @@
 #!/usr/bin/env python
 import numpy as np
 import argparse, sys, os, subprocess, joblib, math
-from scipy.optimize import minimize #, differential_evolution
+from scipy.optimize import minimize, differential_evolution
 
 __author__ = "Raymond Poirier's Group - Ahmad Alrawashdeh, Ibrahim Awad, Csongor Matyas"
+
+class a: #Class of the arguments, "a" for short, all arguments that will be passed in any function will be defined here as =None than changed
+    OutputFile = None       #Name of the output file
+    Element = None          #Z of the desired element
+    Z = None                #Z of the desired element
+    Charge = None           #Charge of the element
+    OptMethod = None        #Method that will be used by Gaussian to get the energy
+    MinMethod = None        #Method that will be used to minimize the given scale values
+    BasisSet = None         #Basis set that will be used by Gaussian to get the energy (Not exactly, will be split up in STO's)
+    GaussianProc = None     #Number of processors that will be used by one gaussian job
+    ParallelProc = None     #Total number of processors
+    Scales = None           #Scale values to be used as a guess
+    Ranges = None           #Ranges of the scale values (length of the ranges list = 2 * lenght of the scales list)
+    Delta = None            #The change that will be used to calculate the gradient and hessian
+    Limit = None            #Precision limit, 1.0e-6 for example
+    ElementName = None      #Name of the element
+    Warnings = []           #This will contain any potential warnings related to our part of the code (not necessarily to the packages)
+    Result = None           #This will contain the result(s) given by the packages
+    NumberOfScales = None   #Number of scales used
+    GuessFile = None        #File that stores recent scales
+    E0 = None               #Energy assigned to scale values (Initial in every loop)
+    x0 = None               #numpy array of scales that will be passed in to scipy functions
+    x_r = None              #numpy array of the ranges of the scales that will be passed in to some scipy functions
+
+class bcolors:
+    HEADER = '\033[95m'
+    OKBLUE = '\033[94m'
+    OKGREEN = '\033[92m'
+    WARNING = '\033[93m'
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
 
 def Arguments():
     parser = argparse.ArgumentParser(description='Basis Sets optimizing project - Using various minimizing methods')
@@ -16,8 +49,7 @@ def Arguments():
     parser.add_argument('-m','--OptMethod',     required=False,type=str,  help='Optimization method',              default='UHF',
                         choices=['UHF', 'ROHF', 'HF', 'B3LYP', 'MP2'])
     parser.add_argument('-M','--MinMethod',     required=False,type=str,  help='Minimization method',              default='en',
-                        choices=['en', 'own', 'combined', 'differential_evolution', 
-                        'CG', 'Nelder-Mead', 'L-BFGS-B', 'Newton-CG', 'TNC', 'SLSQP', 'trust-ncg'])
+                        choices=['en', 'own', 'comb', 'scan', 'scan2D','GA', 'CG', 'NM', 'LBF', 'NCG', 'TNC', 'SLS', 'TR'])
     parser.add_argument('-b','--BasisSet',      required=False,type=str,  help='Basis set',                        default='6-31G',
                         choices=['6-31G', '6-311G', '6-31G(d,p)'])
 
@@ -28,39 +60,37 @@ def Arguments():
     parser.add_argument('-D','--Delta',         required=False,type=float,help='The value of Delta',               default=0.001)
     parser.add_argument('-l','--Limit',         required=False,type=float,help='Error limit',                      default=1.0e-6)
 
-
-    parser.add_argument('-X','--NumberOfScales',required=False,type=float,help='DO NOT GIVE! Will be calculated! - Number of scales used')
-    parser.add_argument('-Y','--GuessFile',     required=False,type=str  ,help='DO NOT GIVE! Will be calculated! - File that stores recent scales')
-    parser.add_argument('-Z','--E0',            required=False,type=float,help='DO NOT GIVE! Will be calculated! - Energy assigned to scale values')
-    parser.add_argument('-W','--ElementName',   required=False,type=str  ,help='DO NOT GIVE! Will be calculated! - Name of the element')
-
     arguments = parser.parse_args()
+
+    a.Element = arguments.Element
+    a.Z = arguments.Element
+    a.Charge = arguments.Charge
+    a.OptMethod = arguments.OptMethod
+    a.MinMethod = arguments.MinMethod
+    a.BasisSet = arguments.BasisSet
+    a.GaussianProc = arguments.GaussianProc
+    a.ParallelProc = arguments.ParallelProc
+    a.Scales = arguments.Scales
+    a.Ranges = arguments.Ranges
+
+    a.Delta = arguments.Delta
+    a.Limit = arguments.Limit
+
+    a.ElementName = GetElementName()
+
     return(arguments)
-
-class bcolors:
-    HEADER = '\033[95m'
-    OKBLUE = '\033[94m'
-    OKGREEN = '\033[92m'
-    WARNING = '\033[93m'
-    FAIL = '\033[91m'
-    ENDC = '\033[0m'
-    BOLD = '\033[1m'
-    UNDERLINE = '\033[4m'
-
-class a:
-    arg = None
 
 ##################################################################################################################################################
 #Get functions
 ##################################################################################################################################################
 
-def GetElementSymbol(arguments):
-    if arguments.Element < 1:
+def GetElementSymbol():
+    if a.Element < 1:
         print('Error: the atomic number is less than one (Z<1)\nExit Program')
-        sys.exit(0)
-    elif float(arguments.Element) > 92:
+        sys.exit()
+    elif float(a.Element) > 92:
         print('Error: the atomic number is greater than 92 (Z>92)\nExit Program')
-        sys.exit(0)
+        sys.exit()
     Element=['H ',                                                                       'He', 
     'Li','Be',                                                  'B ','C ','N ','O ','F ','Ne', 
     'Na','Mg',                                                  'Al','Si','P ','S ','Cl','Ar', 
@@ -68,16 +98,16 @@ def GetElementSymbol(arguments):
     'Rb','Sr','Y ','Zr','Nb','Mo','Tc','Ru','Rh','Pd','Ag','Cd','In','Sn','Sb','Te','I ','Xe', 
     'Cs','Ba','La','Ce','Pr','Nd','Pm','Sm','Eu','Gd','Tb','Dy','Ho','Er','Tm','Yb','Lu','Hf', 
     'Ta','W ','Re','Os','Ir','Pt','Au','Hg','Tl','Pb','Bi','Po','At','Rn','Fr','Ra','Ac','Th','Pa','U ']
-    return Element[arguments.Element - 1]
+    return Element[a.Element - 1]
 
 
-def GetElementName(arguments):
-    if arguments.Element < 1:
+def GetElementName():
+    if a.Element < 1:
         print('Error: the atomic number is less than one (Z<1)\nExit Program')
-        sys.exit(0)
-    elif arguments.Element > 92:
+        sys.exit()
+    elif a.Element > 92:
         print('Error: the atomic number is greater than 92 (Z>92)\nExit Program')
-        sys.exit(0)
+        sys.exit()
     Element=['HYDROGEN    ','HELIUM      ','LITHIUM     ','BERYLLIUM   ', 
              'BORON       ','CARBON      ','NITROGEN    ','OXYGEN      ', 
              'FLUORINE    ','NEON        ','SODIUM      ','MAGNESIUM   ', 
@@ -102,58 +132,51 @@ def GetElementName(arguments):
              'Bismuth     ','Polonium    ','Astatine    ','Radon       ', 
              'Francium    ','Radium      ','Actinium    ','Thorium     ', 
              'Protactinium','Uranium     ']
-    return Element[arguments.Element - 1]
+    return Element[a.Element - 1]
 
-def GetElementGroupPeriod(arguments):
-    if arguments.Element == 0:
-        print('Error: the atomic number is less than one (Z<1)\nProgram Exit ):')
-        sys.exit(0)
+def GetElementGroupPeriod():          # Valid for representative elements, only.
+    if a.Z == 0:
+        print('Error: the atomic number is less than one (Z < 1)\nProgram Exit')
+        sys.exit()
     ElementOrder = [2, 8, 8, 18, 18, 36, 36]
     Period = 1
     Group  = 0
     for i in range(len(ElementOrder)):
-        if Group < arguments.Element - ElementOrder[i]:
+        if Group < a.Z - ElementOrder[i]:
             Group  += ElementOrder[i]
             Period += 1
-    Group = arguments.Element - Group
+    Group = a.Z - Group
+    if (a.Z > 30 and a.Z < 37) or (a.Z > 48  and a.Z <  55): Group = Group - 10
+    if (a.Z > 80 and a.Z < 87) or (a.Z > 112 and a.Z < 119): Group = Group - 24
     return(Group, Period)
-
    
-def GetElementMultiplicity(arguments):
-    z = arguments.Element - arguments.Charge #Everything after this should be checked, or we should find a formula that will calculate multiplicity instead
-    if z in [2,4,10,12,18,20,36,38,54,56,86]:
-        return 1
-    elif z in [1,3,5,9,11,13,17,19,31,35,37,49,53,55,81,85]:
-        return 2
-    elif z in [6,8,14,16,32,34,50,52,82,84]:
-        return 3
-    elif z in [7,15,33,51,83]:
-        return 4
+def GetElementMultiplicity():
+    N_el = a.Z - a.Charge
+    if   N_el in [0,2,4,10,12,18,20,36,38,54,56,86]            :return 1
+    elif N_el in [1,3,5,9,11,13,17,19,31,35,37,49,53,55,81,85] :return 2
+    elif N_el in [6,8,14,16,32,34,50,52,82,84]                 :return 3
+    elif N_el in [7,15,33,51,83]                               :return 4
 
-def GetElementCoreValence(arguments):
-    ElementsOrbitals = [['1S'],['2S','2P'],['3S','3P'],['4S','3D','4P'],['5S','4D','5P'],['6S','4F','5D','6P'],['7S','5F','6D','7P']]
-    Group, Period = GetElementGroupPeriod(arguments)
-    
-    AtomicCore=[]
-    for sto in range(0, Period - 1):
-        for psto in ElementsOrbitals[sto]:
-            AtomicCore.append(psto)
-    
-    AtomicValance=[]
-    for vsto in ElementsOrbitals[Period - 1]:
-        AtomicValance.append(vsto)
-                                                #These also have to be checked
-    return(AtomicCore, AtomicValance)
+def GetElementCoreValence():    #This has to be extended 
+    if   a.Z in [0,1,2]                        : return ([],['1S'])
+    elif a.Z in [3,4]                          : return (['1S'],['2S'])
+    elif a.Z in [5,6,7,8,9,10]                 : return (['1S'],['2S','2P'])
+    elif a.Z in [11,12]                        : return (['1S','2S','2P'],['3S'])
+    elif a.Z in [13,14,15,16,17,18]            : return (['1S','2S','2P'],['3S','3P'])
+    elif a.Z in [19,20]                        : return (['1S','2S','2P','3S','3P'],['4S'])
+    elif a.Z in [21,22,23,24,25,26,27,28,29,30]: return ([],[])
+    elif a.Z in [31,32,33,34,35,36]            : return (['1S','2S','2P','3S','3P','3D'],['4S','4P'])
+    else                                       : return ([],[])
+   
+def GetBasisSetCoreValence():
+    if   a.Z < 19                         : return ('6','31')
+    elif a.Z in [19,20,31,32,33,34,35,36] : return ('6','6')
+    else                                  : return ('','')
 
-def GetBasisSetCoreValence(arguments):
-    Core = arguments.BasisSet[:arguments.BasisSet.find('-')]
-    Valence = arguments.BasisSet[arguments.BasisSet.find('-') + 1 : arguments.BasisSet.find('G')]  #RE is needed here :(
-    return Core, Valence
-
-def GetSTO(arguments):
+def GetSTO():
     STO=[]
-    Core, Valence = GetBasisSetCoreValence(arguments)
-    AtomicCore, AtomicValence = GetElementCoreValence(arguments)
+    Core, Valence = GetBasisSetCoreValence()
+    AtomicCore, AtomicValence = GetElementCoreValence()
     
     for corevalue in Core:
         for atomiccore in AtomicCore:
@@ -169,34 +192,35 @@ def GetSTO(arguments):
 ##### Functions related to generating the Input file
 ##################################################################################################################################################
 
-def GenerateFirstLine(arguments):
-    FirstLine = '# ' + arguments.OptMethod + '/gen gfinput\n'
+def GenerateFirstLine():
+    FirstLine = '# ' + a.OptMethod + '/gen gfinput\n'
     return FirstLine
 
-def GenerateTitle(arguments, Scale_values):
-    Title = "\n" + arguments.ElementName.strip() + "\n\n"
+def GenerateTitle():
+    Title = "\n" + a.ElementName.strip() + "\n\n"
     return Title
 
-def GenerateChargeMultiplicity(arguments):
-    ChargeMultiplicity = "{} {}\n".format(arguments.Charge, GetElementMultiplicity(arguments))
+def GenerateChargeMultiplicity():
+    ChargeMultiplicity = "{} {}\n".format(a.Charge, GetElementMultiplicity())
     return ChargeMultiplicity
 
-def GenerateZMatrix(arguments):
-    ZMatrix = GetElementSymbol(arguments).strip() + "\n\n"
+def GenerateZMatrix():
+    ZMatrix = GetElementSymbol().strip() + "\n\n"
     return ZMatrix
 
-def GenerateCartesianCoordinates(arguments):
-    CartesianCoordinates = GetElementSymbol(arguments).strip() + ' 0\n'
+def GenerateCartesianCoordinates():
+    CartesianCoordinates = GetElementSymbol().strip() + ' 0\n'
     return CartesianCoordinates
     
-def GenerateInput(arguments, Scale_values):
-    inputtext = '%NPROCS=' + str(arguments.GaussianProc) + '\n' + GenerateFirstLine(arguments)
-    inputtext += GenerateTitle(arguments, Scale_values)
-    inputtext += GenerateChargeMultiplicity(arguments)
-    inputtext += GenerateZMatrix(arguments)
-    inputtext += GenerateCartesianCoordinates(arguments)
+def GenerateInput(Scale_values):
+    inputtext = '%NPROCS=' + str(a.GaussianProc) + '\n' + GenerateFirstLine()
+    inputtext += GenerateTitle()
+    inputtext += GenerateChargeMultiplicity()
+    inputtext += GenerateZMatrix()
+    inputtext += GenerateCartesianCoordinates()
 
-    sto = GetSTO(arguments)
+    sto = GetSTO()
+
     for index, sto_out in enumerate(sto):
         inputtext += sto_out + ' ' + str(Scale_values[index])+'\n'
     inputtext += '****\n\n'
@@ -206,9 +230,13 @@ def GenerateInput(arguments, Scale_values):
 #Functions related to energy and gradient / hessian
 ############################################################################################################################
 
-def Get_Energy(FileName, arguments, Scale_values):
+def Get_Energy(FileName, Scale_values):
+    #Save current scales in a file
+    WriteScales(Scale_values)
+
+
     file=open(FileName+'.gjf','w')
-    file.write(GenerateInput(arguments, Scale_values) + '\n\n')
+    file.write(GenerateInput(Scale_values) + '\n\n')
     file.close()
     
     #subprocess.call('GAUSS_SCRDIR="/nqs/$USER"\n', shell=True)
@@ -217,11 +245,12 @@ def Get_Energy(FileName, arguments, Scale_values):
     Energy = Energy.decode('ascii').rstrip('\n')
     if Energy != "":
         EnergyNUM=float(Energy)
+        print('Scale Values: {}; Energy: {}'.format(Scale_values, EnergyNUM))
         return EnergyNUM
 
     else:
         file=open(FileName+'.gjf','w')
-        file.write(GenerateInput(arguments, Scale_values) + '\n\n')
+        file.write(GenerateInput(Scale_values) + '\n\n')
         file.close()
 
         subprocess.call('g09 < '+ FileName + '.gjf > ' + FileName + '.out\n', shell=True)
@@ -229,32 +258,34 @@ def Get_Energy(FileName, arguments, Scale_values):
         Energy = Energy.decode('ascii').rstrip('\n')
         if Energy != "":
             EnergyNUM=float(Energy)
+            print('Scale Values: {}; Energy: {}'.format(Scale_values, EnergyNUM))
             return EnergyNUM
         else:
+            print('Scale Values: {}; Energy: ----------'.format(Scale_values))
             print(bcolors.FAIL,"\n STOP STOP: Gaussian job did not terminate normally", bcolors.ENDC)
             print(bcolors.FAIL,"File Name: ", FileName, bcolors.ENDC, "\n\n GOOD LUCK NEXT TIME!!!")
             sys.exit(0)
             return EnergyNUM
     
 
-def GetGradientScales(arguments, Scales):
+def GetGradientScales(Scales):
     Gradient_scales = []
     Sorted_Gradient_scales = []
-    for i in range(arguments.NumberOfScales):
+    for i in range(a.NumberOfScales):
         plus = Scales[:].tolist()
-        plus[i] = round(Scales[i] + arguments.Delta, 15)
+        plus[i] = round(Scales[i] + a.Delta, 15)
         minus = Scales[:].tolist()
-        minus[i] = round(Scales[i] - arguments.Delta, 15)
+        minus[i] = round(Scales[i] - a.Delta, 15)
         Gradient_scales.append([plus, minus])
         Sorted_Gradient_scales.append(plus)
         Sorted_Gradient_scales.append(minus)
     return(Gradient_scales, Sorted_Gradient_scales)
 
-def CreateIndices(arguments):
+def CreateIndices():
     Indices = []
     Diagonal = []
-    for i in range(arguments.NumberOfScales):
-        for j in range(arguments.NumberOfScales):
+    for i in range(a.NumberOfScales):
+        for j in range(a.NumberOfScales):
             if j < i:
                continue
             elif j == i:
@@ -263,34 +294,34 @@ def CreateIndices(arguments):
                Indices.append([i, j])
     return(Indices, Diagonal)
 
-def CreateE2Scales(arguments, Delta, Scales):
+def CreateE2Scales(Delta, Scales):
     E2Scales = []
-    for i in range(arguments.NumberOfScales):
-        iScales = np.zeros(arguments.NumberOfScales).tolist()
-        for j in range(arguments.NumberOfScales):
+    for i in range(a.NumberOfScales):
+        iScales = np.zeros(a.NumberOfScales).tolist()
+        for j in range(a.NumberOfScales):
             iScales[j] = Scales[j]
         iScales[i] = iScales[i] + 2 * Delta
         E2Scales.append(iScales)
     return(E2Scales)
 
-def CreateEEScales(arguments, Delta1, Delta2, Indices, Scales):
+def CreateEEScales(Delta1, Delta2, Indices, Scales):
     EEScales = []
     for (i, j) in Indices:
-        ijScales = np.zeros(arguments.NumberOfScales).tolist()
-        for k in range(arguments.NumberOfScales):
+        ijScales = np.zeros(a.NumberOfScales).tolist()
+        for k in range(a.NumberOfScales):
             ijScales[k] = Scales[k]
         ijScales[i] = ijScales[i] + Delta1
         ijScales[j] = ijScales[j] + Delta2
         EEScales.append(ijScales)
     return(EEScales)
 
-def GetHessianScales(arguments, Indices, Scales):
-    E2PScales = CreateE2Scales(arguments, arguments.Delta, Scales)
-    E2MScales = CreateE2Scales(arguments, -arguments.Delta, Scales)
-    EPPScales = CreateEEScales(arguments, arguments.Delta, arguments.Delta, Indices, Scales)
-    ENPScales = CreateEEScales(arguments, -arguments.Delta, arguments.Delta, Indices, Scales)
-    EPNScales = CreateEEScales(arguments, arguments.Delta, -arguments.Delta, Indices, Scales)
-    ENNScales = CreateEEScales(arguments, -arguments.Delta, -arguments.Delta, Indices, Scales)
+def GetHessianScales(Indices, Scales):
+    E2PScales = CreateE2Scales(a.Delta, Scales)
+    E2MScales = CreateE2Scales(-a.Delta, Scales)
+    EPPScales = CreateEEScales(a.Delta, a.Delta, Indices, Scales)
+    ENPScales = CreateEEScales(-a.Delta, a.Delta, Indices, Scales)
+    EPNScales = CreateEEScales(a.Delta, -a.Delta, Indices, Scales)
+    ENNScales = CreateEEScales(-a.Delta, -a.Delta, Indices, Scales)
 
     Sorted_Hessian_scales = []
     Sorted_Hessian_scales.extend(E2PScales)
@@ -301,31 +332,29 @@ def GetHessianScales(arguments, Indices, Scales):
     Sorted_Hessian_scales.extend(ENNScales)
     return(E2PScales, E2MScales, EPPScales, ENPScales, EPNScales, ENNScales, Sorted_Hessian_scales)
 
-def EnergyParallel(Title, arguments, sto_out, index):
-    Title = Title+'_'+arguments.ElementName.strip()+'_'+arguments.BasisSet.strip()+'_scale_'+str(index+1)
-    Energy = Get_Energy(Title, arguments, sto_out)
+def EnergyParallel(Title, sto_out, index):
+    Title = Title+'_'+a.ElementName.strip()+'_'+a.BasisSet.strip()+'_scale_'+str(index+1)
+    Energy = Get_Energy(Title, sto_out)
     return(index, Energy)
 
 ##################################################################################################################################
 #Functions to be used by Main
 ##################################################################################################################################
 
-def Initiate(arguments):
-    arguments.ElementName = GetElementName(arguments)
-    
-    print ("Test element is {}".format(arguments.ElementName))
-    print ("Basis set is {}".format(arguments.BasisSet))
-    print ("Level of theory is {}".format(arguments.OptMethod))
-    print ("The value of Delta is {}".format(arguments.Delta))
-    print ("The cutoff is {}".format(arguments.Limit))
+def Initiate(arguments):    
+    print ("Test element is {}".format(a.ElementName))
+    print ("Basis set is {}".format(a.BasisSet))
+    print ("Level of theory is {}".format(a.OptMethod))
+    print ("The value of Delta is {}".format(a.Delta))
+    print ("The cutoff is {}".format(a.Limit))
 
     ## files names  ##
-    fileName = str(arguments.Element) + '_' + GetElementSymbol(arguments).strip() + '_' + arguments.BasisSet.strip()
+    fileName = str(a.Element) + '_' + GetElementSymbol().strip()
     GuessFile = 'Guess_' + fileName + '.txt'
     EnergyFileI = 'EnergyI_' + fileName
     EnergyFileF = 'EnergyF_' + fileName
 
-    sto = GetSTO(arguments)
+    sto = GetSTO()
     stoLen = len(sto)
 
     if arguments.Scales is not None:
@@ -334,7 +363,7 @@ def Initiate(arguments):
             Scales = arguments.Scales
         else:
             print(bcolors.FAIL,"\nSTOP STOP: number of guess values should be ", stoLen,bcolors.ENDC)
-            sys.exit(0)
+            sys.exit()
     elif os.path.isfile(GuessFile):
             Scales=[]
             File = open(GuessFile, 'r')
@@ -346,44 +375,52 @@ def Initiate(arguments):
             Scales = [1.0] * stoLen
             print("The guess values (Default Values) are ", Scales)
 
-    arguments.GuessFile = GuessFile
-    arguments.Scales = Scales
-    arguments.NumberOfScales = len(arguments.Scales)
+    a.GuessFile = GuessFile
+    a.Scales = Scales
+    a.NumberOfScales = len(a.Scales)
+
+    #Numpy array of the scales to be changed, this will be passed in to functions
+    a.x0 = np.array(a.Scales)
+
+    if a.Ranges != None:
+        a.x_r = np.array(a.Ranges)
+        a.x_r = np.reshape(a.x_r, (a.NumberOfScales, 2))   #Ranges for the values to be changed, array of min max pairs
+
 
     return(EnergyFileI, EnergyFileF, sto)
 
-def WriteScales(arguments):
-    File = open(arguments.GuessFile,'w')
-    for val in arguments.Scales:
+def WriteScales(Scales):
+    File = open(a.GuessFile,'w')
+    for val in Scales:
         File.write(str(val) + '\n')
     File.close()
 
 def GetGradient(Scales):
-    global arguments
-    Gradient_scales, Sorted_Gradient_scales = GetGradientScales(arguments, Scales)
+    print(bcolors.OKBLUE, '\nCalculating Gradient for scales: ', bcolors.ENDC, '{}\n\n'.format(Scales.tolist()))
+    Gradient_scales, Sorted_Gradient_scales = GetGradientScales(Scales)
 
     #Parallel    
     """
-    ll=joblib.Parallel(n_jobs=arguments.ParallelProc)(joblib.delayed(EnergyParallel)('Grad',arguments,sto_out,index)
+    ll=joblib.Parallel(n_jobs=a.ParallelProc)(joblib.delayed(EnergyParallel)('Grad',sto_out,index)
         for index,sto_out in enumerate(Sorted_Gradient_scales))
     GradientEnergyDictionary={} 
     GradientEnergyDictionary={t[0]:round(t[1], 15) for t in ll}
-    """
+    #"""
 
     #"""
     #Serial
     GradientEnergyDictionary={}
     p = []
     for index, scales in enumerate(Sorted_Gradient_scales):
-        a, b =EnergyParallel('Grad',arguments,scales,index)
-        p.append([a, b])
+        A, B =EnergyParallel('Grad',scales,index)
+        p.append([A, B])
     GradientEnergyDictionary={t[0]:round(t[1], 15) for t in p}
     #"""
 
 
     GradientList=[]
     for val in range(0, len(GradientEnergyDictionary), 2):
-        GradientList.append(round((float(GradientEnergyDictionary[val]) - float(GradientEnergyDictionary[val + 1])) / (2.0 * arguments.Delta), 15))
+        GradientList.append(round((float(GradientEnergyDictionary[val]) - float(GradientEnergyDictionary[val + 1])) / (2.0 * a.Delta), 15))
     
     Gradient = np.transpose(np.matrix(GradientList))
     #Gradient = np.transpose(Gradient)
@@ -396,24 +433,25 @@ def GetGradient(Scales):
     return(Gradient)
 
 def GetHessian(Scales):
-    global arguments
-    Indices, Diagonal = CreateIndices(arguments)
-    E2PScales, E2MScales, EPPScales, ENPScales, EPNScales, ENNScales, Sorted_Hessian_scales = GetHessianScales(arguments, Indices, Scales)
+
+    print(bcolors.OKBLUE, '\nCalculating Hessian for scales: ', bcolors.ENDC, '{}\n\n'.format(Scales.tolist()))
+    Indices, Diagonal = CreateIndices()
+    E2PScales, E2MScales, EPPScales, ENPScales, EPNScales, ENNScales, Sorted_Hessian_scales = GetHessianScales(Indices, Scales)
 
     #Parallel
     """
-    ll=joblib.Parallel(n_jobs=arguments.ParallelProc)(joblib.delayed(EnergyParallel)('Hess',arguments,sto_out,index) 
+    ll=joblib.Parallel(n_jobs=a.ParallelProc)(joblib.delayed(EnergyParallel)('Hess',sto_out,index) 
         for index,sto_out in enumerate(Sorted_Hessian_scales))
     HessianEnergyDictionary={}
     HessianEnergyDictionary={t[0]:round(t[1], 15) for t in ll}
-    """
+    #"""
 
     #Serial
     HessianEnergyDictionary={}
     p = []
     for index, scales in enumerate(Sorted_Hessian_scales):
-        a, b = EnergyParallel('Hess',arguments,scales,index)
-        p.append([a, b])
+        A, B = EnergyParallel('Hess',scales,index)
+        p.append([A, B])
     HessianEnergyDictionary={t[0]:round(t[1], 15) for t in p}
     print(HessianEnergyDictionary)
 
@@ -422,35 +460,35 @@ def GetHessian(Scales):
     for i in range(len(Sorted_Hessian_scales)):
         HessianEnergies.append(HessianEnergyDictionary[i])
  
-    HessianE2P = HessianEnergies[ : arguments.NumberOfScales]
-    HessianE2N = HessianEnergies[arguments.NumberOfScales : 2 * arguments.NumberOfScales]
-    HessianEPP = HessianEnergies[2 * arguments.NumberOfScales : 2 * arguments.NumberOfScales + len(EPPScales)]
-    HessianENP = HessianEnergies[2 * arguments.NumberOfScales + len(EPPScales) : 2 * arguments.NumberOfScales + 2 * len(EPPScales)]
-    HessianEPN = HessianEnergies[2 * arguments.NumberOfScales + 2 * len(EPPScales) : 2 * arguments.NumberOfScales + 3 * len(EPPScales)]
-    HessianENN = HessianEnergies[2 * arguments.NumberOfScales + 3 * len(EPPScales) : ]
+    HessianE2P = HessianEnergies[ : a.NumberOfScales]
+    HessianE2N = HessianEnergies[a.NumberOfScales : 2 * a.NumberOfScales]
+    HessianEPP = HessianEnergies[2 * a.NumberOfScales : 2 * a.NumberOfScales + len(EPPScales)]
+    HessianENP = HessianEnergies[2 * a.NumberOfScales + len(EPPScales) : 2 * a.NumberOfScales + 2 * len(EPPScales)]
+    HessianEPN = HessianEnergies[2 * a.NumberOfScales + 2 * len(EPPScales) : 2 * a.NumberOfScales + 3 * len(EPPScales)]
+    HessianENN = HessianEnergies[2 * a.NumberOfScales + 3 * len(EPPScales) : ]
 
     HessianDiagonal = []
 
-    for i in range(arguments.NumberOfScales):
-        HessianDiagonal.append((HessianE2P[i] + HessianE2N[i] - 2*arguments.E0) /((2.0*arguments.Delta)**2))
+    for i in range(a.NumberOfScales):
+        HessianDiagonal.append((HessianE2P[i] + HessianE2N[i] - 2*a.E0) /((2.0*a.Delta)**2))
 
     HessianUpT = []
 
     for i in range(len(HessianEPP)):
-        HessianUpT.append((HessianEPP[i] - HessianENP[i] - HessianEPN[i] + HessianENN[i]) / ((2.0*arguments.Delta)**2))
+        HessianUpT.append((HessianEPP[i] - HessianENP[i] - HessianEPN[i] + HessianENN[i]) / ((2.0*a.Delta)**2))
 
-    HessianList = np.zeros((arguments.NumberOfScales, arguments.NumberOfScales)).tolist()
+    HessianList = np.zeros((a.NumberOfScales, a.NumberOfScales)).tolist()
     
-    for i in range(arguments.NumberOfScales):
-        for j in range(arguments.NumberOfScales):
+    for i in range(a.NumberOfScales):
+        for j in range(a.NumberOfScales):
             if i == j:
                 HessianList[i][i] = HessianDiagonal[i]
                 continue
             elif i < j:
-                HessianList[i][j] = HessianUpT[i * (arguments.NumberOfScales - i - 1) + j - 1]
+                HessianList[i][j] = HessianUpT[i * (a.NumberOfScales - i - 1) + j - 1]
                 continue
             elif i > j:
-                HessianList[i][j] = HessianUpT[j * (arguments.NumberOfScales - j - 1) + i - 1]
+                HessianList[i][j] = HessianUpT[j * (a.NumberOfScales - j - 1) + i - 1]
                 continue
             else:
                 print("Wrong value!")
@@ -463,52 +501,108 @@ def GetHessian(Scales):
 
     return Hessian
 
+def NormalTermination():
+    print('\n')
+    for w in a.Warnings:
+        print(bcolors.WARNING,   '\n{}\n'.format(w), bcolors.ENDC)
+    if a.Warnings == []:
+        COLORR = bcolors.OKGREEN
+    else:
+        COLORR = bcolors.OKBLUE
+    print(COLORR, '\n           ------------Normal termination------------           \n', bcolors.ENDC)
+    sys.exit(0)
+
+def ErrorTermination():
+    print('\n')
+    for w in a.Warnings:
+        print(bcolors.WARNING,   '\n{}\n'.format(w), bcolors.ENDC)
+    print(bcolors.FAIL, '\n           ------------Error  termination------------           \n', bcolors.ENDC)
+    sys.exit(0)    
+
 def Function(Scales):
-    global arguments
     Scales_text = ""
-    for i in range(arguments.NumberOfScales):
+    for i in range(len(Scales)):
         Scales_text += "_" + str(Scales[i])
-    Energy = Get_Energy(arguments.ElementName.strip() + Scales_text, arguments, Scales)
-    print(Scales.tolist(), Energy)
+    Energy = Get_Energy(a.ElementName.strip() + Scales_text, Scales)
     return Energy
 
-def Main():
-    global arguments
-    arguments = Arguments()
+def Main(arguments):
     EnergyFileI, EnergyFileF, sto = Initiate(arguments)
 
-    #Save current scales in a file
-    WriteScales(arguments)
-
     #Calculating the initial energy
-    arguments.E0 = Get_Energy(EnergyFileI,arguments, arguments.Scales)
+    a.E0 = Get_Energy(EnergyFileI, a.Scales)
 
-    x0 = np.array(arguments.Scales)
-
-    if arguments.Ranges != None:
-        x_r = np.array(arguments.Ranges)
-        x_r = np.reshape(x_r, (arguments.NumberOfScales, 2))
+    if   a.MinMethod == 'en':
+        print('End of program: Calculate single energy with given scales.')
     
-
-    #result = minimize(Function, x0, method='CG', options={'gtol': arguments.Limit, 'disp': True}) #6 iterations 117 function eval 26 gradient eval
-    #51 sec E = -0.49587724265
-    #result = minimize(Function, x0, method='Nelder-Mead', options={'disp': True}) #39 iterations 72 function eval
-    #32 sec E = -0.495879191425
-    #result = minimize(Function, x0, jac=GetGradient, method='L-BFGS-B', options={'gtol': arguments.Limit, 'disp': True}) #13 iterations 21 function eval
-    #45 sec E = -0.49587945111600001
-    ###result = minimize(Function, x0, jac=GetGradient, method='Newton-CG', options={'xtol': arguments.Limit, 'disp': True})
+    elif a.MinMethod == 'own':
+        pass
     
-    result = minimize(Function, x0, jac=GetGradient, bounds=x_r ,method='TNC', options={'disp': True}) #Finds local minima by checking every direction
-    #1 min 18 sec E = -0.495879450836 - Scales [1.1737637977430455, 0.7185664444458553]
+    elif a.MinMethod == 'comb':
+        pass
     
-    #result = minimize(Function, x0, method='SLSQP', bounds=x_r, options={'ftol': arguments.Limit, 'disp': True}) #3 iterations 12 function eval 3 gradient eval -0.494978
-    ##result = minimize(Function, x0, jac=GetGradient, hess=GetHessian, method='trust-ncg', options={'disp': True})
-    #result = differential_evolution(Function, x_r)
+    elif a.MinMethod == 'scan':
+        pass
+    
+    elif a.MinMethod == 'scan2D':
+        pass
+    
+    elif a.MinMethod == 'NM':
+        print(bcolors.OKBLUE, '\nStart of program: Minimize energy using Nelder-Mead algorithm from scipy.optimize.minimize python package.\n', bcolors.ENDC)
+        a.Result = minimize(Function, a.x0, method='Nelder-Mead', options={'disp': True})
+        print('\nThe results are: {}\n'.format(a.Result.x))
+        print(bcolors.OKBLUE, '\nEnd of program: Minimize energy using Nelder-Mead algorithm from scipy.optimize.minimize python package.\n', bcolors.ENDC)
+    
+    elif a.MinMethod == 'CG':
+        print(bcolors.OKBLUE, '\nStart of program: Minimize energy using conjugate gradient algorithm from scipy.optimize.minimize python package.\n', bcolors.ENDC)
+        a.Result = minimize(Function, a.x0, method='CG', options={'gtol': a.Limit, 'disp': True})
+        print('\nThe results are: {}\n'.format(a.Result.x))
+        print(bcolors.OKBLUE, '\nEnd of program: Minimize energy using conjugate gradient algorithm from scipy.optimize.minimize python package.\n', bcolors.ENDC)
+    
+    elif a.MinMethod == 'LBF':
+        print(bcolors.OKBLUE, '\nStart of program: Minimize energy using L-BFGS-B algorithm from scipy.optimize.minimize python package.\n', bcolors.ENDC)
+        a.Result = minimize(Function, a.x0, jac=GetGradient, method='L-BFGS-B', options={'gtol': a.Limit, 'disp': True})
+        print('\nThe results are: {}\n'.format(a.Result.x))
+        print(bcolors.OKBLUE, '\nEnd of program: Minimize energy using L-BFGS-B algorithm from scipy.optimize.minimize python package.\n', bcolors.ENDC)
+    
+    elif a.MinMethod == 'TNC':
+        if len(a.Ranges) == 2 * len(a.Scales):
+            print(bcolors.OKBLUE, '\nStart of program: Minimize energy using truncated Newton (TNC) algorithm from scipy.optimize.minimize python package.\n', bcolors.ENDC)
+            a.Result = minimize(Function, a.x0, jac=GetGradient, bounds=a.x_r ,method='TNC', options={'disp': True})
+            print('\nThe results are: {}\n'.format(a.Result.x))
+            print(bcolors.OKBLUE, '\nEnd of program: Minimize energy using truncated Newton (TNC) algorithm from scipy.optimize.minimize python package.\n', bcolors.ENDC)
+        else:
+            a.Warnings.append('Ranges (min / max) for each scale value must be given for this method with the option "-r".\nlen(R) = 2 * len(S) condition not met!')
+            ErrorTermination()
 
-    print(result.x)
- 
+    elif a.MinMethod == 'NCG':
+        ###result = minimize(Function, x0, jac=GetGradient, method='Newton-CG', options={'xtol': a.Limit, 'disp': True})
+        pass
+    
+    elif a.MinMethod == 'SLS':
+        #result = minimize(Function, x0, method='SLSQP', bounds=x_r, options={'ftol': a.Limit, 'disp': True})
+        pass
+    
+    elif a.MinMethod == 'TR':
+        ##result = minimize(Function, x0, jac=GetGradient, hess=GetHessian, method='trust-ncg', options={'disp': True})
+        pass
+    
+    elif a.MinMethod == 'GA':
+        if len(a.Ranges) == 2 * len(a.Scales):
+            print(bcolors.OKBLUE, '\nStart of program: Minimize energy using differential_evolution algorithm from scipy.optimize python package.\n', bcolors.ENDC)
+            a.Result = differential_evolution(Function, a.x_r)
+            print('\nThe results are: {}\n'.format(a.Result.x))
+            print(bcolors.OKBLUE, '\nEnd of program: Minimize energy using differential_evolution algorithm from scipy.optimize python package.\n', bcolors.ENDC)
+        else:
+            a.Warnings.append('Ranges (min / max) for each scale value must be given for this method with the option "-r".\nlen(R) = 2 * len(S) condition not met!')
+            ErrorTermination()
+    else:
+        a.Warnings.append('This method is unknown')
+        ErrorTermination()
+
+    #End of Main() function
 
 if __name__ == "__main__":
-    Main()
-
-sys.exit(0)
+    arguments = Arguments()
+    Main(arguments)
+    NormalTermination()
