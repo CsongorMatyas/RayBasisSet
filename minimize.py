@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import numpy as np
 import argparse, sys, os, subprocess, joblib, math
-from scipy.optimize import minimize#, differential_evolution
+from scipy.optimize import minimize, differential_evolution
 
 __author__ = "Raymond Poirier's Group - Ahmad Alrawashdeh, Ibrahim Awad, Csongor Matyas"
 
@@ -27,6 +27,10 @@ class a: #Class of the arguments, "a" for short, all arguments that will be pass
     E0 = None               #Energy assigned to scale values (Initial in every loop)
     x0 = None               #numpy array of scales that will be passed in to scipy functions
     x_r = None              #numpy array of the ranges of the scales that will be passed in to some scipy functions
+    AlphaValues = None      #Alpha values to be changed
+    AlphaValueRanges = None #Ranges for the Alpha values to be changed
+    a0 = None               #numpy array of the alpha values
+    a_r = None              #numpy array of the ranges of the alpha values
 
 class bcolors:
     HEADER = '\033[95m'
@@ -49,7 +53,7 @@ def Arguments():
     parser.add_argument('-m','--OptMethod',     required=False,type=str,  help='Optimization method',              default='UHF',
                         choices=['UHF', 'ROHF', 'HF', 'B3LYP', 'MP2'])
     parser.add_argument('-M','--MinMethod',     required=False,type=str,  help='Minimization method',              default='en',
-                        choices=['en', 'own', 'comb', 'scan', 'scan2D','GA', 'CG', 'NM', 'LBF', 'NCG', 'TNC', 'SLS', 'TR'])
+                        choices=['en', 'own', 'comb', 'scan', 'scan2D','GA', 'CG', 'NM', 'LBF', 'NCG', 'TNC', 'SLS', 'TR', 'all'])
     parser.add_argument('-b','--BasisSet',      required=False,type=str,  help='Basis set',                        default='6-31G',
                         choices=['6-31G', '6-311G', '6-31G(d,p)'])
 
@@ -59,6 +63,8 @@ def Arguments():
     parser.add_argument('-r','--Ranges',        required=False,type=float,help='Range of each scale value',        nargs='+')
     parser.add_argument('-D','--Delta',         required=False,type=float,help='The value of Delta',               default=0.001)
     parser.add_argument('-l','--Limit',         required=False,type=float,help='Error limit',                      default=1.0e-6)
+    parser.add_argument('-a','--AlphaValues',   required=False,type=float,help='Alpha values',                     nargs='+')
+    parser.add_argument('-A','--AlphaValueRanges',required=False,type=float,help='Ranges for alpha values',        nargs='+')
 
     arguments = parser.parse_args()
 
@@ -75,6 +81,8 @@ def Arguments():
 
     a.Delta = arguments.Delta
     a.Limit = arguments.Limit
+    a.AlphaValues = arguments.AlphaValues
+    a.AlphaValueRanges = arguments.AlphaValueRanges
 
     a.ElementName = GetElementName()
 
@@ -526,11 +534,69 @@ def Function(Scales):
     Energy = Get_Energy(a.ElementName.strip() + Scales_text, Scales)
     return Energy
 
+def GetEnergyA(FileName, AV):
+    file=open(FileName+'.gjf','w')
+    file.write('# HF/gen gfinput\n\nTitle\n\n0 2\nH\n\nH 0\nS   3 1.00    0.0000000000\n     {} 0.2549381454D-01\n'.format(AV[0]))
+    file.write('     {} 0.1903731086D+00\n     {} 0.8521614860D+00\nS   1 1.00    0.0000000000\n     {} 1.0\n****\n\n\n'.format(AV[1], AV[2], AV[3]))
+    file.close()
+    
+    subprocess.call('g09 < '+ FileName + '.gjf > ' + FileName + '.out\n', shell=True)
+    Energy = subprocess.check_output('grep "SCF Done:" ' + FileName + '.out | tail -1|awk \'{ print $5 }\'', shell=True)
+    Energy = Energy.decode('ascii').rstrip('\n')
+    if Energy != "":
+        EnergyNUM=float(Energy)
+        print('Alpha Values: {}; Energy: {}'.format(AV, EnergyNUM))
+        return EnergyNUM
+
+    else:
+        file=open(FileName+'.gjf','w')
+        file.write('# HF/gen gfinput\n\nTitle\n\n0 2\nH\n\nH 0\nS   3 1.00    0.0000000000\n     {} 0.2549381454D-01\n'.format(AV[0]))
+        file.write('     {} 0.1903731086D+00\n     {} 0.8521614860D+00\nS   1 1.00    0.0000000000\n     {} 1\n****\n\n\n'.format(AV[1], AV[2], AV[3]))
+        file.close()
+
+        subprocess.call('g09 < '+ FileName + '.gjf > ' + FileName + '.out\n', shell=True)
+        Energy = subprocess.check_output('grep "SCF Done:" ' + FileName + '.out | tail -1|awk \'{ print $5 }\'', shell=True)
+        Energy = Energy.decode('ascii').rstrip('\n')
+        if Energy != "":
+            EnergyNUM=float(Energy)
+            print('Alpha Values: {}; Energy: {}'.format(AV, EnergyNUM))
+            return EnergyNUM
+        else:
+            print('Alpha Values: {}; Energy: ----------'.format(AV))
+            print(bcolors.FAIL,"\n STOP STOP: Gaussian job did not terminate normally", bcolors.ENDC)
+            print(bcolors.FAIL,"File Name: ", FileName, bcolors.ENDC, "\n\n GOOD LUCK NEXT TIME!!!")
+            sys.exit(0)
+            return EnergyNUM
+
+def FunctionA(AV):
+    Alpha_text = ""
+    for i in range(len(AV)):
+        Alpha_text += "_" + str(AV[i])
+    Energy = GetEnergyA(a.ElementName.strip() + Alpha_text, AV)
+    return Energy
+
+
+def MinimizeAlphas():
+    a.a0 = np.array(a.AlphaValues)
+    if a.Ranges != None:
+        a.a_r = np.array(a.AlphaValueRanges)
+        a.a_r = np.reshape(a.a_r, (len(a.AlphaValues), 2))   #Ranges for the values to be changed, array of min max pairs
+
+    print(bcolors.OKBLUE, '\nStart of program: Minimize energy.\n', bcolors.ENDC)
+    #a.Result = minimize(FunctionA, a.a0, method='Nelder-Mead', options={'disp': True})
+    #a.Result = minimize(FunctionA, a.a0, method='CG', options={'gtol': a.Limit, 'disp': True})
+    #a.Result = minimize(FunctionA, a.a0, jac=GetGradient, method='L-BFGS-B', options={'gtol': a.Limit, 'disp': True})
+    #a.Result = minimize(FunctionA, a.a0, jac=GetGradient, bounds=a.a_r ,method='TNC', options={'disp': True})
+    a.Result = differential_evolution(FunctionA, a.a_r)
+
+    print('\nThe results are: {}\n'.format(a.Result.x))
+    print(bcolors.OKBLUE, '\nEnd of program: Minimize energy.\n', bcolors.ENDC)
+
 def Main(arguments):
     EnergyFileI, EnergyFileF, sto = Initiate(arguments)
 
     #Calculating the initial energy
-    a.E0 = Get_Energy(EnergyFileI, a.Scales)
+    #a.E0 = Get_Energy(EnergyFileI, a.Scales)
 
     if   a.MinMethod == 'en':
         print('End of program: Calculate single energy with given scales.')
@@ -596,6 +662,8 @@ def Main(arguments):
         else:
             a.Warnings.append('Ranges (min / max) for each scale value must be given for this method with the option "-r".\nlen(R) = 2 * len(S) condition not met!')
             ErrorTermination()
+    elif a.MinMethod == 'all':
+        MinimizeAlphas()
     else:
         a.Warnings.append('This method is unknown')
         ErrorTermination()
