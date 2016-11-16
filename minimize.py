@@ -551,7 +551,7 @@ def GetEnergyA(FileName, AV):
     else:
         file=open(FileName+'.gjf','w')
         file.write('# HF/gen gfinput\n\nTitle\n\n0 2\nH\n\nH 0\nS   3 1.00    0.0000000000\n     {} 0.2549381454D-01\n'.format(AV[0]))
-        file.write('     {} 0.1903731086D+00\n     {} 0.8521614860D+00\nS   1 1.00    0.0000000000\n     {} 1\n****\n\n\n'.format(AV[1], AV[2], AV[3]))
+        file.write('     {} 0.1903731086D+00\n     {} 0.8521614860D+00\nS   1 1.00    0.0000000000\n     {} 1.0\n****\n\n\n'.format(AV[1], AV[2], AV[3]))
         file.close()
 
         subprocess.call('g09 < '+ FileName + '.gjf > ' + FileName + '.out\n', shell=True)
