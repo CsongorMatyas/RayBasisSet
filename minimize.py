@@ -578,7 +578,7 @@ def FunctionA(AV):
 
 def MinimizeAlphas():
     a.a0 = np.array(a.AlphaValues)
-    if a.Ranges != None:
+    if a.AlphaValueRanges != None:
         a.a_r = np.array(a.AlphaValueRanges)
         a.a_r = np.reshape(a.a_r, (len(a.AlphaValues), 2))   #Ranges for the values to be changed, array of min max pairs
 
