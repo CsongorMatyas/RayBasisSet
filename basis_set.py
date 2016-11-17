@@ -501,6 +501,7 @@ def Main():
 
 # Control the criteria of the trust region:
         if DEnergy <= 0.0750 and (Rho < 1.250 and  Rho > 0.90): Ctrl = Ctrl/10.0
+        if Z > 10 and DEnergy <= 1.0 and (Rho < 1.250 and  Rho > 0.90): Ctrl = Ctrl/10.0
         if Ctrl > 10.0 and DEnergy < 1.0e-4 and RGS < 0.01: Ctrl = 1.0
         if Ctrl < 1.0 and (Rho > 1.250 or (Rho < 0.90 and Rho > 0.250)): Ctrl = 1.0
         if Ctrl < 1.0 and (Rho < 1.250 and Rho > 0.90): 
