@@ -245,7 +245,7 @@ def GenerateChargeMultiplicityDiatomic():
 def GenerateZMatrixDiatomic():
     symb = GetElementSymbol()
     covalent = GetCovalentBond()
-    ZMatrix = '{}\n{} 1 {}\n\n{} 0\n'.format(symb, symb, covalent,symb)
+    ZMatrix = '{}\n{} 1 {}\n\n'.format(symb, symb, covalent)
     return ZMatrix
 
 def GenerateCartesianCoordinates():
