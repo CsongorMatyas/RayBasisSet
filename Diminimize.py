@@ -67,7 +67,7 @@ def Arguments():
     parser.add_argument('-l','--Limit',         required=False,type=float,help='Error limit',                      default=1.0e-6)
     parser.add_argument('-a','--AlphaValues',   required=False,type=float,help='Alpha values',                     nargs='+')
     parser.add_argument('-A','--AlphaValueRanges',required=False,type=float,help='Ranges for alpha values',        nargs='+')
-    parser.add_argument('-t','--Diatomic',      required=False,type=str,  help='Diatomic',                        default='N',
+    parser.add_argument('-d','--Diatomic',      required=False,type=str,  help='Diatomic',                        default='N',
                         choices=['Y', 'N'])
 
     arguments = parser.parse_args()
@@ -154,8 +154,8 @@ def GetCovalentBond():
     elif float(a.Element) > 92:
         print('Error: the atomic number is greater than 92 (Z>92)\nExit Program')
         sys.exit()
-    Element=['0.7080 ',                                                                       'He',
-    'Li','Be',                                                  'B ','C ','N ','O ','F ','Ne',
+    Element=['0.7410 ',                                                                                           '1.081',
+    '2.673','2.460',                                                  '1.590','1.243 ','1.098 ','1.208 ','1.412 ','3.100',
     'Na','Mg',                                                  'Al','Si','P ','S ','Cl','Ar',
     'K ','Ca','Sc','Ti','V ','Cr','Mn','Fe','Co','Ni','Cu','Zn','Ga','Ge','As','Se','Br','Kr',
     'Rb','Sr','Y ','Zr','Nb','Mo','Tc','Ru','Rh','Pd','Ag','Cd','In','Sn','Sb','Te','I ','Xe',
