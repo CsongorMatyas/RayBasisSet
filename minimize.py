@@ -1258,7 +1258,7 @@ def Main(arguments):
         pass
     
     elif a.MinMethod == 'SLS':
-        #result = minimize(Function, x0, method='SLSQP', bounds=x_r, options={'ftol': a.Limit, 'disp': True})
+        result = minimize(Function, a.x0, method='SLSQP', bounds=a.x_r, options={'ftol': a.Limit, 'disp': True})
         pass
     
     elif a.MinMethod == 'TR':
