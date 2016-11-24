@@ -1,15 +1,15 @@
-#####################  Anions  #################### 85 
+#####################  Anions  #################### 82 
 
-	H-,	      Hydrogen atom anion
-	D-,	      Deuterium atom anion
+	H-,	  Hydrogen atom anion
+	D-,	  Deuterium atom anion
 	He-,	  Helium atom anion
 	Li-,	  Lithium atom anion
 	Be-,	  Beryllium atom anion
-	B-,	      Boron atom anion
-	C-,	      Carbon atom anion
-	N-,	      Nitrogen atom anion
-	O-,	      Oxygen atom anion
-	F-,	      Fluorine atom anion
+	B-,	  Boron atom anion
+	C-,	  Carbon atom anion
+	N-,	  Nitrogen atom anion
+	O-,	  Oxygen atom anion
+	F-,	  Fluorine atom anion
 	Ne-,	  Neon atom anion
 	H2-,	  hydrogen diatomic anion
 	LiH-,	  lithium hydride anion
@@ -82,22 +82,19 @@
 	CH3OH-,	  Methyl alcohol anion
 	CH3OO-,	  methylperoxy anion
 	CH3CO-,	  Acetyl anion
-	C2H5-,	  Ethyl anion
-	CH3COO-,  acetate anion
-	CF3COO-,  trifluoro acetate anion
 
-#####################  Cations  #################### 131 
+#####################  Cations  #################### 124 
 
-	H+,	      Hydrogen atom cation
-	D+,	      Deuterium atom cation
+	H+,	  Hydrogen atom cation
+	D+,	  Deuterium atom cation
 	He+,	  Helium atom cation
 	Li+,	  Lithium atom cation
 	Be+,	  Beryllium atom cation
-	B+,	      Boron atom cation
-	C+,	      Carbon atom cation
-	N+,	      Nitrogen atom cation
-	O+,	      Oxygen atom cation
-	F+,	      Fluorine atom cation
+	B+,	  Boron atom cation
+	C+,	  Carbon atom cation
+	N+,	  Nitrogen atom cation
+	O+,	  Oxygen atom cation
+	F+,	  Fluorine atom cation
 	Ne+,	  Neon atom cation
 	H2+,	  Hydrogen cation
 	He2+,	  helium dimer cation
@@ -199,34 +196,27 @@
 	C3H3+,	  cyclopropenyl cation
 	C4H2+,	  diacetlyene cation
 	N2H4+,	  hydrazine cation
-	CH2NH2+,  methyleneamine cation
+	CH2NH2+,	  methyleneamine cation
 	CH3CN+,	  Acetonitrile cation
 	NCNH3+,	  Cyanamide, protonated
-	HNCNH2+,  diiminomethane, protonated
+	HNCNH2+,	  diiminomethane, protonated
 	CH3OH+,	  Methyl alcohol cation
 	CH3OO+,	  methylperoxy cation
 	CH3CO+,	  acetyl cation
 	H2NO3+,	  Nitric Acid, Protonated
-	C2H2O2+,  Ethanedial cation
-	CH2CHF+,  fluoroethene cation
+	C2H2O2+,	  Ethanedial cation
+	CH2CHF+,	  fluoroethene cation
 	C2HF3+,	  Trifluoroethylene cation
 	CF3CN+,	  Acetonitrile, trifluoro- cation
 	C2F4+,	  Tetrafluoroethylene cation
-	C2H5+,	  Ethyl cation
-	CH3NH2+,  methyl amine cation
-	N2H5+,	  protonated hydrazine
-	C3H3N+,	  acrylonitrile cation
-	CH3OH2+,  Methanol, protonated
-	H2CONH2+, protonated formamide
-	H3CO3+,	  carbonic acid, protonated
 
-#####################  Radicals  #################### 25 
+#####################  Radicals  #################### 23 
 
-	CN,	      Cyano radical
-	OH,	      Hydroxyl radical
+	CN,	  Cyano radical
+	OH,	  Hydroxyl radical
 	C2H,	  Ethynyl radical
 	NH2,	  Amino radical
-	N3,	      azide radical
+	N3,	  azide radical
 	HCO,	  Formyl radical
 	HO2,	  Hydroperoxy radical
 	NCO,	  isocyanato radical
@@ -245,68 +235,66 @@
 	CH3OO,	  methylperoxy radical
 	CH3CO,	  Acetyl radical
 	CH2CHO,	  Vinyloxy radical
-	C2H5,	  Ethyl radical
-	CH3CHN,	  methylmethaniminyl radical
 
-#####################  Neurtals  #################### 235 
+#####################  Neurtals  #################### 207 
 
-	H,	      Hydrogen atom
-	D,	      Deuterium atom
-	He,	      Helium atom
-	Li,	      Lithium atom
-	Be,	      Beryllium atom
-	B,	      Boron atom
-	C,	      Carbon atom
-	N,	      Nitrogen atom
-	O,	      Oxygen atom
-	F,	      Fluorine atom
-	Ne,	      Neon atom
-	HD,	      Deuterium hydride
-	H2,	      Hydrogen diatomic
-	D2,	      Deuterium diatomic
+	H,	  Hydrogen atom
+	D,	  Deuterium atom
+	He,	  Helium atom
+	Li,	  Lithium atom
+	Be,	  Beryllium atom
+	B,	  Boron atom
+	C,	  Carbon atom
+	N,	  Nitrogen atom
+	O,	  Oxygen atom
+	F,	  Fluorine atom
+	Ne,	  Neon atom
+	HD,	  Deuterium hydride
+	H2,	  Hydrogen diatomic
+	D2,	  Deuterium diatomic
 	HeH,	  Helium hydride
 	LiH,	  Lithium Hydride
 	Li2,	  Lithium diatomic
 	BeH,	  beryllium monohydride
 	Be2,	  Beryllium diatomic
 	LiBe,	  Lithium Beryllium
-	BH,	      Boron monohydride
+	BH,	  Boron monohydride
 	LiB,	  Lithium boride
-	B2,	      Boron diatomic
+	B2,	  Boron diatomic
 	BeB,	  Beryllium monoboride
-	CH,	      Methylidyne
+	CH,	  Methylidyne
 	LiC,	  Lithium Carbide
 	BeC,	  beryllium carbide triplet
-	BC,	      boron monocarbide
-	C2,	      Carbon diatomic
-	NH,	      Imidogen
+	BC,	  boron monocarbide
+	C2,	  Carbon diatomic
+	NH,	  Imidogen
 	BeN,	  Beryllium mononitride
 	LiN,	  Lithium Nitride
-	BN,	      boron nitride
-	N2,	      Nitrogen diatomic
-	DO,	      Hydroxyl-d
+	BN,	  boron nitride
+	N2,	  Nitrogen diatomic
+	DO,	  Hydroxyl-d
 	LiO,	  lithium oxide
-	BO,	      boron monoxide
+	BO,	  boron monoxide
 	BeO,	  beryllium oxide
-	O2,	      Oxygen diatomic
-	NO,	      Nitric oxide
-	CO,	      Carbon monoxide
-	HF,	      Hydrogen fluoride
-	DF,	      Hydrofluoric acid-d
-	FO,	      Oxygen monofluoride
-	BF,	      Boron monofluoride
+	O2,	  Oxygen diatomic
+	NO,	  Nitric oxide
+	CO,	  Carbon monoxide
+	HF,	  Hydrogen fluoride
+	DF,	  Hydrofluoric acid-d
+	FO,	  Oxygen monofluoride
+	BF,	  Boron monofluoride
 	BeF,	  Beryllium monofluoride
-	NF,	      nitrogen fluoride
-	F2,	      Fluorine diatomic
+	NF,	  nitrogen fluoride
+	F2,	  Fluorine diatomic
 	LiF,	  lithium fluoride
-	CF,	      Fluoromethylidyne
+	CF,	  Fluoromethylidyne
 	NeH,	  neon hydrogen
 	Ne2,	  Neon dimer
 	Li3,	  Lithium trimer
 	BeH2,	  beryllium dihydride
 	BH2,	  boron dihydride
 	CH2,	  Methylene
-	C3,	      carbon trimer
+	C3,	  carbon trimer
 	ND2,	  Amidogen-d2
 	NNH,	  Dinitrogen monohydride
 	HNB,	  hydrogen nitrogen boron
@@ -327,7 +315,7 @@
 	Li2O,	  dilithium oxide
 	BO2,	  Boron dioxide
 	NO2,	  Nitrogen dioxide
-	O3,	      Ozone
+	O3,	  Ozone
 	N2O,	  Nitrous oxide
 	CO2,	  Carbon dioxide
 	HCF,	  Fluoromethylene
@@ -343,7 +331,7 @@
 	BH3,	  boron trihydride
 	CCH2,	  vinylidene
 	C2H2,	  Acetylene
-	C4,	      Carbon tetramer
+	C4,	  Carbon tetramer
 	ND3,	  Ammonia-d3
 	NH3,	  Ammonia
 	H2CN,	  H2CN
@@ -457,31 +445,3 @@
 	CF3CN,	  Acetonitrile, trifluoro-
 	C2F4,	  Tetrafluoroethylene
 	B2F4,	  Diboron tetrafluoride
-	CH3BH2,	  methylborane
-	C3H4,	  cyclopropene
-	CH2CCH2,  allene
-	CH3CCH,	  propyne
-	CH3NH2,	  methyl amine
-	CH2CHNH,  vinylazine
-	NHCHNH2,  aminomethanimine
-	C3H3N,	  acrylonitrile
-	CH3N3,	  methyl azide
-	CH2N4,	  1H-Tetrazole
-	C3H2N2,	  Malononitrile
-	H2ONH3,	  Water Ammonia Dimer
-	CH3OOH,	  Methyl peroxide
-	H2OH2CO,  water formaldehyde dimer
-	CH3CHO,	  Acetaldehyde
-	C2H4O,	  Ethylene oxide
-	CH2(OH)2, methanediol
-	CH2CHOH,  ethenol
-	CH3ONO,	  Methyl nitrite
-	NH2COOH,  Carbamic acid
-	CH3NO2,	  Methane, nitro-
-	H3BO3,	  Boric acid
-	C3H2O2,	  Propiolic acid
-	CHOCOOH,  oxo acetic acid
-	N2O5,	  Dinitrogen pentoxide
-	CH3COF,	  Acetyl fluoride
-	CF3CHO,	  trifluoroacetaldehyde
-	CF3COF,	  trifluoroacetyl fluoride
