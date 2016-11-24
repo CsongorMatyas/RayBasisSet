@@ -250,17 +250,17 @@
 	F,	  Fluorine atom
 	Ne,	  Neon atom
 	HD,	  Deuterium hydride
-	H2,	  Hydrogen diatomic
+						H2,	  Hydrogen diatomic                
 	D2,	  Deuterium diatomic
-	HeH,	  Helium hydride
-	LiH,	  Lithium Hydride
-	Li2,	  Lithium diatomic
+						HeH,	  Helium hydride
+						LiH,	  Lithium Hydride
+						Li2,	  Lithium diatomic
 	BeH,	  beryllium monohydride
-	Be2,	  Beryllium diatomic
-	LiBe,	  Lithium Beryllium
+						Be2,	  Beryllium diatomic
+	LiBe,	  Lithium Beryllium	
 	BH,	  Boron monohydride
 	LiB,	  Lithium boride
-	B2,	  Boron diatomic
+						B2,	  Boron diatomic
 	BeB,	  Beryllium monoboride
 	CH,	  Methylidyne
 	LiC,	  Lithium Carbide
@@ -271,58 +271,58 @@
 	BeN,	  Beryllium mononitride
 	LiN,	  Lithium Nitride
 	BN,	  boron nitride
-	N2,	  Nitrogen diatomic
+						N2,	  Nitrogen diatomic
 	DO,	  Hydroxyl-d
 	LiO,	  lithium oxide
 	BO,	  boron monoxide
 	BeO,	  beryllium oxide
-	O2,	  Oxygen diatomic
-	NO,	  Nitric oxide
-	CO,	  Carbon monoxide
-	HF,	  Hydrogen fluoride
+						O2,	  Oxygen diatomic
+						NO,	  Nitric oxide
+						CO,	  Carbon monoxide
+						HF,	  Hydrogen fluoride
 	DF,	  Hydrofluoric acid-d
 	FO,	  Oxygen monofluoride
 	BF,	  Boron monofluoride
 	BeF,	  Beryllium monofluoride
 	NF,	  nitrogen fluoride
-	F2,	  Fluorine diatomic
-	LiF,	  lithium fluoride
+						F2,	  Fluorine diatomic
+						LiF,	  lithium fluoride
 	CF,	  Fluoromethylidyne
 	NeH,	  neon hydrogen
-	Ne2,	  Neon dimer
+						Ne2,	  Neon dimer
 	Li3,	  Lithium trimer
-	BeH2,	  beryllium dihydride
+						BeH2,	  beryllium dihydride
 	BH2,	  boron dihydride
 	CH2,	  Methylene
 	C3,	  carbon trimer
 	ND2,	  Amidogen-d2
 	NNH,	  Dinitrogen monohydride
 	HNB,	  hydrogen nitrogen boron
-	HNC,	  hydrogen isocyanide
-	HCN,	  Hydrogen cyanide
-	LiCN,	  lithium cyanide
+						HNC,	  hydrogen isocyanide
+						HCN,	  Hydrogen cyanide
+						LiCN,	  lithium cyanide
 	NCN,	  NCN
 	CN2,	  3H-Diazirin-3-ylidene
 	HDO,	  Water-d1
 	D2O,	  Deuterium oxide
-	H2O,	  Water
-	LiOH,	  lithium hydroxide
+						H2O,	  Water
+						LiOH,	  lithium hydroxide
 	HNO,	  Nitrosyl hydride
 	NOH,	  NOH
 	BeOH,	  beryllium hydroxide
 	HBO,	  Boron hydride oxide
 	CCO,	  Dicarbon monoxide
-	Li2O,	  dilithium oxide
+						Li2O,	  dilithium oxide
 	BO2,	  Boron dioxide
-	NO2,	  Nitrogen dioxide
-	O3,	  Ozone
-	N2O,	  Nitrous oxide
-	CO2,	  Carbon dioxide
+						NO2,	  Nitrogen dioxide
+						O3,	  Ozone
+						N2O,	  Nitrous oxide
+						CO2,	  Carbon dioxide
 	HCF,	  Fluoromethylene
-	HOF,	  Hypofluorous acid
+						HOF,	  Hypofluorous acid
 	FHF,	  FHF
 	FO2,	  Dioxygen monofluoride
-	BeF2,	  Beryllium fluoride
+						BeF2,	  Beryllium fluoride
 	FNO,	  Nitrosyl fluoride
 	F2O,	  Difluorine monoxide
 	FCN,	  Cyanogen fluoride
@@ -330,15 +330,15 @@
 	CF2,	  Difluoromethylene
 	BH3,	  boron trihydride
 	CCH2,	  vinylidene
-	C2H2,	  Acetylene
+						C2H2,	  Acetylene
 	C4,	  Carbon tetramer
 	ND3,	  Ammonia-d3
-	NH3,	  Ammonia
+						NH3,	  Ammonia
 	H2CN,	  H2CN
 	CNH2,	  CNH2
 	HCNH,	  HCNH
-	N2H2,	  (Z)-Diazene
-	N2H2,	  trans-diazine
+						N2H2,	  (Z)-Diazene
+						N2H2,	  trans-diazine
 	HN3,	  hydrogen azide
 	HCCN,	  cyanomethylene
 	C2N2,	  Cyanogen
@@ -346,15 +346,15 @@
 	H2NO,	  nitroxide
 	HOCH,	  hydroxycarbene
 	H2CO,	  Formaldehyde
-	H2O2,	  Hydrogen peroxide
-	HNO2,	  Nitrous acid
-	HNCO,	  Isocyanic acid
-	HCNO,	  fulminic acid
-	HOCN,	  cyanic acid
+						H2O2,	  Hydrogen peroxide
+						HNO2,	  Nitrous acid	
+						HNCO,	  Isocyanic acid
+						HCNO,	  fulminic acid
+						HOCN,	  cyanic acid
 	CO3--,	  carbonate
 	CO3,	  Carbon trioxide
-	NO3,	  Nitrogen trioxide
-	B2O2,	  Diboron dioxide
+						NO3,	  Nitrogen trioxide
+						B2O2,	  Diboron dioxide
 	ONNO,	  NO dimer
 	H2F2,	  Hydrogen fluoride dimer
 	NH2F,	  monofluoroamine
@@ -367,7 +367,7 @@
 	FNO2,	  Nitryl fluoride
 	FOOF,	  Perfluoroperoxide
 	NF3,	  Nitrogen trifluoride
-	BF3,	  Borane, trifluoro-
+						BF3,	  Borane, trifluoro-
 	CF2O,	  Carbonic difluoride
 	C2F2,	  difluoroacetylene
 	BH4,	  borohydride
@@ -375,7 +375,7 @@
 	CH3D,	  methane-d
 	CH2D2,	  methane-d2
 	CHD3,	  methane-d3
-	CH4,	  Methane
+						CH4,	  Methane
 	CH3Li,	  methyl lithium
 	C2H3,	  vinyl
 	CH2BH,	  methyleneborane
@@ -389,57 +389,57 @@
 	NH3O,	  Ammonia Oxide
 	NH2NO,	  Nitrosamide
 	H2COO,	  dioxymethyl
-	HCCOH,	  ethynol
+						HCCOH,	  ethynol
 	H2O3,	  Hydrogen trioxide
 	CH2O2,	  Dioxirane
 	C2H2O,	  Oxirene
 	CH2CO,	  Ketene
-	HCOOH,	  Formic acid
-	HNO3,	  Nitric acid
+						HCOOH,	  Formic acid
+						HNO3,	  Nitric acid
 	C3O2,	  Carbon suboxide
 	ONONO,	  Nitrosyl nitrite
 	BeCO3,	  Beryllium Carbonate
 	N2O3,	  Dinitrogen trioxide
 	CD3F,	  methylfluoride-d3
-	CH3F,	  Methyl fluoride
-	CH2F2,	  Methane, difluoro-
-	CHF3,	  Methane, trifluoro-
+						CH3F,	  Methyl fluoride
+						CH2F2,	  Methane, difluoro-
+						CHF3,	  Methane, trifluoro-
 	FNO3,	  Fluorine nitrate
 	CF4,	  Carbon tetrafluoride
 	F3NO,	  Nitrogen trifluoride oxide
 	HBHHBH,	  Diborane(4) C2V
-	LiBH4,	  Lithium borohydride
-	B2H4,	  Diborane(4) D2d
+						LiBH4,	  Lithium borohydride
+						B2H4,	  Diborane(4) D2d
 	CH3CH,	  methylmethylene
-	C2H4,	  Ethylene
+						C2H4,	  Ethylene
 	C4H2,	  Diacetylene
 	N2H4,	  Hydrazine
 	CH3NC,	  methyl isocyanide
 	CH3CN,	  Acetonitrile
 	C4N2,	  2-Butynedinitrile
-	CH3OH,	  Methyl alcohol
+						CH3OH,	  Methyl alcohol
 	H2OH2O,	  water dimer
 	CH3BO,	  Borane, methyloxo-
 	CH2BOH,	  hydroxy(methylene)borane
 	BH3CO,	  Borane carbonyl
-	CHONH2,	  formamide
+						CHONH2,	  formamide
 	CH2NOH,	  formaldoxime
 	CH3NO,	  nitrosomethane
 	CNOH3,	  1,2-oxaziridine
 	HOCHNH,	  hydroxymethylimine
 	CH2OOH,	  CH2OOH
 	NH2NO2,	  nitramide
-	H2CO3,	  Carbonic acid
+	H2CO3,	  Carbonic acid1
 	C2H2O2,	  Ethanedial
 	HOONO2,	  peroxy nitric acid
 	N2O4,	  Dinitrogen tetroxide
-	Li2CO3,	  Lithium Carbonate
+						Li2CO3,	  Lithium Carbonate
 	C2O4--,	  oxalate anion
 	CH2CHF,	  Ethene, fluoro-
 	CH2CF2,	  Ethene, 1,1-difluoro-
 	C2H2F2,	  Ethene, 1,2-difluoro-, (Z)-
 	C2H2F2,	  Ethene, 1,2-difluoro-, (E)-
-	CF3OH,	  trifluoromethanol
+						CF3OH,	  trifluoromethanol
 	C2HF3,	  Trifluoroethylene
 	CF3OF,	  Trifluoromethylhypofluorite
 	CF3CN,	  Acetonitrile, trifluoro-
