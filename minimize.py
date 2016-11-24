@@ -1207,10 +1207,10 @@ def MinimizeAlphas():
 def Main(arguments):
     EnergyFileI, EnergyFileF, sto = Initiate(arguments)
 
-    #Calculating the initial energy
-    #a.E0 = Get_Energy(EnergyFileI, a.Scales)
 
     if   a.MinMethod == 'en':
+        #Calculating the initial energy
+        a.E0 = Get_Energy(EnergyFileI, a.Scales)
         print('End of program: Calculate single energy with given scales.')
     
     elif a.MinMethod == 'own':
