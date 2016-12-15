@@ -55,6 +55,8 @@ def Arguments():
                         choices=['UHF', 'ROHF', 'HF', 'B3LYP', 'MP2'])
     parser.add_argument('-M','--MinMethod',     required=False,type=str,  help='Minimization method',              default='en',
                         choices=['en', 'own', 'comb', 'scan', 'scan2D','GA', 'CG', 'NM', 'LBF', 'NCG', 'TNC', 'SLS', 'TR', 'all'])
+    parser.add_argument('-i','--InputFileType', required=False,type=str,  help='Input File Style',              default='STO',
+                        choices=['STO','ALpha','Coeff','AlphaCoeff'])
     parser.add_argument('-b','--BasisSet',      required=False,type=str,  help='Basis set',                        default='6-31G',
                         choices=['6-31G', '6-311G', '6-31G(d,p)'])
 
@@ -74,6 +76,7 @@ def Arguments():
     a.Charge = arguments.Charge
     a.OptMethod = arguments.OptMethod
     a.MinMethod = arguments.MinMethod
+    a.InputFileType = arguments.InputFileType
     a.BasisSet = arguments.BasisSet
     a.GaussianProc = arguments.GaussianProc
     a.ParallelProc = arguments.ParallelProc
