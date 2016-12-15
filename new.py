@@ -87,6 +87,12 @@ def Arguments():
 
     a.ElementName = GetElementName()
 
+    ## files names  ##
+    a.fileName = str(a.Element) + '_' + GetElementSymbol().strip()
+    a.GuessFile = 'Guess_' + a.fileName + '.txt'
+    a.EnergyFileI = 'EnergyI_' + a.fileName
+    a.EnergyFileF = 'EnergyF_' + a.fileName
+
     return(arguments)
 
 # """ Starting the program """"
@@ -98,12 +104,6 @@ def Initiate(arguments):
     print ("The value of Delta is {}".format(a.Delta))
     print ("The cutoff is {}".format(a.Limit))
 
-    ## files names  ##
-    fileName = str(a.Element) + '_' + GetElementSymbol().strip()
-    GuessFile = 'Guess_' + fileName + '.txt'
-    EnergyFileI = 'EnergyI_' + fileName
-    EnergyFileF = 'EnergyF_' + fileName
-
     sto = GetSTO()
     stoLen = len(sto)
 
@@ -114,9 +114,9 @@ def Initiate(arguments):
         else:
             print(bcolors.FAIL,"\nSTOP STOP: number of guess values should be ", stoLen,bcolors.ENDC)
             sys.exit()
-    elif os.path.isfile(GuessFile):
+    elif os.path.isfile(a.GuessFile):
             Scales=[]
-            File = open(GuessFile, 'r')
+            File = open(a.GuessFile, 'r')
             for line in File:
                 Scales.append(float(line.rstrip('\n')))
             File.close()
@@ -125,7 +125,6 @@ def Initiate(arguments):
             Scales = [1.0] * stoLen
             print("The guess values (Default Values) are ", Scales)
 
-    a.GuessFile = GuessFile
     a.Scales = Scales
     a.NumberOfScales = len(a.Scales)
 
@@ -137,7 +136,6 @@ def Initiate(arguments):
         a.x_r = np.reshape(a.x_r, (a.NumberOfScales, 2))   #Ranges for the values to be changed, array of min max pairs
 
 
-    return(EnergyFileI, EnergyFileF, sto)
 ##### Functions related to generating the Input file for scales
 
 def WriteScales(Scales):
@@ -186,14 +184,17 @@ def GenerateInput(Scale_values):
     inputtext += GenerateChargeMultiplicity()
     inputtext += GenerateZMatrix()
     inputtext += GenerateCartesianCoordinates()
+    inputtext += GenerateInputGen(Scale_values)
+    return inputtext
 
+def GenerateInputGen(Scale_values):
     sto = GetSTO()
-
+    inputtext = ''
     for index, sto_out in enumerate(sto):
         inputtext += sto_out + ' ' + str(Scale_values[index])+'\n'
     inputtext += '****\n\n'
     return inputtext
-
+    
 #### Functions related to energy 
 
 def FunctionA(AV):
@@ -909,11 +910,11 @@ def MinimizeAlphas():
     print(bcolors.OKBLUE, '\nEnd of program: Minimize energy.\n', bcolors.ENDC)
 
 def Main(arguments):
-    EnergyFileI, EnergyFileF, sto = Initiate(arguments)
+    Initiate(arguments)
 
     if   a.MinMethod == 'en':
         #Calculating the initial energy
-        a.E0 = Get_Energy(EnergyFileI, a.Scales)
+        a.E0 = Get_Energy(a.EnergyFileI, a.Scales)
         print('End of program: Calculate single energy with given scales.')
     
     elif a.MinMethod == 'own':
@@ -1080,6 +1081,17 @@ def GetBasisSetCoreValence():
     elif a.Z in [19,20,31,32,33,34,35,36] : return ('6','6')
     else                                  : return ('','')
 
+def normalization(DV,AV):
+    lenDV = len(DV)
+    lenAV = len(AV)
+    if lenDV != lenAV:
+        print('AV != DV')
+        sys.exit()
+    D_product = np.asarray([dv_i*dv_j for dv_i in DV for dv_j in DV])
+    A_product = np.asarray([(a_i*a_j)/(a_i+a_j)**2 for a_i in AV for a_j in AV])
+    norm = np.dot(D_product, np.power(A_product,0.75)) * 2.0 * np.sqrt(2.0)
+    Corr_DV = DV / np.sqrt(norm)
+    return norm, Corr_DV
 
 #""" Gradiant Functions """
 
@@ -1276,3 +1288,4 @@ if __name__ == "__main__":
     arguments = Arguments()
     Main(arguments)
     NormalTermination()
+
