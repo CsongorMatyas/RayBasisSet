@@ -2,6 +2,8 @@
 import numpy as np
 import argparse, sys, os, subprocess, joblib, math
 from scipy.optimize import minimize#, differential_evolution
+import random
+
 
 __author__ = "Raymond Poirier's Group - Ahmad Alrawashdeh, Ibrahim Awad, Csongor Matyas"
 
@@ -32,6 +34,8 @@ class a: #Class of the arguments, "a" for short, all arguments that will be pass
     a0 = None               #numpy array of the alpha values
     a_r = None              #numpy array of the ranges of the alpha values
     AInput = None           #String that contains input text for alpha minimization
+    TextNum = 1
+    colorslist = None
 
 class bcolors:
     HEADER = '\033[95m'
@@ -65,7 +69,7 @@ def Arguments():
     parser.add_argument('-s','--Scales',        required=False,type=float,help='Initial scale values',             nargs='+')
     parser.add_argument('-r','--Ranges',        required=False,type=float,help='Range of each scale value',        nargs='+')
     parser.add_argument('-D','--Delta',         required=False,type=float,help='The value of Delta',               default=0.001)
-    parser.add_argument('-l','--Limit',         required=False,type=float,help='Error limit',                      default=1.0e-6)
+    parser.add_argument('-l','--Limit',         required=False,type=float,help='Error limit',                      default=1.0e-4)
     parser.add_argument('-a','--AlphaValues',   required=False,type=float,help='Alpha values',                     nargs='+')
     parser.add_argument('-A','--AlphaValueRanges',required=False,type=float,help='Ranges for alpha values',        nargs='+')
 
@@ -82,6 +86,8 @@ def Arguments():
     a.ParallelProc = arguments.ParallelProc
     a.Scales = arguments.Scales
     a.Ranges = arguments.Ranges
+
+    a.colorslist = [bcolors.HEADER,bcolors.OKBLUE,bcolors.WARNING,bcolors.FAIL,bcolors.ENDC,bcolors.BOLD,bcolors.UNDERLINE]
 
     a.Delta = arguments.Delta
     a.Limit = arguments.Limit
@@ -111,12 +117,12 @@ def Initiate(arguments):
     stoLen = len(sto)
 
     if arguments.Scales is not None:
-        if stoLen == len(arguments.Scales):
+   #     if stoLen == len(arguments.Scales):
             print("The guess values ", arguments.Scales)
             Scales = arguments.Scales
-        else:
-            print(bcolors.FAIL,"\nSTOP STOP: number of guess values should be ", stoLen,bcolors.ENDC)
-            sys.exit()
+    #    else:
+     #       print(bcolors.FAIL,"\nSTOP STOP: number of guess values should be ", stoLen,bcolors.ENDC)
+        #    sys.exit()
     elif os.path.isfile(a.GuessFile):
             Scales=[]
             File = open(a.GuessFile, 'r')
@@ -161,33 +167,24 @@ def GetSTO():
             STO.append('STO ' + atomicvalence + ' ' + str(valencevalue))
     return STO
 
-def GenerateFirstLine():
-    FirstLine = '# ' + a.OptMethod + '/gen gfinput\n'
-    return FirstLine
 
-def GenerateTitle():
-    Title = "\n" + a.ElementName.strip() + "\n\n"
-    return Title
-
-def GenerateChargeMultiplicity():
-    ChargeMultiplicity = "{} {}\n".format(a.Charge, GetElementMultiplicity())
-    return ChargeMultiplicity
-
-def GenerateZMatrix():
-    ZMatrix = GetElementSymbol().strip() + "\n\n"
-    return ZMatrix
-
-def GenerateCartesianCoordinates():
-    CartesianCoordinates = GetElementSymbol().strip() + ' 0\n'
-    return CartesianCoordinates
-    
 def GenerateInput(Scale_values):
-    inputtext = '%NPROCS=' + str(a.GaussianProc) + '\n' + GenerateFirstLine()
-    inputtext += GenerateTitle()
-    inputtext += GenerateChargeMultiplicity()
-    inputtext += GenerateZMatrix()
-    inputtext += GenerateCartesianCoordinates()
-    inputtext += GenerateInputGen(Scale_values)
+    inputtext = '%NPROCS=' + str(a.GaussianProc) + '\n' 
+    inputtext += '# ' + a.OptMethod + '/gen gfinput\n'
+    inputtext += "\n" + a.ElementName.strip() + "\n\n"
+    inputtext += "{} {}\n".format(a.Charge, GetElementMultiplicity())
+    inputtext += GetElementSymbol().strip() + "\n\n"
+    inputtext += GetElementSymbol().strip() + ' 0\n'
+    if (a.InputFileType == "STO") :
+        inputtext += GenerateInputGen(Scale_values)
+    elif (a.InputFileType == "AlphaCoeff") :
+        len_scales = len(Scale_values) 
+        AV = Scale_values[:len_scales//2]
+        DV = Scale_values[len_scales//2:]
+        inputtext += GenerateInputGenAlpha(DV, AV)
+    else:
+        print("{} method is not available".format(a.InputFileType))
+        sys.exit()
     return inputtext
 
 def GenerateInputGen(Scale_values):
@@ -198,25 +195,141 @@ def GenerateInputGen(Scale_values):
     inputtext += '****\n\n'
     return inputtext
     
+def GenerateInputGenAlpha(DVV, AV):
+    inputtext=''
+    DV = []
+    if a.Z in [1, 2]:
+        inputtext += 'S   3 1.00    0.0000000000\n'
+        DV = normalization(DVV[0:3],AV[0:3])[1]
+        inputtext += '      {} {}\n'.format(AV[0], DV[0])
+        inputtext += '      {} {}\n'.format(AV[1], DV[1])
+        inputtext += '      {} {}\n'.format(AV[2], DV[2])
+        inputtext += 'S   1 1.00    0.0000000000\n'
+        inputtext += '      {} {}\n'.format(AV[3], 1.000)
+        inputtext += '****\n\n\n'
+
+    elif a.Z in range(3,11):
+
+        inputtext += 'S   6 1.00    0.0000000000\n'
+        DV[0:6] = normalization(DVV[0:6],AV[0:6])[1].tolist()
+        inputtext += '      {} {}\n'.format(AV[0], DV[0])
+        inputtext += '      {} {}\n'.format(AV[1], DV[1])
+        inputtext += '      {} {}\n'.format(AV[2], DV[2])
+        inputtext += '      {} {}\n'.format(AV[3], DV[3])
+        inputtext += '      {} {}\n'.format(AV[4], DV[4])
+        inputtext += '      {} {}\n'.format(AV[5], DV[5])
+        inputtext += 'S   3 1.00    0.0000000000\n'
+        DV[6:9] = normalization(DVV[6:9],AV[6:9])[1].tolist()
+        inputtext += '      {} {}\n'.format(AV[6], DV[6])
+        inputtext += '      {} {}\n'.format(AV[7], DV[7])
+        inputtext += '      {} {}\n'.format(AV[8], DV[8])
+        inputtext += 'P   3 1.00    0.0000000000\n'
+        DV[9:12] = normalization(DVV[9:12],AV[9:12])[1].tolist()
+        inputtext += '      {} {}\n'.format(AV[9], DV[9])
+        inputtext += '      {} {}\n'.format(AV[10], DV[10])
+        inputtext += '      {} {}\n'.format(AV[11], DV[11])
+        inputtext += 'S   1 1.00    0.0000000000\n'
+        inputtext += '      {} {}\n'.format(AV[12], 1.000)
+        inputtext += 'P   1 1.00    0.0000000000\n'
+        inputtext += '      {} {}\n'.format(AV[13], 1.000)
+        inputtext += '****\n\n\n'
+
+
+    elif a.Z in range(11,19):
+
+        inputtext += 'S   6 1.00    0.0000000000\n'
+        DV = normalization(DVV[0:6],AV[0:6])[1]
+        inputtext += '      {} {}\n'.format(AV[0], DV[0])
+        inputtext += '      {} {}\n'.format(AV[1], DV[1])
+        inputtext += '      {} {}\n'.format(AV[2], DV[2])
+        inputtext += '      {} {}\n'.format(AV[3], DV[3])
+        inputtext += '      {} {}\n'.format(AV[4], DV[4])
+        inputtext += '      {} {}\n'.format(AV[5], DV[5])
+        inputtext += 'S   6 1.00    0.0000000000\n'
+        DV = normalization(DVV[6:12],AV[6:12])[1]
+        inputtext += '      {} {}\n'.format(AV[6], DV[6])
+        inputtext += '      {} {}\n'.format(AV[7], DV[7])
+        inputtext += '      {} {}\n'.format(AV[8], DV[8])
+        inputtext += '      {} {}\n'.format(AV[9], DV[9])
+        inputtext += '      {} {}\n'.format(AV[10], DV[10])
+        inputtext += '      {} {}\n'.format(AV[11], DV[11])
+        inputtext += 'P   6 1.00    0.0000000000\n'
+        DV = normalization(DVV[12:18],AV[12:18])[1]
+        inputtext += '      {} {}\n'.format(AV[12], DV[12])
+        inputtext += '      {} {}\n'.format(AV[13], DV[13])
+        inputtext += '      {} {}\n'.format(AV[14], DV[14])
+        inputtext += '      {} {}\n'.format(AV[15], DV[15])
+        inputtext += '      {} {}\n'.format(AV[16], DV[16])
+        inputtext += '      {} {}\n'.format(AV[17], DV[17])
+        inputtext += 'S   3 1.00    0.0000000000\n'
+        DV = normalization(DVV[18:21],AV[18:21])[1]
+        inputtext += '      {} {}\n'.format(AV[18], DV[18])
+        inputtext += '      {} {}\n'.format(AV[19], DV[19])
+        inputtext += '      {} {}\n'.format(AV[20], DV[20])
+        inputtext += 'P   3 1.00    0.0000000000\n'
+        DV = normalization(DVV[22:24],AV[22:21])[1]
+        inputtext += '      {} {}\n'.format(AV[21], DV[21])
+        inputtext += '      {} {}\n'.format(AV[22], DV[22])
+        inputtext += '      {} {}\n'.format(AV[23], DV[23])
+        inputtext += 'S   1 1.00    0.0000000000\n'
+        inputtext += '      {} {}\n'.format(AV[24], 1.0000)
+        inputtext += 'P   1 1.00    0.0000000000\n'
+        inputtext += '      {} {}\n'.format(AV[25], 1.0000)
+        inputtext += '****\n\n\n'
+
+    elif a.Z == 19:
+
+        inputtext += 'S   6 1.00    0.0000000000\n'
+        DV = normalization(DVV[0:6],AV[0:6])[1]
+        inputtext += '      {} {}\n'.format(AV[0], DV[0])
+        inputtext += '      {} {}\n'.format(AV[1], DV[1])
+        inputtext += '      {} {}\n'.format(AV[2], DV[2])
+        inputtext += '      {} {}\n'.format(AV[3], DV[3])
+        inputtext += '      {} {}\n'.format(AV[4], DV[4])
+        inputtext += '      {} {}\n'.format(AV[5], DV[5])
+        inputtext += 'S   6 1.00    0.0000000000\n'
+        DV = normalization(DVV[6:12],AV[6:12])[1]
+        inputtext += '      {} {}\n'.format(AV[6], DV[6])
+        inputtext += '      {} {}\n'.format(AV[7], DV[7])
+        inputtext += '      {} {}\n'.format(AV[8], DV[8])
+        inputtext += '      {} {}\n'.format(AV[9], DV[9])
+        inputtext += '      {} {}\n'.format(AV[10], DV[10])
+        inputtext += '      {} {}\n'.format(AV[11], DV[11])
+        inputtext += 'P   6 1.00    0.0000000000\n'
+        DV = normalization(DVV[12:18],AV[12:18])[1]
+        inputtext += '      {} {}\n'.format(AV[12], DV[12])
+        inputtext += '      {} {}\n'.format(AV[13], DV[13])
+        inputtext += '      {} {}\n'.format(AV[14], DV[14])
+        inputtext += '      {} {}\n'.format(AV[15], DV[15])
+        inputtext += '      {} {}\n'.format(AV[16], DV[16])
+        inputtext += '      {} {}\n'.format(AV[17], DV[17])
+        inputtext += 'S   3 1.00    0.0000000000\n'
+        DV = normalization(DVV[18:21],AV[18:21])[1]
+        inputtext += '      {} {}\n'.format(AV[18], DV[18])
+        inputtext += '      {} {}\n'.format(AV[19], DV[19])
+        inputtext += '      {} {}\n'.format(AV[20], DV[20])
+        inputtext += 'P   3 1.00    0.0000000000\n'
+        inputtext += '      {} {}\n'.format(AV[21], DV[21])
+        inputtext += '      {} {}\n'.format(AV[22], DV[22])
+        inputtext += '      {} {}\n'.format(AV[23], DV[23])
+        inputtext += 'S   1 1.00    0.0000000000\n'
+        inputtext += '      {} {}\n'.format(AV[24], DV[24])
+        inputtext += 'P   1 1.00    0.0000000000\n'
+        inputtext += '      {} {}\n'.format(AV[25], DV[25])
+        inputtext += '****\n\n\n'
+
+    return inputtext
 #### Functions related to energy 
 
-def FunctionA(AV):
-    Alpha_text = ""
-    for i in range(len(AV)):
-        Alpha_text += "_" + str(AV[i])
-    Energy = GetEnergyA(a.ElementName.strip() + Alpha_text, AV)
-    return Energy
-
 def Function(Scales):
-    Scales_text = ""
-    for i in range(len(Scales)):
-        Scales_text += "_" + str(Scales[i])
+    Scales_text = "_"+str(a.TextNum)
     Energy = Get_Energy(a.ElementName.strip() + Scales_text, Scales)
+    a.TextNum += 1
     return Energy
 
-def EnergyParallel(Title, sto_out, index):
+def EnergyParallel(Title, scales, index):
     Title = Title+'_'+a.ElementName.strip()+'_'+a.BasisSet.strip()+'_scale_'+str(index+1)
-    Energy = Get_Energy(Title, sto_out)
+    Energy = Get_Energy(Title, scales)
     return(index, Energy)
 
 def Get_Energy(FileName, Scale_values):
@@ -226,14 +339,16 @@ def Get_Energy(FileName, Scale_values):
     file=open(FileName+'.gjf','w')
     file.write(GenerateInput(Scale_values) + '\n\n')
     file.close()
-    
+    CurrentColor = random.choice(a.colorslist)
+    sys.stdout.write("{}   {}{}  \r".format(CurrentColor ,FileName,bcolors.ENDC))
+    sys.stdout.flush()
     #subprocess.call('GAUSS_SCRDIR="/nqs/$USER"\n', shell=True)
     subprocess.call('g09 < '+ FileName + '.gjf > ' + FileName + '.out\n', shell=True)
     Energy = subprocess.check_output('grep "SCF Done:" ' + FileName + '.out | tail -1|awk \'{ print $5 }\'', shell=True)
     Energy = Energy.decode('ascii').rstrip('\n')
     if Energy != "":
         EnergyNUM=float(Energy)
-        print('Scale Values: {}; Energy: {}'.format(Scale_values, EnergyNUM))
+   #     print('Scale Values: {}; Energy: {}'.format(Scale_values, EnergyNUM))
         return EnergyNUM
 
     else:
@@ -246,7 +361,7 @@ def Get_Energy(FileName, Scale_values):
         Energy = Energy.decode('ascii').rstrip('\n')
         if Energy != "":
             EnergyNUM=float(Energy)
-            print('Scale Values: {}; Energy: {}'.format(Scale_values, EnergyNUM))
+    #        print('Scale Values: {}; Energy: {}'.format(Scale_values, EnergyNUM))
             return EnergyNUM
         else:
             print('Scale Values: {}; Energy: ----------'.format(Scale_values))
@@ -255,669 +370,12 @@ def Get_Energy(FileName, Scale_values):
             sys.exit(0)
             return EnergyNUM
     
-
-def GetEnergyA(FileName, AV):
-    symb = GetElementSymbol()
-    mult = GetElementMultiplicity()
-    inputtext = ''
-    inputtext += '# {}/gen gfinput\n\nTitle\n\n'.format(str(a.OptMethod))
-    inputtext += '{} {}\n'.format(str(a.Charge), str(mult))
-    inputtext += '{}\n\n{} 0\n'.format(symb, symb)
-
-    if a.Z == 1:
-        DV = ['0.03349460', '0.23472695', '0.81375733', '1.0000000']
-        inputtext += 'S   3 1.00    0.0000000000\n'
-        inputtext += '      {} {}\n'.format(AV[0], DV[0])
-        inputtext += '      {} {}\n'.format(AV[1], DV[1])
-        inputtext += '      {} {}\n'.format(AV[2], DV[2])
-        inputtext += 'S   1 1.00    0.0000000000\n'
-        inputtext += '      {} {}\n'.format(AV[3], DV[3])
-        inputtext += '****\n\n\n'
-
-    elif a.Z == 2:
-        DV = ['0.0237660', '0.1546790', '0.4696300', '1.0000000']
-        inputtext += 'S   3 1.00    0.0000000000\n'
-        inputtext += '      {} {}\n'.format(AV[0], DV[0])
-        inputtext += '      {} {}\n'.format(AV[1], DV[1])
-        inputtext += '      {} {}\n'.format(AV[2], DV[2])
-        inputtext += 'S   1 1.00    0.0000000000\n'
-        inputtext += '      {} {}\n'.format(AV[3], DV[3])
-        inputtext += '****\n\n\n'
-
-    elif a.Z == 3:
-
-        DV = ['0.0021426', '0.0162089', '0.0773156', '0.2457860', '0.4701890', '0.3454708', '-0.0350917', '-0.1912328', '1.0839878',
-              '0.0089415', '0.1410095', '0.9453637', '1.0000000', '1.0000000']
-        inputtext += 'S   6 1.00    0.0000000000\n'
-        inputtext += '      {} {}\n'.format(AV[0], DV[0])
-        inputtext += '      {} {}\n'.format(AV[1], DV[1])
-        inputtext += '      {} {}\n'.format(AV[2], DV[2])
-        inputtext += '      {} {}\n'.format(AV[3], DV[3])
-        inputtext += '      {} {}\n'.format(AV[4], DV[4])
-        inputtext += '      {} {}\n'.format(AV[5], DV[5])
-        inputtext += 'S   3 1.00    0.0000000000\n'
-        inputtext += '      {} {}\n'.format(AV[6], DV[6])
-        inputtext += '      {} {}\n'.format(AV[7], DV[7])
-        inputtext += '      {} {}\n'.format(AV[8], DV[8])
-        inputtext += 'P   3 1.00    0.0000000000\n'
-        inputtext += '      {} {}\n'.format(AV[9], DV[9])
-        inputtext += '      {} {}\n'.format(AV[10], DV[10])
-        inputtext += '      {} {}\n'.format(AV[11], DV[11])
-        inputtext += 'S   1 1.00    0.0000000000\n'
-        inputtext += '      {} {}\n'.format(AV[12], DV[12])
-        inputtext += 'P   1 1.00    0.0000000000\n'
-        inputtext += '      {} {}\n'.format(AV[13], DV[13])
-        inputtext += '****\n\n\n'
-
-    elif a.Z == 4:
-
-        DV = ['0.0019448', '0.0148351', '0.0720906', '0.2371542', '0.4691987', '0.3565202', '-0.1126487', '-0.2295064', '1.1869167', 
-              '0.0559802', '0.2615506', '0.7939723', '1.0000000', '1.0000000']
-        inputtext += 'S   6 1.00    0.0000000000\n'
-        inputtext += '      {} {}\n'.format(AV[0], DV[0])
-        inputtext += '      {} {}\n'.format(AV[1], DV[1])
-        inputtext += '      {} {}\n'.format(AV[2], DV[2])
-        inputtext += '      {} {}\n'.format(AV[3], DV[3])
-        inputtext += '      {} {}\n'.format(AV[4], DV[4])
-        inputtext += '      {} {}\n'.format(AV[5], DV[5])
-        inputtext += 'S   3 1.00    0.0000000000\n'
-        inputtext += '      {} {}\n'.format(AV[6], DV[6])
-        inputtext += '      {} {}\n'.format(AV[7], DV[7])
-        inputtext += '      {} {}\n'.format(AV[8], DV[8])
-        inputtext += 'P   3 1.00    0.0000000000\n'
-        inputtext += '      {} {}\n'.format(AV[9], DV[9])
-        inputtext += '      {} {}\n'.format(AV[10], DV[10])
-        inputtext += '      {} {}\n'.format(AV[11], DV[11])
-        inputtext += 'S   1 1.00    0.0000000000\n'
-        inputtext += '      {} {}\n'.format(AV[12], DV[12])
-        inputtext += 'P   1 1.00    0.0000000000\n'
-        inputtext += '      {} {}\n'.format(AV[13], DV[13])
-        inputtext += '****\n\n\n'
-
-    elif a.Z == 5:
-
-        DV = ['0.0018663', '0.0142515', '0.0695516', '0.2325729', '0.4670787', '0.3634314', '-0.1303938', '-0.1307889', '1.1309444', '0.0745976',
-              '0.3078467', '0.7434568', '1.0000000', '1.0000000']
-        inputtext += 'S   6 1.00    0.0000000000\n'
-        inputtext += '      {} {}\n'.format(AV[0], DV[0])
-        inputtext += '      {} {}\n'.format(AV[1], DV[1])
-        inputtext += '      {} {}\n'.format(AV[2], DV[2])
-        inputtext += '      {} {}\n'.format(AV[3], DV[3])
-        inputtext += '      {} {}\n'.format(AV[4], DV[4])
-        inputtext += '      {} {}\n'.format(AV[5], DV[5])
-        inputtext += 'S   3 1.00    0.0000000000\n'
-        inputtext += '      {} {}\n'.format(AV[6], DV[6])
-        inputtext += '      {} {}\n'.format(AV[7], DV[7])
-        inputtext += '      {} {}\n'.format(AV[8], DV[8])
-        inputtext += 'P   3 1.00    0.0000000000\n'
-        inputtext += '      {} {}\n'.format(AV[9], DV[9])
-        inputtext += '      {} {}\n'.format(AV[10], DV[10])
-        inputtext += '      {} {}\n'.format(AV[11], DV[11])
-        inputtext += 'S   1 1.00    0.0000000000\n'
-        inputtext += '      {} {}\n'.format(AV[12], DV[12])
-        inputtext += 'P   1 1.00    0.0000000000\n'
-        inputtext += '      {} {}\n'.format(AV[13], DV[13])
-        inputtext += '****\n\n\n'
-
-    elif a.Z == 6:
-
-        DV = ['0.0018347', '0.0140373', '0.0688426', '0.2321844', '0.4679413', '0.3623120', '-0.1193324', '-0.1608542', '1.1434564', '0.0689991',
-              '0.3164240', '0.7443083', '1.0000000', '1.0000000']
-        inputtext += 'S   6 1.00    0.0000000000\n'
-        inputtext += '      {} {}\n'.format(AV[0], DV[0])
-        inputtext += '      {} {}\n'.format(AV[1], DV[1])
-        inputtext += '      {} {}\n'.format(AV[2], DV[2])
-        inputtext += '      {} {}\n'.format(AV[3], DV[3])
-        inputtext += '      {} {}\n'.format(AV[4], DV[4])
-        inputtext += '      {} {}\n'.format(AV[5], DV[5])
-        inputtext += 'S   3 1.00    0.0000000000\n'
-        inputtext += '      {} {}\n'.format(AV[6], DV[6])
-        inputtext += '      {} {}\n'.format(AV[7], DV[7])
-        inputtext += '      {} {}\n'.format(AV[8], DV[8])
-        inputtext += 'P   3 1.00    0.0000000000\n'
-        inputtext += '      {} {}\n'.format(AV[9], DV[9])
-        inputtext += '      {} {}\n'.format(AV[10], DV[10])
-        inputtext += '      {} {}\n'.format(AV[11], DV[11])
-        inputtext += 'S   1 1.00    0.0000000000\n'
-        inputtext += '      {} {}\n'.format(AV[12], DV[12])
-        inputtext += 'P   1 1.00    0.0000000000\n'
-        inputtext += '      {} {}\n'.format(AV[13], DV[13])
-        inputtext += '****\n\n\n'
-
-    elif a.Z == 7:
-
-        DV = ['0.0018348', '0.0139950', '0.0685870', '0.2322410', '0.4690700', '0.3604550', '-0.1149610', '-0.1691180', '1.1458520', '0.0675800',
-              '0.3239070', '0.7408950', '1.0000000', '1.0000000']
-        inputtext += 'S   6 1.00    0.0000000000\n'
-        inputtext += '      {} {}\n'.format(AV[0], DV[0])
-        inputtext += '      {} {}\n'.format(AV[1], DV[1])
-        inputtext += '      {} {}\n'.format(AV[2], DV[2])
-        inputtext += '      {} {}\n'.format(AV[3], DV[3])
-        inputtext += '      {} {}\n'.format(AV[4], DV[4])
-        inputtext += '      {} {}\n'.format(AV[5], DV[5])
-        inputtext += 'S   3 1.00    0.0000000000\n'
-        inputtext += '      {} {}\n'.format(AV[6], DV[6])
-        inputtext += '      {} {}\n'.format(AV[7], DV[7])
-        inputtext += '      {} {}\n'.format(AV[8], DV[8])
-        inputtext += 'P   3 1.00    0.0000000000\n'
-        inputtext += '      {} {}\n'.format(AV[9], DV[9])
-        inputtext += '      {} {}\n'.format(AV[10], DV[10])
-        inputtext += '      {} {}\n'.format(AV[11], DV[11])
-        inputtext += 'S   1 1.00    0.0000000000\n'
-        inputtext += '      {} {}\n'.format(AV[12], DV[12])
-        inputtext += 'P   1 1.00    0.0000000000\n'
-        inputtext += '      {} {}\n'.format(AV[13], DV[13])
-        inputtext += '****\n\n\n'
-
-    elif a.Z == 8:
-
-        DV = ['0.0018311', '0.0139501', '0.0684451', '0.2327143', '0.4701930', '0.3585209', '-0.1107775', '-0.1480263', '1.1307670', '0.0708743',
-              '0.3397528', '0.7271586', '1.0000000', '1.0000000']
-        inputtext += 'S   6 1.00    0.0000000000\n'
-        inputtext += '      {} {}\n'.format(AV[0], DV[0])
-        inputtext += '      {} {}\n'.format(AV[1], DV[1])
-        inputtext += '      {} {}\n'.format(AV[2], DV[2])
-        inputtext += '      {} {}\n'.format(AV[3], DV[3])
-        inputtext += '      {} {}\n'.format(AV[4], DV[4])
-        inputtext += '      {} {}\n'.format(AV[5], DV[5])
-        inputtext += 'S   3 1.00    0.0000000000\n'
-        inputtext += '      {} {}\n'.format(AV[6], DV[6])
-        inputtext += '      {} {}\n'.format(AV[7], DV[7])
-        inputtext += '      {} {}\n'.format(AV[8], DV[8])
-        inputtext += 'P   3 1.00    0.0000000000\n'
-        inputtext += '      {} {}\n'.format(AV[9], DV[9])
-        inputtext += '      {} {}\n'.format(AV[10], DV[10])
-        inputtext += '      {} {}\n'.format(AV[11], DV[11])
-        inputtext += 'S   1 1.00    0.0000000000\n'
-        inputtext += '      {} {}\n'.format(AV[12], DV[12])
-        inputtext += 'P   1 1.00    0.0000000000\n'
-        inputtext += '      {} {}\n'.format(AV[13], DV[13])
-        inputtext += '****\n\n\n'
-
-    elif a.Z == 9:
-
-        DV = ['0.0018196169', '0.0139160796', '0.0684053245', '0.233185760', '0.471267439', '0.356618546', '-0.108506975', '-0.146451658', '1.128688580',
-              '0.0716287243', '0.3459121030', '0.7224699570', '1.0000000', '1.0000000']
-        inputtext += 'S   6 1.00    0.0000000000\n'
-        inputtext += '      {} {}\n'.format(AV[0], DV[0])
-        inputtext += '      {} {}\n'.format(AV[1], DV[1])
-        inputtext += '      {} {}\n'.format(AV[2], DV[2])
-        inputtext += '      {} {}\n'.format(AV[3], DV[3])
-        inputtext += '      {} {}\n'.format(AV[4], DV[4])
-        inputtext += '      {} {}\n'.format(AV[5], DV[5])
-        inputtext += 'S   3 1.00    0.0000000000\n'
-        inputtext += '      {} {}\n'.format(AV[6], DV[6])
-        inputtext += '      {} {}\n'.format(AV[7], DV[7])
-        inputtext += '      {} {}\n'.format(AV[8], DV[8])
-        inputtext += 'P   3 1.00    0.0000000000\n'
-        inputtext += '      {} {}\n'.format(AV[9], DV[9])
-        inputtext += '      {} {}\n'.format(AV[10], DV[10])
-        inputtext += '      {} {}\n'.format(AV[11], DV[11])
-        inputtext += 'S   1 1.00    0.0000000000\n'
-        inputtext += '      {} {}\n'.format(AV[12], DV[12])
-        inputtext += 'P   1 1.00    0.0000000000\n'
-        inputtext += '      {} {}\n'.format(AV[13], DV[13])
-        inputtext += '****\n\n\n'
-
-    elif a.Z == 10:
-
-        DV = ['0.0018843481', '0.0143368994', '0.0701096233', '0.2373732660', '0.4730071260', '0.3484012410', '-0.107118287', '-0.146163821', '1.127773500',
-              '0.0719095885', '0.3495133720', '0.7199405120', '1.0000000', '1.0000000']
-        inputtext += 'S   6 1.00    0.0000000000\n'
-        inputtext += '      {} {}\n'.format(AV[0], DV[0])
-        inputtext += '      {} {}\n'.format(AV[1], DV[1])
-        inputtext += '      {} {}\n'.format(AV[2], DV[2])
-        inputtext += '      {} {}\n'.format(AV[3], DV[3])
-        inputtext += '      {} {}\n'.format(AV[4], DV[4])
-        inputtext += '      {} {}\n'.format(AV[5], DV[5])
-        inputtext += 'S   3 1.00    0.0000000000\n'
-        inputtext += '      {} {}\n'.format(AV[6], DV[6])
-        inputtext += '      {} {}\n'.format(AV[7], DV[7])
-        inputtext += '      {} {}\n'.format(AV[8], DV[8])
-        inputtext += 'P   3 1.00    0.0000000000\n'
-        inputtext += '      {} {}\n'.format(AV[9], DV[9])
-        inputtext += '      {} {}\n'.format(AV[10], DV[10])
-        inputtext += '      {} {}\n'.format(AV[11], DV[11])
-        inputtext += 'S   1 1.00    0.0000000000\n'
-        inputtext += '      {} {}\n'.format(AV[12], DV[12])
-        inputtext += 'P   1 1.00    0.0000000000\n'
-        inputtext += '      {} {}\n'.format(AV[13], DV[13])
-        inputtext += '****\n\n\n'
-
-    elif a.Z == 11:
-
-        DV = ['0.0019377', '0.0148070', '0.0727060', '0.2526290', '0.4932420', '0.3131690',
-              '-0.0035421', '-0.0439590', '-0.1097521', '0.1873980', '0.6466990', '0.3060580',
-              '0.0050017', '0.0355110', '0.1428250', '0.3386200', '0.4515790', '0.2732710',
-              '-0.2485030', '-0.1317040', '1.2335200', '-0.0230230', '0.9503590', '0.0598580',
-              '1.0000000', '1.0000000']
-        inputtext += 'S   6 1.00    0.0000000000\n'
-        inputtext += '      {} {}\n'.format(AV[0], DV[0])
-        inputtext += '      {} {}\n'.format(AV[1], DV[1])
-        inputtext += '      {} {}\n'.format(AV[2], DV[2])
-        inputtext += '      {} {}\n'.format(AV[3], DV[3])
-        inputtext += '      {} {}\n'.format(AV[4], DV[4])
-        inputtext += '      {} {}\n'.format(AV[5], DV[5])
-        inputtext += 'S   6 1.00    0.0000000000\n'
-        inputtext += '      {} {}\n'.format(AV[6], DV[6])
-        inputtext += '      {} {}\n'.format(AV[7], DV[7])
-        inputtext += '      {} {}\n'.format(AV[8], DV[8])
-        inputtext += '      {} {}\n'.format(AV[9], DV[9])
-        inputtext += '      {} {}\n'.format(AV[10], DV[10])
-        inputtext += '      {} {}\n'.format(AV[11], DV[11])
-        inputtext += 'P   6 1.00    0.0000000000\n'
-        inputtext += '      {} {}\n'.format(AV[12], DV[12])
-        inputtext += '      {} {}\n'.format(AV[13], DV[13])
-        inputtext += '      {} {}\n'.format(AV[14], DV[14])
-        inputtext += '      {} {}\n'.format(AV[15], DV[15])
-        inputtext += '      {} {}\n'.format(AV[16], DV[16])
-        inputtext += '      {} {}\n'.format(AV[17], DV[17])
-        inputtext += 'S   3 1.00    0.0000000000\n'
-        inputtext += '      {} {}\n'.format(AV[18], DV[18])
-        inputtext += '      {} {}\n'.format(AV[19], DV[19])
-        inputtext += '      {} {}\n'.format(AV[20], DV[20])
-        inputtext += 'P   3 1.00    0.0000000000\n'
-        inputtext += '      {} {}\n'.format(AV[21], DV[21])
-        inputtext += '      {} {}\n'.format(AV[22], DV[22])
-        inputtext += '      {} {}\n'.format(AV[23], DV[23])
-        inputtext += 'S   1 1.00    0.0000000000\n'
-        inputtext += '      {} {}\n'.format(AV[24], DV[24])
-        inputtext += 'P   1 1.00    0.0000000000\n'
-        inputtext += '      {} {}\n'.format(AV[25], DV[25])
-        inputtext += '****\n\n\n'
-
-    elif a.Z == 12:
-
-        DV = ['0.0019778', '0.0151140', '0.0739110', '0.2491910', '0.4879280', '0.3196620',
-              '-0.0032372', '-0.0410080', '-0.1126000', '0.1486330', '0.6164970', '0.3648290',
-              '0.0049281', '0.0349890', '0.1407250', '0.3336420', '0.4449400', '0.2692540',
-              '-0.2122900', '-0.1079850', '1.1758400', '-0.0224190', '0.1922700', '0.8461810',
-              '1.0000000', '1.0000000']
-        inputtext += 'S   6 1.00    0.0000000000\n'
-        inputtext += '      {} {}\n'.format(AV[0], DV[0])
-        inputtext += '      {} {}\n'.format(AV[1], DV[1])
-        inputtext += '      {} {}\n'.format(AV[2], DV[2])
-        inputtext += '      {} {}\n'.format(AV[3], DV[3])
-        inputtext += '      {} {}\n'.format(AV[4], DV[4])
-        inputtext += '      {} {}\n'.format(AV[5], DV[5])
-        inputtext += 'S   6 1.00    0.0000000000\n'
-        inputtext += '      {} {}\n'.format(AV[6], DV[6])
-        inputtext += '      {} {}\n'.format(AV[7], DV[7])
-        inputtext += '      {} {}\n'.format(AV[8], DV[8])
-        inputtext += '      {} {}\n'.format(AV[9], DV[9])
-        inputtext += '      {} {}\n'.format(AV[10], DV[10])
-        inputtext += '      {} {}\n'.format(AV[11], DV[11])
-        inputtext += 'P   6 1.00    0.0000000000\n'
-        inputtext += '      {} {}\n'.format(AV[12], DV[12])
-        inputtext += '      {} {}\n'.format(AV[13], DV[13])
-        inputtext += '      {} {}\n'.format(AV[14], DV[14])
-        inputtext += '      {} {}\n'.format(AV[15], DV[15])
-        inputtext += '      {} {}\n'.format(AV[16], DV[16])
-        inputtext += '      {} {}\n'.format(AV[17], DV[17])
-        inputtext += 'S   3 1.00    0.0000000000\n'
-        inputtext += '      {} {}\n'.format(AV[18], DV[18])
-        inputtext += '      {} {}\n'.format(AV[19], DV[19])
-        inputtext += '      {} {}\n'.format(AV[20], DV[20])
-        inputtext += 'P   3 1.00    0.0000000000\n'
-        inputtext += '      {} {}\n'.format(AV[21], DV[21])
-        inputtext += '      {} {}\n'.format(AV[22], DV[22])
-        inputtext += '      {} {}\n'.format(AV[23], DV[23])
-        inputtext += 'S   1 1.00    0.0000000000\n'
-        inputtext += '      {} {}\n'.format(AV[24], DV[24])
-        inputtext += 'P   1 1.00    0.0000000000\n'
-        inputtext += '      {} {}\n'.format(AV[25], DV[25])
-        inputtext += '****\n\n\n'
-
-    elif a.Z == 13:
-
-        DV = ['0.00194267', '0.0148599', '0.0728494', '0.2468300', '0.4872580', '0.3234960',
-              '-0.00292619', '-0.0374080', '-0.1144870', '0.1156350', '0.6125950', '0.3937990',
-              '0.00460285', '0.0331990', '0.1362820', '0.3304760', '0.4491460', '0.2657040',
-              '-0.2276060', '0.00144583', '1.0927900', '-0.0175130', '0.2445330', '0.8049340',
-              '1.0000000', '1.0000000']
-        inputtext += 'S   6 1.00    0.0000000000\n'
-        inputtext += '      {} {}\n'.format(AV[0], DV[0])
-        inputtext += '      {} {}\n'.format(AV[1], DV[1])
-        inputtext += '      {} {}\n'.format(AV[2], DV[2])
-        inputtext += '      {} {}\n'.format(AV[3], DV[3])
-        inputtext += '      {} {}\n'.format(AV[4], DV[4])
-        inputtext += '      {} {}\n'.format(AV[5], DV[5])
-        inputtext += 'S   6 1.00    0.0000000000\n'
-        inputtext += '      {} {}\n'.format(AV[6], DV[6])
-        inputtext += '      {} {}\n'.format(AV[7], DV[7])
-        inputtext += '      {} {}\n'.format(AV[8], DV[8])
-        inputtext += '      {} {}\n'.format(AV[9], DV[9])
-        inputtext += '      {} {}\n'.format(AV[10], DV[10])
-        inputtext += '      {} {}\n'.format(AV[11], DV[11])
-        inputtext += 'P   6 1.00    0.0000000000\n'
-        inputtext += '      {} {}\n'.format(AV[12], DV[12])
-        inputtext += '      {} {}\n'.format(AV[13], DV[13])
-        inputtext += '      {} {}\n'.format(AV[14], DV[14])
-        inputtext += '      {} {}\n'.format(AV[15], DV[15])
-        inputtext += '      {} {}\n'.format(AV[16], DV[16])
-        inputtext += '      {} {}\n'.format(AV[17], DV[17])
-        inputtext += 'S   3 1.00    0.0000000000\n'
-        inputtext += '      {} {}\n'.format(AV[18], DV[18])
-        inputtext += '      {} {}\n'.format(AV[19], DV[19])
-        inputtext += '      {} {}\n'.format(AV[20], DV[20])
-        inputtext += 'P   3 1.00    0.0000000000\n'
-        inputtext += '      {} {}\n'.format(AV[21], DV[21])
-        inputtext += '      {} {}\n'.format(AV[22], DV[22])
-        inputtext += '      {} {}\n'.format(AV[23], DV[23])
-        inputtext += 'S   1 1.00    0.0000000000\n'
-        inputtext += '      {} {}\n'.format(AV[24], DV[24])
-        inputtext += 'P   1 1.00    0.0000000000\n'
-        inputtext += '      {} {}\n'.format(AV[25], DV[25])
-        inputtext += '****\n\n\n'
-
-    elif a.Z == 14:
-
-        DV = ['0.00195948', '0.01492880', '0.07284780', '0.24613000', '0.48591400', '0.32500200',
-              '-0.00278094', '-0.03571460', '-0.11498500', '0.09356340', '0.60301700', '0.41895900',
-              '0.00443826', '0.03266790', '0.13472100', '0.32867800', '0.44964000', '0.26137200',
-              '-0.24463000', '0.00431572', '1.09818000', '-0.01779510', '0.25353900', '0.80066900',
-              '1.0000000', '1.0000000']
-        inputtext += 'S   6 1.00    0.0000000000\n'
-        inputtext += '      {} {}\n'.format(AV[0], DV[0])
-        inputtext += '      {} {}\n'.format(AV[1], DV[1])
-        inputtext += '      {} {}\n'.format(AV[2], DV[2])
-        inputtext += '      {} {}\n'.format(AV[3], DV[3])
-        inputtext += '      {} {}\n'.format(AV[4], DV[4])
-        inputtext += '      {} {}\n'.format(AV[5], DV[5])
-        inputtext += 'S   6 1.00    0.0000000000\n'
-        inputtext += '      {} {}\n'.format(AV[6], DV[6])
-        inputtext += '      {} {}\n'.format(AV[7], DV[7])
-        inputtext += '      {} {}\n'.format(AV[8], DV[8])
-        inputtext += '      {} {}\n'.format(AV[9], DV[9])
-        inputtext += '      {} {}\n'.format(AV[10], DV[10])
-        inputtext += '      {} {}\n'.format(AV[11], DV[11])
-        inputtext += 'P   6 1.00    0.0000000000\n'
-        inputtext += '      {} {}\n'.format(AV[12], DV[12])
-        inputtext += '      {} {}\n'.format(AV[13], DV[13])
-        inputtext += '      {} {}\n'.format(AV[14], DV[14])
-        inputtext += '      {} {}\n'.format(AV[15], DV[15])
-        inputtext += '      {} {}\n'.format(AV[16], DV[16])
-        inputtext += '      {} {}\n'.format(AV[17], DV[17])
-        inputtext += 'S   3 1.00    0.0000000000\n'
-        inputtext += '      {} {}\n'.format(AV[18], DV[18])
-        inputtext += '      {} {}\n'.format(AV[19], DV[19])
-        inputtext += '      {} {}\n'.format(AV[20], DV[20])
-        inputtext += 'P   3 1.00    0.0000000000\n'
-        inputtext += '      {} {}\n'.format(AV[21], DV[21])
-        inputtext += '      {} {}\n'.format(AV[22], DV[22])
-        inputtext += '      {} {}\n'.format(AV[23], DV[23])
-        inputtext += 'S   1 1.00    0.0000000000\n'
-        inputtext += '      {} {}\n'.format(AV[24], DV[24])
-        inputtext += 'P   1 1.00    0.0000000000\n'
-        inputtext += '      {} {}\n'.format(AV[25], DV[25])
-        inputtext += '****\n\n\n'
-
-    elif a.Z == 15:
-
-        DV = ['0.0018516', '0.0142062', '0.0699995', '0.2400790', '0.4847620', '0.3352000',
-              '-0.00278217', '-0.0360499', '-0.1166310', '0.0968328', '0.6144180', '0.4037980',
-              '0.00456462', '0.03369360', '0.13975500', '0.33936200', '0.45092100', '0.23858600',
-              '-0.2529230', '0.0328517', '1.0812500', '-0.01776530', '0.27405800', '0.78542100',
-              '1.0000000', '1.0000000']
-        inputtext += 'S   6 1.00    0.0000000000\n'
-        inputtext += '      {} {}\n'.format(AV[0], DV[0])
-        inputtext += '      {} {}\n'.format(AV[1], DV[1])
-        inputtext += '      {} {}\n'.format(AV[2], DV[2])
-        inputtext += '      {} {}\n'.format(AV[3], DV[3])
-        inputtext += '      {} {}\n'.format(AV[4], DV[4])
-        inputtext += '      {} {}\n'.format(AV[5], DV[5])
-        inputtext += 'S   6 1.00    0.0000000000\n'
-        inputtext += '      {} {}\n'.format(AV[6], DV[6])
-        inputtext += '      {} {}\n'.format(AV[7], DV[7])
-        inputtext += '      {} {}\n'.format(AV[8], DV[8])
-        inputtext += '      {} {}\n'.format(AV[9], DV[9])
-        inputtext += '      {} {}\n'.format(AV[10], DV[10])
-        inputtext += '      {} {}\n'.format(AV[11], DV[11])
-        inputtext += 'P   6 1.00    0.0000000000\n'
-        inputtext += '      {} {}\n'.format(AV[12], DV[12])
-        inputtext += '      {} {}\n'.format(AV[13], DV[13])
-        inputtext += '      {} {}\n'.format(AV[14], DV[14])
-        inputtext += '      {} {}\n'.format(AV[15], DV[15])
-        inputtext += '      {} {}\n'.format(AV[16], DV[16])
-        inputtext += '      {} {}\n'.format(AV[17], DV[17])
-        inputtext += 'S   3 1.00    0.0000000000\n'
-        inputtext += '      {} {}\n'.format(AV[18], DV[18])
-        inputtext += '      {} {}\n'.format(AV[19], DV[19])
-        inputtext += '      {} {}\n'.format(AV[20], DV[20])
-        inputtext += 'P   3 1.00    0.0000000000\n'
-        inputtext += '      {} {}\n'.format(AV[21], DV[21])
-        inputtext += '      {} {}\n'.format(AV[22], DV[22])
-        inputtext += '      {} {}\n'.format(AV[23], DV[23])
-        inputtext += 'S   1 1.00    0.0000000000\n'
-        inputtext += '      {} {}\n'.format(AV[24], DV[24])
-        inputtext += 'P   1 1.00    0.0000000000\n'
-        inputtext += '      {} {}\n'.format(AV[25], DV[25])
-        inputtext += '****\n\n\n'
-
-    elif a.Z == 16:
-
-        DV = ['0.0018690', '0.0142300', '0.0696960', '0.2384870', '0.4833070', '0.3380740',
-              '-0.0023767', '-0.0316930', '-0.1133170', '0.0560900', '0.5922550', '0.4550060',
-              '0.0040610', '0.0306810', '0.1304520', '0.3272050', '0.4528510', '0.2560420',
-              '-0.2503740', '0.0669570', '1.0545100', '-0.0145110', '0.3102630', '0.7544830',
-              '1.0000000', '1.0000000']
-        inputtext += 'S   6 1.00    0.0000000000\n'
-        inputtext += '      {} {}\n'.format(AV[0], DV[0])
-        inputtext += '      {} {}\n'.format(AV[1], DV[1])
-        inputtext += '      {} {}\n'.format(AV[2], DV[2])
-        inputtext += '      {} {}\n'.format(AV[3], DV[3])
-        inputtext += '      {} {}\n'.format(AV[4], DV[4])
-        inputtext += '      {} {}\n'.format(AV[5], DV[5])
-        inputtext += 'S   6 1.00    0.0000000000\n'
-        inputtext += '      {} {}\n'.format(AV[6], DV[6])
-        inputtext += '      {} {}\n'.format(AV[7], DV[7])
-        inputtext += '      {} {}\n'.format(AV[8], DV[8])
-        inputtext += '      {} {}\n'.format(AV[9], DV[9])
-        inputtext += '      {} {}\n'.format(AV[10], DV[10])
-        inputtext += '      {} {}\n'.format(AV[11], DV[11])
-        inputtext += 'P   6 1.00    0.0000000000\n'
-        inputtext += '      {} {}\n'.format(AV[12], DV[12])
-        inputtext += '      {} {}\n'.format(AV[13], DV[13])
-        inputtext += '      {} {}\n'.format(AV[14], DV[14])
-        inputtext += '      {} {}\n'.format(AV[15], DV[15])
-        inputtext += '      {} {}\n'.format(AV[16], DV[16])
-        inputtext += '      {} {}\n'.format(AV[17], DV[17])
-        inputtext += 'S   3 1.00    0.0000000000\n'
-        inputtext += '      {} {}\n'.format(AV[18], DV[18])
-        inputtext += '      {} {}\n'.format(AV[19], DV[19])
-        inputtext += '      {} {}\n'.format(AV[20], DV[20])
-        inputtext += 'P   3 1.00    0.0000000000\n'
-        inputtext += '      {} {}\n'.format(AV[21], DV[21])
-        inputtext += '      {} {}\n'.format(AV[22], DV[22])
-        inputtext += '      {} {}\n'.format(AV[23], DV[23])
-        inputtext += 'S   1 1.00    0.0000000000\n'
-        inputtext += '      {} {}\n'.format(AV[24], DV[24])
-        inputtext += 'P   1 1.00    0.0000000000\n'
-        inputtext += '      {} {}\n'.format(AV[25], DV[25])
-        inputtext += '****\n\n\n'
-
-    elif a.Z == 17:
-
-        DV = ['0.0018330', '0.0140340', '0.0690970', '0.2374520', '0.4830340', '0.3398560',
-              '-0.0022974', '-0.0307140', '-0.1125280', '0.0450160', '0.5893530', '0.4652060',
-              '0.0039894', '0.0303180', '0.1298800', '0.3279510', '0.4535270', '0.2521540',
-              '-0.2518300', '0.0615890', '1.0601800', '-0.0142990', '0.3235720', '0.7435070',
-              '1.0000000', '1.0000000']
-        inputtext += 'S   6 1.00    0.0000000000\n'
-        inputtext += '      {} {}\n'.format(AV[0], DV[0])
-        inputtext += '      {} {}\n'.format(AV[1], DV[1])
-        inputtext += '      {} {}\n'.format(AV[2], DV[2])
-        inputtext += '      {} {}\n'.format(AV[3], DV[3])
-        inputtext += '      {} {}\n'.format(AV[4], DV[4])
-        inputtext += '      {} {}\n'.format(AV[5], DV[5])
-        inputtext += 'S   6 1.00    0.0000000000\n'
-        inputtext += '      {} {}\n'.format(AV[6], DV[6])
-        inputtext += '      {} {}\n'.format(AV[7], DV[7])
-        inputtext += '      {} {}\n'.format(AV[8], DV[8])
-        inputtext += '      {} {}\n'.format(AV[9], DV[9])
-        inputtext += '      {} {}\n'.format(AV[10], DV[10])
-        inputtext += '      {} {}\n'.format(AV[11], DV[11])
-        inputtext += 'P   6 1.00    0.0000000000\n'
-        inputtext += '      {} {}\n'.format(AV[12], DV[12])
-        inputtext += '      {} {}\n'.format(AV[13], DV[13])
-        inputtext += '      {} {}\n'.format(AV[14], DV[14])
-        inputtext += '      {} {}\n'.format(AV[15], DV[15])
-        inputtext += '      {} {}\n'.format(AV[16], DV[16])
-        inputtext += '      {} {}\n'.format(AV[17], DV[17])
-        inputtext += 'S   3 1.00    0.0000000000\n'
-        inputtext += '      {} {}\n'.format(AV[18], DV[18])
-        inputtext += '      {} {}\n'.format(AV[19], DV[19])
-        inputtext += '      {} {}\n'.format(AV[20], DV[20])
-        inputtext += 'P   3 1.00    0.0000000000\n'
-        inputtext += '      {} {}\n'.format(AV[21], DV[21])
-        inputtext += '      {} {}\n'.format(AV[22], DV[22])
-        inputtext += '      {} {}\n'.format(AV[23], DV[23])
-        inputtext += 'S   1 1.00    0.0000000000\n'
-        inputtext += '      {} {}\n'.format(AV[24], DV[24])
-        inputtext += 'P   1 1.00    0.0000000000\n'
-        inputtext += '      {} {}\n'.format(AV[25], DV[25])
-        inputtext += '****\n\n\n'
-
-    elif a.Z == 18:
-
-        DV = ['0.00182526', '0.01396860', '0.06870730', '0.23620400', '0.48221400', '0.34204300',
-              '-0.00215972', '-0.02907750', '-0.11082700', '0.02769990', '0.57761300', '0.48868800',
-              '0.00380665', '0.02923050', '0.12646700', '0.32351000', '0.45489600', '0.25663000',
-              '-0.2555920', '0.0378066', '1.0805600', '-0.01591970', '0.32464600', '0.74399000',
-              '1.0000000', '1.0000000']
-        inputtext += 'S   6 1.00    0.0000000000\n'
-        inputtext += '      {} {}\n'.format(AV[0], DV[0])
-        inputtext += '      {} {}\n'.format(AV[1], DV[1])
-        inputtext += '      {} {}\n'.format(AV[2], DV[2])
-        inputtext += '      {} {}\n'.format(AV[3], DV[3])
-        inputtext += '      {} {}\n'.format(AV[4], DV[4])
-        inputtext += '      {} {}\n'.format(AV[5], DV[5])
-        inputtext += 'S   6 1.00    0.0000000000\n'
-        inputtext += '      {} {}\n'.format(AV[6], DV[6])
-        inputtext += '      {} {}\n'.format(AV[7], DV[7])
-        inputtext += '      {} {}\n'.format(AV[8], DV[8])
-        inputtext += '      {} {}\n'.format(AV[9], DV[9])
-        inputtext += '      {} {}\n'.format(AV[10], DV[10])
-        inputtext += '      {} {}\n'.format(AV[11], DV[11])
-        inputtext += 'P   6 1.00    0.0000000000\n'
-        inputtext += '      {} {}\n'.format(AV[12], DV[12])
-        inputtext += '      {} {}\n'.format(AV[13], DV[13])
-        inputtext += '      {} {}\n'.format(AV[14], DV[14])
-        inputtext += '      {} {}\n'.format(AV[15], DV[15])
-        inputtext += '      {} {}\n'.format(AV[16], DV[16])
-        inputtext += '      {} {}\n'.format(AV[17], DV[17])
-        inputtext += 'S   3 1.00    0.0000000000\n'
-        inputtext += '      {} {}\n'.format(AV[18], DV[18])
-        inputtext += '      {} {}\n'.format(AV[19], DV[19])
-        inputtext += '      {} {}\n'.format(AV[20], DV[20])
-        inputtext += 'P   3 1.00    0.0000000000\n'
-        inputtext += '      {} {}\n'.format(AV[21], DV[21])
-        inputtext += '      {} {}\n'.format(AV[22], DV[22])
-        inputtext += '      {} {}\n'.format(AV[23], DV[23])
-        inputtext += 'S   1 1.00    0.0000000000\n'
-        inputtext += '      {} {}\n'.format(AV[24], DV[24])
-        inputtext += 'P   1 1.00    0.0000000000\n'
-        inputtext += '      {} {}\n'.format(AV[25], DV[25])
-        inputtext += '****\n\n\n'
-
-    elif a.Z == 19:
-
-        DV = ['', '', '', '', '', '',
-              '', '', '', '', '', '',
-              '', '', '', '', '', '',
-              '', '', '', '', '', '',
-              '1.0000000', '1.0000000']
-        inputtext += 'S   6 1.00    0.0000000000\n'
-        inputtext += '      {} {}\n'.format(AV[0], DV[0])
-        inputtext += '      {} {}\n'.format(AV[1], DV[1])
-        inputtext += '      {} {}\n'.format(AV[2], DV[2])
-        inputtext += '      {} {}\n'.format(AV[3], DV[3])
-        inputtext += '      {} {}\n'.format(AV[4], DV[4])
-        inputtext += '      {} {}\n'.format(AV[5], DV[5])
-        inputtext += 'S   6 1.00    0.0000000000\n'
-        inputtext += '      {} {}\n'.format(AV[6], DV[6])
-        inputtext += '      {} {}\n'.format(AV[7], DV[7])
-        inputtext += '      {} {}\n'.format(AV[8], DV[8])
-        inputtext += '      {} {}\n'.format(AV[9], DV[9])
-        inputtext += '      {} {}\n'.format(AV[10], DV[10])
-        inputtext += '      {} {}\n'.format(AV[11], DV[11])
-        inputtext += 'P   6 1.00    0.0000000000\n'
-        inputtext += '      {} {}\n'.format(AV[12], DV[12])
-        inputtext += '      {} {}\n'.format(AV[13], DV[13])
-        inputtext += '      {} {}\n'.format(AV[14], DV[14])
-        inputtext += '      {} {}\n'.format(AV[15], DV[15])
-        inputtext += '      {} {}\n'.format(AV[16], DV[16])
-        inputtext += '      {} {}\n'.format(AV[17], DV[17])
-        inputtext += 'S   3 1.00    0.0000000000\n'
-        inputtext += '      {} {}\n'.format(AV[18], DV[18])
-        inputtext += '      {} {}\n'.format(AV[19], DV[19])
-        inputtext += '      {} {}\n'.format(AV[20], DV[20])
-        inputtext += 'P   3 1.00    0.0000000000\n'
-        inputtext += '      {} {}\n'.format(AV[21], DV[21])
-        inputtext += '      {} {}\n'.format(AV[22], DV[22])
-        inputtext += '      {} {}\n'.format(AV[23], DV[23])
-        inputtext += 'S   1 1.00    0.0000000000\n'
-        inputtext += '      {} {}\n'.format(AV[24], DV[24])
-        inputtext += 'P   1 1.00    0.0000000000\n'
-        inputtext += '      {} {}\n'.format(AV[25], DV[25])
-        inputtext += '****\n\n\n'
-
-    file=open(FileName+'.gjf','w')
-    file.write(inputtext)
-    file.close()
-    
-    subprocess.call('g09 < '+ FileName + '.gjf > ' + FileName + '.out\n', shell=True)
-    Energy = subprocess.check_output('grep "SCF Done:" ' + FileName + '.out | tail -1|awk \'{ print $5 }\'', shell=True)
-    Energy = Energy.decode('ascii').rstrip('\n')
-    if Energy != "":
-        EnergyNUM=float(Energy)
-        print('Alpha Values: {}; Energy: {}'.format(AV, EnergyNUM))
-        return EnergyNUM
-
-    else:
-        file=open(FileName+'.gjf','w')
-        file.write('# HF/gen gfinput\n\nTitle\n\n0 2\nH\n\nH 0\nS   3 1.00    0.0000000000\n     {} 0.2549381454D-01\n'.format(AV[0]))
-        file.write('     {} 0.1903731086D+00\n     {} 0.8521614860D+00\nS   1 1.00    0.0000000000\n     {} 1.0\n****\n\n\n'.format(AV[1], AV[2], AV[3]))
-        file.close()
-
-        subprocess.call('g09 < '+ FileName + '.gjf > ' + FileName + '.out\n', shell=True)
-        Energy = subprocess.check_output('grep "SCF Done:" ' + FileName + '.out | tail -1|awk \'{ print $5 }\'', shell=True)
-        Energy = Energy.decode('ascii').rstrip('\n')
-        if Energy != "":
-            EnergyNUM=float(Energy)
-            print('Alpha Values: {}; Energy: {}'.format(AV, EnergyNUM))
-            return EnergyNUM
-        else:
-            print('Alpha Values: {}; Energy: ----------'.format(AV))
-            print(bcolors.FAIL,"\n STOP STOP: Gaussian job did not terminate normally", bcolors.ENDC)
-            print(bcolors.FAIL,"File Name: ", FileName, bcolors.ENDC, "\n\n GOOD LUCK NEXT TIME!!!")
-            sys.exit(0)
-            return EnergyNUM
-
-
-
-def MinimizeAlphas():
-    a.a0 = np.array(a.AlphaValues)
-    if a.AlphaValueRanges != None:
-        a.a_r = np.array(a.AlphaValueRanges)
-        a.a_r = np.reshape(a.a_r, (len(a.AlphaValues), 2))   #Ranges for the values to be changed, array of min max pairs
-
-    print(bcolors.OKBLUE, '\nStart of program: Minimize energy.\n', bcolors.ENDC)
-    a.Result = minimize(FunctionA, a.a0, method='Nelder-Mead', options={'disp': True})
-    #a.Result = minimize(FunctionA, a.a0, method='CG', options={'gtol': a.Limit, 'disp': True})
-    #a.Result = minimize(FunctionA, a.a0, jac=GetGradient, method='L-BFGS-B', options={'gtol': a.Limit, 'disp': True})
-    #a.Result = minimize(FunctionA, a.a0, jac=GetGradient, bounds=a.a_r ,method='TNC', options={'disp': True})
-    #a.Result = differential_evolution(FunctionA, a.a_r)
-
-    print('\nThe results are: {}\n'.format(a.Result.x))
-    print(bcolors.OKBLUE, '\nEnd of program: Minimize energy.\n', bcolors.ENDC)
-
 def Main(arguments):
     Initiate(arguments)
 
+    a.E0 = Get_Energy(a.EnergyFileI, a.Scales)
     if   a.MinMethod == 'en':
         #Calculating the initial energy
-        a.E0 = Get_Energy(a.EnergyFileI, a.Scales)
         print('End of program: Calculate single energy with given scales.')
     
     elif a.MinMethod == 'own':
@@ -981,8 +439,213 @@ def Main(arguments):
         else:
             a.Warnings.append('Ranges (min / max) for each scale value must be given for this method with the option "-r".\nlen(R) = 2 * len(S) condition not met!')
             ErrorTermination()
+
     elif a.MinMethod == 'all':
-        MinimizeAlphas()
+#     Initial values:
+        Ctrl   =1000.0
+        RGS    =100.0
+        E0     =0.0
+        Rho    =0.0
+        skip   =0
+        counter=0
+        Scales = a.x0 
+#     Calculating the initial energy:
+        if E0 == 0.0:
+            E0 = Get_Energy(a.EnergyFileI, Scales)
+            DEnergy=np.absolute(E0)
+            print("Eo =",'% 12.6f' % E0, " --  Initial DEnergy =", '% 12.6f' % DEnergy)
+      
+#     Generate Gaussian input files and run them, then calculate Hessian:
+            Hessian = GetHessian(Scales)
+      
+#     >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> while loop <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+        while RGS > a.Limit:
+            counter += 1 
+      
+#     Generate Gaussian input files and run them, then calculate Gradient:
+            Gradient = GetGradient(np.array(Scales))
+      
+#     Update Hessian -------------------------------------
+            if skip == 0: G0 = Gradient
+            if skip == 1:
+                dG         = Gradient - G0
+                zd         = dG - np.dot(Hessian, dX)
+                norm_dX    = np.linalg.norm(dX)
+                norm_dG    = np.linalg.norm(dG)
+                norm_zd    = np.linalg.norm(zd)
+                condition1 = (np.dot(np.transpose(zd), dX)).tolist()[0][0] / (norm_zd * norm_dX)
+                condition2 = (np.dot(np.transpose(dG), dX)).tolist()[0][0] / (norm_dG * norm_dX)
+#     1) Murtagh-Sargent, symmetric rank one (SR1) update:
+                if   condition1 < -0.1:
+                    print('-----------1) Murtagh-Sargent, symmetric rank one (SR1) update')
+                    #print('z_zT', np.dot(zd, np.transpose(zd)))
+                    #print('zT_dX', np.dot(np.transpose(zd), dX))
+                    Hessian = Hessian + ((np.dot(zd, np.transpose(zd))) / (np.dot(np.transpose(zd), dX)))
+#     2) Broyden-Fletcher-Goldfarb-Shanno (BFGS) update:
+                elif condition2 >  0.1:
+                    print('-----------2) Broyden-Fletcher-Goldfarb-Shanno (BFGS) update')
+                    #print('OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO')
+                    #print('dG_dGT', (np.dot(dG, np.transpose(dG))))
+                    #print('dGT_dX', (np.dot(np.transpose(dG), dX)))
+                    dGdGt = ((np.dot(dG, np.transpose(dG))) / (np.dot(np.transpose(dG), dX)))
+                    HxxtH  = (np.dot(np.dot(np.dot(Hessian, dX), np.transpose(dX)), Hessian)) /  np.dot(np.dot(np.transpose(dX), Hessian), dX)
+                    #print('change', dGdGt - HxxtH)
+                    Hessian = Hessian + (dGdGt - HxxtH)
+#     3) Powell-symmetric-Broyden (PSB) update:
+                else:
+                    print('-----------3) Powell-symmetric-Broyden (PSB) update')
+                    #print('dXzT + zdXT', np.dot(dX, np.transpose(zd)) + np.dot(zd, np.transpose(dX)))
+                    #print('dXTdX', np.dot(np.transpose(dX), dX))
+                    dG_Hx = (  np.dot(dX, np.transpose(zd)) + np.dot(zd, np.transpose(dX)) ) / (np.dot(np.transpose(dX), dX))
+                    #print('np.dot(np.transpose(dX), zd)', np.dot(np.transpose(dX), zd))
+                    #print('np.dot(dX, np.transpose(dX))', np.dot(dX, np.transpose(dX)))
+                    #print('*', np.dot(np.transpose(dX), zd).tolist()[0][0] *  np.dot(dX, np.transpose(dX)) )
+                    #print('np.dot(np.transpose(dX), dX)', np.dot(np.transpose(dX), dX))
+                    #print('square', np.dot(np.transpose(dX), dX) * np.dot(np.transpose(dX), dX))
+                    dxtzdxx = np.dot(np.transpose(dX), zd).tolist()[0][0] * np.dot(dX, np.transpose(dX)) / (np.dot(np.transpose(dX), dX) * np.dot(np.transpose(dX), dX))
+                    #print('change', dG_Hx - dxtzdxx)
+                    Hessian = Hessian + (dG_Hx - dxtzdxx)
+      
+            #    print("dG",dG)
+            #    print("zd",zd)
+            #    print("norm_dX",norm_dX)
+            #    print("norm_dG",norm_dG)
+            #    print("norm_zd",norm_zd)
+            #    print("condition1",condition1)
+            #    print("condition2",condition2)
+            #    print("dGdGt",dGdGt)
+            #    print("xHHx",xHHx)
+            #    print("dG_Hx",dG_Hx)
+            #    print("xzdxx",xzdxx)
+      
+#     Calculate Hessian eigenvalues:
+            eW, eV = np.linalg.eig(Hessian)
+            ew = min(eW)
+      
+#     Print to the output:
+            print()
+            print(bcolors.OKBLUE,"Step", counter, "---------------",bcolors.ENDC)
+            print()
+            print("   Eigenvalues of Hes:","[",', '.join('%8.6f' % i for i in eW),"]")
+            print("   Minimum eigenvalue:", '%8.6f' % ew)
+            print()
+      
+#     Control the criteria of the trust region:
+            if DEnergy <= 0.0750 and (Rho < 1.250 and  Rho > 0.90): Ctrl = Ctrl/10.0
+            if a.Z > 10 and DEnergy <= 1.0 and (Rho < 1.250 and  Rho > 0.90): Ctrl = Ctrl/10.0
+            if Ctrl > 10.0 and DEnergy < 1.0e-4 and RGS < 0.01: Ctrl = 1.0
+            if Ctrl < 1.0 and (Rho > 1.250 or (Rho < 0.90 and Rho > 0.250)): Ctrl = 1.0
+            if Ctrl < 1.0 and (Rho < 1.250 and Rho > 0.90): 
+                Ctrl = 0.250
+                if RGS < 0.0050 and DEnergy < 1.0e-3: 
+                    Ctrl = Ctrl/10.0
+                    if RGS < 0.0009: Ctrl = Ctrl/20.0
+            if Rho < 0.250: Ctrl = Ctrl * 10.0
+            if Ctrl > 1000.0: Ctrl = 1000.0
+      
+#     Make dx = -inv(H - λI)g if, at least, one of the Hesian eigen values < zero, else dx = -inv(H)g: 
+            if ew < 9.0e-3:
+                Lambda = (- ew) + Ctrl
+                ShiftedHessian = Hessian + Lambda * np.identity(len(Gradient))
+                dX = -np.dot(ShiftedHessian.I, Gradient)
+                dXList = np.transpose(dX).tolist()[0]
+                LastScales = Scales.copy()
+                Scales=[float(i) + float(j) for i, j in zip(Scales, dXList)]
+      
+                '''
+                if min(Scales) < 0:
+                    # Generate Gaussian input files and run them, then calculate Hessian:
+                    Hessian = GetHessian(np.array(LastScales))
+      
+                    eW, eV = np.linalg.eig(Hessian)
+                    ew = min(eW)
+      
+                    if ew < 9.0e-3:
+                        Lambda = (- ew) + Ctrl
+                        ShiftedHessian = Hessian + Lambda * np.identity(len(Gradient))
+                        dX = -np.dot(ShiftedHessian.I, Gradient)
+                        dXList = np.transpose(dX).tolist()[0]
+                        Scales=[float(i) + float(j) for i, j in zip(LastScales, dXList)]
+                    else:
+                        dX = -np.dot(Hessian.I, Gradient)
+                        dXList = np.transpose(dX).tolist()[0]
+                        Scales=[float(i) + float(j) for i, j in zip(LastScales, dXList)]
+                '''
+      
+                NEnergy=Get_Energy(a.EnergyFileF,Scales)
+                DEnergy=E0-NEnergy
+                if -(np.dot(np.transpose(Gradient), dX) + 0.5 * np.dot(np.dot(np.transpose(dX), Hessian), dX)).tolist()[0][0] == 0.0:
+                    Rho = 0.0
+                else:
+                    Rho = (DEnergy / -(np.dot(np.transpose(Gradient), dX) + 0.5 * np.dot(np.dot(np.transpose(dX), Hessian), dX)).tolist()[0][0])
+                print(bcolors.OKGREEN, "  * Ctrl:",Ctrl, bcolors.ENDC)
+                print("   lambda:    ",'% 12.6f' % float(Lambda))
+                print("   Rho:       ",'% 12.6f' % float(Rho))
+            else:
+                dX = -np.dot(Hessian.I, Gradient)
+                dXList = np.transpose(dX).tolist()[0]
+                LastScales = Scales.copy()
+                Scales=[float(i) + float(j) for i, j in zip(Scales, dXList)]
+      
+                #'''
+                if min(Scales) < 0:
+                    # Generate Gaussian input files and run them, then calculate Hessian:
+                    Hessian = GetHessian(LastScales)
+      
+                    eW, eV = np.linalg.eig(Hessian)
+                    ew = min(eW)
+      
+                    if ew < 9.0e-3:
+                        Lambda = (- ew) + Ctrl
+                        ShiftedHessian = Hessian + Lambda * np.identity(len(Gradient))
+                        dX = -np.dot(ShiftedHessian.I, Gradient)
+                        dXList = np.transpose(dX).tolist()[0]
+                        Scales=[float(i) + float(j) for i, j in zip(LastScales, dXList)]
+                    else:
+                        dX = -np.dot(Hessian.I, Gradient)
+                        dXList = np.transpose(dX).tolist()[0]
+                        Scales=[float(i) + float(j) for i, j in zip(LastScales, dXList)]
+                #'''
+      
+                NEnergy=Get_Energy(a.EnergyFileF, Scales)
+                DEnergy=E0-NEnergy
+                if -(np.dot(np.transpose(Gradient), dX) + 0.5 * np.dot(np.dot(np.transpose(dX), Hessian), dX)).tolist()[0][0] == 0.0:
+                    Rho = 0.0
+                else:
+                    Rho = (DEnergy / -(np.dot(np.transpose(Gradient), dX) + 0.5 * np.dot(np.dot(np.transpose(dX), Hessian), dX)).tolist()[0][0])
+                print("   lambda:    ",'% 12.6f' % float(ew))
+                print("   Rho:       ",'% 12.6f' % float(Rho))
+      
+#     calculate the root for the sum of squares of gradient components:  
+            Sum_G_Sq = 0.0
+            for i in range(len(Gradient)):
+                Sum_G_Sq += (Gradient[i] * Gradient[i]) 
+            RGS = math.sqrt(Sum_G_Sq)
+      
+#     Print to the output:
+            print(bcolors.BOLD,"  RGS:       ",'% 12.6f' % float(RGS), bcolors.ENDC)      
+            ColoRR=bcolors.OKGREEN
+            if DEnergy < 0.0: ColoRR=bcolors.FAIL
+            print()   
+            print(ColoRR,"  New Scale:","[",' '.join('%10.6f' % i for i in Scales),"]") #"   ",np.array(Scales))
+            print("   Initial E:","", '% 12.6f' % float(E0))
+            print("   Final E  :","", '% 12.6f' % float(NEnergy))
+            print("   Delta E  :","", '% 12.6f' % float(DEnergy), bcolors.ENDC)
+            print()   
+      
+#     Saving the new E0, G0, and new scale values:
+            WriteScales(Scales)
+            E0 = NEnergy
+            G0 = Gradient
+            skip = 1
+      
+#     Print to the output if the convergence criteria met, and exit: 
+            if (RGS <= a.Limit):
+                print(bcolors.OKGREEN,"STOP:", bcolors.ENDC)
+                print("The gradient is", "[",', '.join('%8.6f' % i for i in Gradient),"]", "and RGS =",'% 8.6f' % float(RGS))      
+                print(bcolors.OKBLUE,"\n                        -- Optimization Terminated Normally --")
+                print()
+# ------------------------------------------------------ Exit ---------------------------------------------------------------
     else:
         a.Warnings.append('This method is unknown')
         ErrorTermination()
@@ -1112,18 +775,16 @@ def GetGradientScales(Scales):
     return(Gradient_scales, Sorted_Gradient_scales)
 
 def GetGradient(Scales):
-    print(bcolors.OKBLUE, '\nCalculating Gradient for scales: ', bcolors.ENDC, '{}\n\n'.format(Scales.tolist()))
+    print(bcolors.OKBLUE, '\nCalculating Gradient: ', bcolors.ENDC, '\n')
     Gradient_scales, Sorted_Gradient_scales = GetGradientScales(Scales)
 
     #Parallel    
-    """
-    ll=joblib.Parallel(n_jobs=a.ParallelProc)(joblib.delayed(EnergyParallel)('Grad',sto_out,index)
-        for index,sto_out in enumerate(Sorted_Gradient_scales))
+    ll=joblib.Parallel(n_jobs=a.ParallelProc)(joblib.delayed(EnergyParallel)('Grad',scales,index)
+        for index,scales in enumerate(Sorted_Gradient_scales))
     GradientEnergyDictionary={} 
     GradientEnergyDictionary={t[0]:round(t[1], 15) for t in ll}
-    #"""
 
-    #"""
+    """
     #Serial
     GradientEnergyDictionary={}
     p = []
@@ -1131,7 +792,7 @@ def GetGradient(Scales):
         A, B =EnergyParallel('Grad',scales,index)
         p.append([A, B])
     GradientEnergyDictionary={t[0]:round(t[1], 15) for t in p}
-    #"""
+    """
 
 
     GradientList=[]
@@ -1197,18 +858,17 @@ def GetHessianScales(Indices, Scales):
 
 def GetHessian(Scales):
 
-    print(bcolors.OKBLUE, '\nCalculating Hessian for scales: ', bcolors.ENDC, '{}\n\n'.format(Scales.tolist()))
+    print(bcolors.OKBLUE, '\nCalculating Hessian: ', bcolors.ENDC, '\n')
     Indices, Diagonal = CreateIndices()
     E2PScales, E2MScales, EPPScales, ENPScales, EPNScales, ENNScales, Sorted_Hessian_scales = GetHessianScales(Indices, Scales)
 
     #Parallel
-    """
-    ll=joblib.Parallel(n_jobs=a.ParallelProc)(joblib.delayed(EnergyParallel)('Hess',sto_out,index) 
-        for index,sto_out in enumerate(Sorted_Hessian_scales))
+    ll=joblib.Parallel(n_jobs=a.ParallelProc)(joblib.delayed(EnergyParallel)('Hess',scales,index) 
+        for index,scales in enumerate(Sorted_Hessian_scales))
     HessianEnergyDictionary={}
     HessianEnergyDictionary={t[0]:round(t[1], 15) for t in ll}
-    #"""
-
+     
+    """
     #Serial
     HessianEnergyDictionary={}
     p = []
@@ -1216,6 +876,7 @@ def GetHessian(Scales):
         A, B = EnergyParallel('Hess',scales,index)
         p.append([A, B])
     HessianEnergyDictionary={t[0]:round(t[1], 15) for t in p}
+    """
     print(HessianEnergyDictionary)
 
     HessianEnergies = []
