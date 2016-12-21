@@ -36,6 +36,10 @@ class a: #Class of the arguments, "a" for short, all arguments that will be pass
     AInput = None           #String that contains input text for alpha minimization
     TextNum = 1
     colorslist = None
+    NumA = None
+    NumD = None
+    NumS = None
+    PRINT = None
 
 class bcolors:
     HEADER = '\033[95m'
@@ -60,7 +64,7 @@ def Arguments():
     parser.add_argument('-M','--MinMethod',     required=False,type=str,  help='Minimization method',              default='en',
                         choices=['en', 'own', 'comb', 'scan', 'scan2D','GA', 'CG', 'NM', 'LBF', 'NCG', 'TNC', 'SLS', 'TR', 'all'])
     parser.add_argument('-i','--InputFileType', required=False,type=str,  help='Input File Style',              default='STO',
-                        choices=['STO','ALpha','Coeff','AlphaCoeff'])
+                        choices=['STO','A','C','AC','S'])
     parser.add_argument('-b','--BasisSet',      required=False,type=str,  help='Basis set',                        default='6-31G',
                         choices=['6-31G', '6-311G', '6-31G(d,p)'])
 
@@ -71,6 +75,7 @@ def Arguments():
     parser.add_argument('-D','--Delta',         required=False,type=float,help='The value of Delta',               default=0.001)
     parser.add_argument('-l','--Limit',         required=False,type=float,help='Error limit',                      default=1.0e-4)
     parser.add_argument('-a','--AlphaValues',   required=False,type=float,help='Alpha values',                     nargs='+')
+    parser.add_argument('-d','--Coeffs',        required=False,type=float,help='Coefficient values',               nargs='+')
     parser.add_argument('-A','--AlphaValueRanges',required=False,type=float,help='Ranges for alpha values',        nargs='+')
 
     arguments = parser.parse_args()
@@ -84,10 +89,9 @@ def Arguments():
     a.BasisSet = arguments.BasisSet
     a.GaussianProc = arguments.GaussianProc
     a.ParallelProc = arguments.ParallelProc
-    a.Scales = arguments.Scales
     a.Ranges = arguments.Ranges
 
-    a.colorslist = [bcolors.HEADER,bcolors.OKBLUE,bcolors.WARNING,bcolors.FAIL,bcolors.ENDC,bcolors.BOLD,bcolors.UNDERLINE]
+    a.colorslist = [bcolors.HEADER,bcolors.OKBLUE,bcolors.WARNING,bcolors.FAIL,bcolors.ENDC,bcolors.BOLD]
 
     a.Delta = arguments.Delta
     a.Limit = arguments.Limit
@@ -96,12 +100,15 @@ def Arguments():
 
     a.ElementName = GetElementName()
 
+    a.NumS, a.NumA, a.NumD = NumberSAD()
+
     ## files names  ##
     a.fileName = str(a.Element) + '_' + GetElementSymbol().strip()
-    a.GuessFile = 'Guess_' + a.fileName + '.txt'
+    a.GuessFile = 'STOGuess_' + a.fileName + '.txt'
     a.EnergyFileI = 'EnergyI_' + a.fileName
     a.EnergyFileF = 'EnergyF_' + a.fileName
-
+    
+    a.PRINT = True 
     return(arguments)
 
 # """ Starting the program """"
@@ -112,38 +119,84 @@ def Initiate(arguments):
     print ("Level of theory is {}".format(a.OptMethod))
     print ("The value of Delta is {}".format(a.Delta))
     print ("The cutoff is {}".format(a.Limit))
+    returnVarScales()
 
-    sto = GetSTO()
-    stoLen = len(sto)
+def InitialScales():
+    if (a.InputFileType == "STO") :
+        sto = GetSTO()
+        stoLen = len(sto)
 
-    if arguments.Scales is not None:
-   #     if stoLen == len(arguments.Scales):
-            print("The guess values ", arguments.Scales)
-            Scales = arguments.Scales
-    #    else:
-     #       print(bcolors.FAIL,"\nSTOP STOP: number of guess values should be ", stoLen,bcolors.ENDC)
-        #    sys.exit()
-    elif os.path.isfile(a.GuessFile):
-            Scales=[]
-            File = open(a.GuessFile, 'r')
-            for line in File:
-                Scales.append(float(line.rstrip('\n')))
-            File.close()
-            print("The guess values (From the File) are ", Scales)
-    else:
-            Scales = [1.0] * stoLen
-            print("The guess values (Default Values) are ", Scales)
+        if arguments.Scales is not None:
+            if stoLen == len(arguments.Scales):
+                print("The guess values ", arguments.Scales)
+                a.IScales = arguments.Scales
+            else:
+                print(bcolors.FAIL,"\nSTOP STOP: number of guess values should be ", stoLen,bcolors.ENDC)
+                sys.exit()
+        #elif os.path.isfile(a.GuessFile):
+        #        Scales=[]
+        #        File = open(a.GuessFile, 'r')
+        #        for line in File:
+        #            Scales.append(float(line.rstrip('\n')))
+        #        File.close()
+        #        a.IScales = Scales
+        #        print("The guess values (From the File) are ", a.IScales)
+        else:
+                a.IScales = [1.0] * stoLen
+                print("The guess values (Default Values) are ", a.IScales)
 
-    a.Scales = Scales
+    elif (a.InputFileType in ["AC","A","S","C"]) :
+# InitScales
+        if arguments.Scales is not None:
+            if a.NumS == len(arguments.Scales):
+                a.IScales = arguments.Scales
+            else:
+                print(bcolors.FAIL,"\nSTOP STOP: number of guess values should be ", a.NumS,bcolors.ENDC)
+                sys.exit()
+        else:
+            a.IScales = [1.0] * a.NumS
+# InitAlphas            
+        if arguments.AlphaValues is not None:
+            if a.NumA == len(arguments.AlphaValues):
+                a.Alphas = arguments.AlphaValues
+            else:
+                print(bcolors.FAIL,"\nSTOP STOP: number of alpha values should be ", a.NumA, bcolors.ENDC)
+                sys.exit()
+        else:
+             a.Alphas = DefaultAC()[0]
+# InitCoeffs
+        if arguments.Coeffs is not None:
+            if a.NumD == len(arguments.Coeffs):
+                a.Coeffs = arguments.Coeffs
+            else:
+                print(bcolors.FAIL,"\nSTOP STOP: number of coefficient values should be ", a.NumD ,bcolors.ENDC)
+                sys.exit()
+        else:
+            a.Coeffs = DefaultAC()[1]
+           
+def returnVarScales():
+
+    InitialScales()
+
+    if (a.InputFileType == "STO") :
+        a.Scales = a.IScales
+    elif (a.InputFileType == "AC"):
+        a.Scales = a.Alphas + a.Coeffs
+    elif (a.InputFileType == "A"):
+        a.Scales = a.Alphas
+    elif (a.InputFileType == "C"):
+        a.Scales = a.Coeffs
+    elif (a.InputFileType == "S"):
+        a.Scales = a.IScales 
+    
+
     a.NumberOfScales = len(a.Scales)
-
     #Numpy array of the scales to be changed, this will be passed in to functions
     a.x0 = np.array(a.Scales)
 
     if a.Ranges != None:
         a.x_r = np.array(a.Ranges)
         a.x_r = np.reshape(a.x_r, (a.NumberOfScales, 2))   #Ranges for the values to be changed, array of min max pairs
-
 
 ##### Functions related to generating the Input file for scales
 
@@ -152,6 +205,20 @@ def WriteScales(Scales):
     for val in Scales:
         File.write(str(val) + '\n')
     File.close()
+
+def NumberSAD():
+    if a.Z in [1, 2]:
+        NumS = 2; NumA = 4; NumD = 3
+    elif a.Z in range(3,5):
+        NumS = 3; NumA = 10; NumD = 9
+    elif a.Z in range(5,11):
+        NumS = 5; NumA = 14; NumD = 12
+    elif a.Z in range(11,19):
+        NumS = 7; NumA = 26; NumD = 24
+    else:
+        print('The atomic number is more than 18')
+        sys.exit()
+    return NumS, NumA, NumD
 
 def GetSTO():
     STO=[]
@@ -177,11 +244,26 @@ def GenerateInput(Scale_values):
     inputtext += GetElementSymbol().strip() + ' 0\n'
     if (a.InputFileType == "STO") :
         inputtext += GenerateInputGen(Scale_values)
-    elif (a.InputFileType == "AlphaCoeff") :
-        len_scales = len(Scale_values) 
-        AV = Scale_values[:len_scales//2]
-        DV = Scale_values[len_scales//2:]
-        inputtext += GenerateInputGenAlpha(DV, AV)
+    elif (a.InputFileType == "AC") :
+        AV = Scale_values[:a.NumA+1]
+        DV = Scale_values[a.NumA:]
+        SV = a.IScales
+        inputtext += GenerateInputGenAlpha(SV,DV, AV)
+    elif (a.InputFileType == "A") :
+        AV = Scale_values
+        DV = a.Coeffs
+        SV = a.IScales
+        inputtext += GenerateInputGenAlpha(SV,DV, AV)
+    elif (a.InputFileType == "C") :
+        AV = a.Alphas
+        DV = Scale_values
+        SV = a.IScales
+        inputtext += GenerateInputGenAlpha(SV,DV, AV)
+    elif (a.InputFileType == "S") :
+        AV = a.Alphas
+        DV = a.Coeffs
+        SV = Scale_values
+        inputtext += GenerateInputGenAlpha(SV,DV, AV)
     else:
         print("{} method is not available".format(a.InputFileType))
         sys.exit()
@@ -194,23 +276,50 @@ def GenerateInputGen(Scale_values):
         inputtext += sto_out + ' ' + str(Scale_values[index])+'\n'
     inputtext += '****\n\n'
     return inputtext
+   
+def DefaultAC():
+    if a.Z in [1, 2]:
+        alpha = [2.227660584, 0.405771156, 0.10981751, 
+                 0.270949809]
+        coffes = [ 0.154328967, 0.535328142, 0.444634542]
+    elif a.Z in range(3,5):
+        alpha = [23.10303149, 4.235915534, 1.185056519, 0.407098898, 0.158088415, 0.06510954,
+                 2.581578398, 0.15676221, 0.060183323, 	
+                 0.101215108]
+        coffes = [0.009163596, 0.049361493, 0.168538305, 0.37056280, 0.41649153, 0.130334084, 
+                 -0.059944749, 0.596038540, 0.458178629]
+    elif a.Z in range(5,11):
+        alpha = [23.10303149, 4.235915534, 1.185056519, 0.407098898, 0.158088415, 0.06510954,
+                 2.581578398, 0.15676221, 0.060183323, 	
+                 0.919237900, 0.23591945, 0.080098057,
+                 0.101215108,
+                 0.175966689]
+        coffes = [0.009163596, 0.049361493, 0.168538305, 0.37056280, 0.41649153, 0.130334084, 
+                 -0.059944749, 0.596038540, 0.458178629,
+                  0.162394855, 0.566170886, 0.422307175]
+    elif a.Z in range(11,19):
+        pass
+
+
+
+    return alpha, coffes
     
-def GenerateInputGenAlpha(DVV, AV):
+def GenerateInputGenAlpha(SV,DVV, AV):
     inputtext=''
     DV = []
     if a.Z in [1, 2]:
-        inputtext += 'S   3 1.00    0.0000000000\n'
+        inputtext += 'S   3 {0:.6f}    \n'.format(SV[0])
         DV = normalization(DVV[0:3],AV[0:3])[1]
         inputtext += '      {} {}\n'.format(AV[0], DV[0])
         inputtext += '      {} {}\n'.format(AV[1], DV[1])
         inputtext += '      {} {}\n'.format(AV[2], DV[2])
-        inputtext += 'S   1 1.00    0.0000000000\n'
+        inputtext += 'S   1 {0:.6f}    \n'.format(SV[1])
         inputtext += '      {} {}\n'.format(AV[3], 1.000)
         inputtext += '****\n\n\n'
 
-    elif a.Z in range(3,11):
+    elif a.Z in range(3,5):
 
-        inputtext += 'S   6 1.00    0.0000000000\n'
+        inputtext += 'S   6 {0:.6f}    \n'.format(SV[0])
         DV[0:6] = normalization(DVV[0:6],AV[0:6])[1].tolist()
         inputtext += '      {} {}\n'.format(AV[0], DV[0])
         inputtext += '      {} {}\n'.format(AV[1], DV[1])
@@ -218,104 +327,81 @@ def GenerateInputGenAlpha(DVV, AV):
         inputtext += '      {} {}\n'.format(AV[3], DV[3])
         inputtext += '      {} {}\n'.format(AV[4], DV[4])
         inputtext += '      {} {}\n'.format(AV[5], DV[5])
-        inputtext += 'S   3 1.00    0.0000000000\n'
+        inputtext += 'S   3 {0:.6f}    \n'.format(SV[1])
         DV[6:9] = normalization(DVV[6:9],AV[6:9])[1].tolist()
         inputtext += '      {} {}\n'.format(AV[6], DV[6])
         inputtext += '      {} {}\n'.format(AV[7], DV[7])
         inputtext += '      {} {}\n'.format(AV[8], DV[8])
-        inputtext += 'P   3 1.00    0.0000000000\n'
+        inputtext += 'S   1 {0:.6f}    \n'.format(SV[2])
+        inputtext += '      {} {}\n'.format(AV[9], 1.0000)
+        inputtext += '****\n\n\n'
+
+    elif a.Z in range(5,11):
+
+        inputtext += 'S   6 {0:.6f}    \n'.format(SV[0])
+        DV[0:6] = normalization(DVV[0:6],AV[0:6])[1].tolist()
+        inputtext += '      {} {}\n'.format(AV[0], DV[0])
+        inputtext += '      {} {}\n'.format(AV[1], DV[1])
+        inputtext += '      {} {}\n'.format(AV[2], DV[2])
+        inputtext += '      {} {}\n'.format(AV[3], DV[3])
+        inputtext += '      {} {}\n'.format(AV[4], DV[4])
+        inputtext += '      {} {}\n'.format(AV[5], DV[5])
+        inputtext += 'S   3 {0:.6f}    \n'.format(SV[1])
+        DV[6:9] = normalization(DVV[6:9],AV[6:9])[1].tolist()
+        inputtext += '      {} {}\n'.format(AV[6], DV[6])
+        inputtext += '      {} {}\n'.format(AV[7], DV[7])
+        inputtext += '      {} {}\n'.format(AV[8], DV[8])
+        inputtext += 'P   3 {0:.6f}    \n'.format(SV[2])
         DV[9:12] = normalization(DVV[9:12],AV[9:12])[1].tolist()
         inputtext += '      {} {}\n'.format(AV[9], DV[9])
         inputtext += '      {} {}\n'.format(AV[10], DV[10])
         inputtext += '      {} {}\n'.format(AV[11], DV[11])
-        inputtext += 'S   1 1.00    0.0000000000\n'
+        inputtext += 'S   1 {0:.6f}    \n'.format(SV[3])
         inputtext += '      {} {}\n'.format(AV[12], 1.000)
-        inputtext += 'P   1 1.00    0.0000000000\n'
+        inputtext += 'P   1 {0:.6f}    \n'.format(SV[4])
         inputtext += '      {} {}\n'.format(AV[13], 1.000)
         inputtext += '****\n\n\n'
 
-
     elif a.Z in range(11,19):
 
-        inputtext += 'S   6 1.00    0.0000000000\n'
-        DV = normalization(DVV[0:6],AV[0:6])[1]
+        inputtext += 'S   6 {0:.6f}    \n'.format(SV[0])
+        DV[0:6] = normalization(DVV[0:6],AV[0:6])[1]
         inputtext += '      {} {}\n'.format(AV[0], DV[0])
         inputtext += '      {} {}\n'.format(AV[1], DV[1])
         inputtext += '      {} {}\n'.format(AV[2], DV[2])
         inputtext += '      {} {}\n'.format(AV[3], DV[3])
         inputtext += '      {} {}\n'.format(AV[4], DV[4])
         inputtext += '      {} {}\n'.format(AV[5], DV[5])
-        inputtext += 'S   6 1.00    0.0000000000\n'
-        DV = normalization(DVV[6:12],AV[6:12])[1]
+        inputtext += 'S   6 {0:.6f}    \n'.format(SV[1])
+        DV[6:12] = normalization(DVV[6:12],AV[6:12])[1]
         inputtext += '      {} {}\n'.format(AV[6], DV[6])
         inputtext += '      {} {}\n'.format(AV[7], DV[7])
         inputtext += '      {} {}\n'.format(AV[8], DV[8])
         inputtext += '      {} {}\n'.format(AV[9], DV[9])
         inputtext += '      {} {}\n'.format(AV[10], DV[10])
         inputtext += '      {} {}\n'.format(AV[11], DV[11])
-        inputtext += 'P   6 1.00    0.0000000000\n'
-        DV = normalization(DVV[12:18],AV[12:18])[1]
+        inputtext += 'P   6 {0:.6f}    \n'.format(SV[2])
+        DV[12:18] = normalization(DVV[12:18],AV[12:18])[1]
         inputtext += '      {} {}\n'.format(AV[12], DV[12])
         inputtext += '      {} {}\n'.format(AV[13], DV[13])
         inputtext += '      {} {}\n'.format(AV[14], DV[14])
         inputtext += '      {} {}\n'.format(AV[15], DV[15])
         inputtext += '      {} {}\n'.format(AV[16], DV[16])
         inputtext += '      {} {}\n'.format(AV[17], DV[17])
-        inputtext += 'S   3 1.00    0.0000000000\n'
-        DV = normalization(DVV[18:21],AV[18:21])[1]
+        inputtext += 'S   3 {0:.6f}    \n'.format(SV[3])
+        DV[18:21] = normalization(DVV[18:21],AV[18:21])[1]
         inputtext += '      {} {}\n'.format(AV[18], DV[18])
         inputtext += '      {} {}\n'.format(AV[19], DV[19])
         inputtext += '      {} {}\n'.format(AV[20], DV[20])
-        inputtext += 'P   3 1.00    0.0000000000\n'
-        DV = normalization(DVV[22:24],AV[22:21])[1]
+        inputtext += 'P   3 {0:.6f}    \n'.format(SV[4])
+        DV[21:24] = normalization(DVV[21:24],AV[21:24])[1]
         inputtext += '      {} {}\n'.format(AV[21], DV[21])
         inputtext += '      {} {}\n'.format(AV[22], DV[22])
         inputtext += '      {} {}\n'.format(AV[23], DV[23])
-        inputtext += 'S   1 1.00    0.0000000000\n'
+        inputtext += 'S   1 {0:.6f}    \n'.format(SV[5])
         inputtext += '      {} {}\n'.format(AV[24], 1.0000)
-        inputtext += 'P   1 1.00    0.0000000000\n'
+        inputtext += 'P   1 {0:.6f}    \n'.format(SV[6])
         inputtext += '      {} {}\n'.format(AV[25], 1.0000)
-        inputtext += '****\n\n\n'
-
-    elif a.Z == 19:
-
-        inputtext += 'S   6 1.00    0.0000000000\n'
-        DV = normalization(DVV[0:6],AV[0:6])[1]
-        inputtext += '      {} {}\n'.format(AV[0], DV[0])
-        inputtext += '      {} {}\n'.format(AV[1], DV[1])
-        inputtext += '      {} {}\n'.format(AV[2], DV[2])
-        inputtext += '      {} {}\n'.format(AV[3], DV[3])
-        inputtext += '      {} {}\n'.format(AV[4], DV[4])
-        inputtext += '      {} {}\n'.format(AV[5], DV[5])
-        inputtext += 'S   6 1.00    0.0000000000\n'
-        DV = normalization(DVV[6:12],AV[6:12])[1]
-        inputtext += '      {} {}\n'.format(AV[6], DV[6])
-        inputtext += '      {} {}\n'.format(AV[7], DV[7])
-        inputtext += '      {} {}\n'.format(AV[8], DV[8])
-        inputtext += '      {} {}\n'.format(AV[9], DV[9])
-        inputtext += '      {} {}\n'.format(AV[10], DV[10])
-        inputtext += '      {} {}\n'.format(AV[11], DV[11])
-        inputtext += 'P   6 1.00    0.0000000000\n'
-        DV = normalization(DVV[12:18],AV[12:18])[1]
-        inputtext += '      {} {}\n'.format(AV[12], DV[12])
-        inputtext += '      {} {}\n'.format(AV[13], DV[13])
-        inputtext += '      {} {}\n'.format(AV[14], DV[14])
-        inputtext += '      {} {}\n'.format(AV[15], DV[15])
-        inputtext += '      {} {}\n'.format(AV[16], DV[16])
-        inputtext += '      {} {}\n'.format(AV[17], DV[17])
-        inputtext += 'S   3 1.00    0.0000000000\n'
-        DV = normalization(DVV[18:21],AV[18:21])[1]
-        inputtext += '      {} {}\n'.format(AV[18], DV[18])
-        inputtext += '      {} {}\n'.format(AV[19], DV[19])
-        inputtext += '      {} {}\n'.format(AV[20], DV[20])
-        inputtext += 'P   3 1.00    0.0000000000\n'
-        inputtext += '      {} {}\n'.format(AV[21], DV[21])
-        inputtext += '      {} {}\n'.format(AV[22], DV[22])
-        inputtext += '      {} {}\n'.format(AV[23], DV[23])
-        inputtext += 'S   1 1.00    0.0000000000\n'
-        inputtext += '      {} {}\n'.format(AV[24], DV[24])
-        inputtext += 'P   1 1.00    0.0000000000\n'
-        inputtext += '      {} {}\n'.format(AV[25], DV[25])
         inputtext += '****\n\n\n'
 
     return inputtext
@@ -330,6 +416,10 @@ def Function(Scales):
 def EnergyParallel(Title, scales, index):
     Title = Title+'_'+a.ElementName.strip()+'_'+a.BasisSet.strip()+'_scale_'+str(index+1)
     Energy = Get_Energy(Title, scales)
+    if a.PRINT:
+        CurrentColor = random.choice(a.colorslist)
+        sys.stdout.write("{}   {}      ; Energy: {} {}\r".format(CurrentColor ,Title, Energy,bcolors.ENDC))
+        sys.stdout.flush()
     return(index, Energy)
 
 def Get_Energy(FileName, Scale_values):
@@ -339,16 +429,13 @@ def Get_Energy(FileName, Scale_values):
     file=open(FileName+'.gjf','w')
     file.write(GenerateInput(Scale_values) + '\n\n')
     file.close()
-    CurrentColor = random.choice(a.colorslist)
-    sys.stdout.write("{}   {}{}  \r".format(CurrentColor ,FileName,bcolors.ENDC))
-    sys.stdout.flush()
     #subprocess.call('GAUSS_SCRDIR="/nqs/$USER"\n', shell=True)
     subprocess.call('g09 < '+ FileName + '.gjf > ' + FileName + '.out\n', shell=True)
     Energy = subprocess.check_output('grep "SCF Done:" ' + FileName + '.out | tail -1|awk \'{ print $5 }\'', shell=True)
     Energy = Energy.decode('ascii').rstrip('\n')
     if Energy != "":
         EnergyNUM=float(Energy)
-   #     print('Scale Values: {}; Energy: {}'.format(Scale_values, EnergyNUM))
+    #    print('Scale Values: {}; Energy: {}'.format(Scale_values, EnergyNUM))
         return EnergyNUM
 
     else:
@@ -376,6 +463,7 @@ def Main(arguments):
     a.E0 = Get_Energy(a.EnergyFileI, a.Scales)
     if   a.MinMethod == 'en':
         #Calculating the initial energy
+        print('\n\n\nEnergy = {} Hartee'.format(a.E0))
         print('End of program: Calculate single energy with given scales.')
     
     elif a.MinMethod == 'own':
@@ -391,28 +479,36 @@ def Main(arguments):
         pass
     
     elif a.MinMethod == 'NM':
+        #a.PRINT = False
         print(bcolors.OKBLUE, '\nStart of program: Minimize energy using Nelder-Mead algorithm from scipy.optimize.minimize python package.\n', bcolors.ENDC)
         a.Result = minimize(Function, a.x0, method='Nelder-Mead', options={'disp': True})
         print('\nThe results are: {}\n'.format(a.Result.x))
+        Function(a.Result.x)
         print(bcolors.OKBLUE, '\nEnd of program: Minimize energy using Nelder-Mead algorithm from scipy.optimize.minimize python package.\n', bcolors.ENDC)
     
     elif a.MinMethod == 'CG':
+        #a.PRINT = False
         print(bcolors.OKBLUE, '\nStart of program: Minimize energy using conjugate gradient algorithm from scipy.optimize.minimize python package.\n', bcolors.ENDC)
         a.Result = minimize(Function, a.x0, method='CG', options={'gtol': a.Limit, 'disp': True})
         print('\nThe results are: {}\n'.format(a.Result.x))
+        Function(a.Result.x)
         print(bcolors.OKBLUE, '\nEnd of program: Minimize energy using conjugate gradient algorithm from scipy.optimize.minimize python package.\n', bcolors.ENDC)
     
     elif a.MinMethod == 'LBF':
+        #a.PRINT = False
         print(bcolors.OKBLUE, '\nStart of program: Minimize energy using L-BFGS-B algorithm from scipy.optimize.minimize python package.\n', bcolors.ENDC)
         a.Result = minimize(Function, a.x0, jac=GetGradient, method='L-BFGS-B', options={'gtol': a.Limit, 'disp': True})
         print('\nThe results are: {}\n'.format(a.Result.x))
+        Function(a.Result.x)
         print(bcolors.OKBLUE, '\nEnd of program: Minimize energy using L-BFGS-B algorithm from scipy.optimize.minimize python package.\n', bcolors.ENDC)
     
     elif a.MinMethod == 'TNC':
+        #a.PRINT = False
         if len(a.Ranges) == 2 * len(a.Scales):
             print(bcolors.OKBLUE, '\nStart of program: Minimize energy using truncated Newton (TNC) algorithm from scipy.optimize.minimize python package.\n', bcolors.ENDC)
             a.Result = minimize(Function, a.x0, jac=GetGradient, bounds=a.x_r ,method='TNC', options={'disp': True})
             print('\nThe results are: {}\n'.format(a.Result.x))
+            Function(a.Result.x)
             print(bcolors.OKBLUE, '\nEnd of program: Minimize energy using truncated Newton (TNC) algorithm from scipy.optimize.minimize python package.\n', bcolors.ENDC)
         else:
             a.Warnings.append('Ranges (min / max) for each scale value must be given for this method with the option "-r".\nlen(R) = 2 * len(S) condition not met!')
@@ -423,6 +519,7 @@ def Main(arguments):
         pass
     
     elif a.MinMethod == 'SLS':
+        #a.PRINT = False
         result = minimize(Function, a.x0, method='SLSQP', bounds=a.x_r, options={'ftol': a.Limit, 'disp': True})
         pass
     
@@ -435,6 +532,7 @@ def Main(arguments):
             print(bcolors.OKBLUE, '\nStart of program: Minimize energy using differential_evolution algorithm from scipy.optimize python package.\n', bcolors.ENDC)
             a.Result = differential_evolution(Function, a.x_r)
             print('\nThe results are: {}\n'.format(a.Result.x))
+            Function(a.Result.x)
             print(bcolors.OKBLUE, '\nEnd of program: Minimize energy using differential_evolution algorithm from scipy.optimize python package.\n', bcolors.ENDC)
         else:
             a.Warnings.append('Ranges (min / max) for each scale value must be given for this method with the option "-r".\nlen(R) = 2 * len(S) condition not met!')
@@ -477,13 +575,13 @@ def Main(arguments):
                 condition2 = (np.dot(np.transpose(dG), dX)).tolist()[0][0] / (norm_dG * norm_dX)
 #     1) Murtagh-Sargent, symmetric rank one (SR1) update:
                 if   condition1 < -0.1:
-                    print('-----------1) Murtagh-Sargent, symmetric rank one (SR1) update')
+                    print('\n-----------1) Murtagh-Sargent, symmetric rank one (SR1) update')
                     #print('z_zT', np.dot(zd, np.transpose(zd)))
                     #print('zT_dX', np.dot(np.transpose(zd), dX))
                     Hessian = Hessian + ((np.dot(zd, np.transpose(zd))) / (np.dot(np.transpose(zd), dX)))
 #     2) Broyden-Fletcher-Goldfarb-Shanno (BFGS) update:
                 elif condition2 >  0.1:
-                    print('-----------2) Broyden-Fletcher-Goldfarb-Shanno (BFGS) update')
+                    print('\n-----------2) Broyden-Fletcher-Goldfarb-Shanno (BFGS) update')
                     #print('OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO')
                     #print('dG_dGT', (np.dot(dG, np.transpose(dG))))
                     #print('dGT_dX', (np.dot(np.transpose(dG), dX)))
@@ -493,7 +591,7 @@ def Main(arguments):
                     Hessian = Hessian + (dGdGt - HxxtH)
 #     3) Powell-symmetric-Broyden (PSB) update:
                 else:
-                    print('-----------3) Powell-symmetric-Broyden (PSB) update')
+                    print('\n-----------3) Powell-symmetric-Broyden (PSB) update')
                     #print('dXzT + zdXT', np.dot(dX, np.transpose(zd)) + np.dot(zd, np.transpose(dX)))
                     #print('dXTdX', np.dot(np.transpose(dX), dX))
                     dG_Hx = (  np.dot(dX, np.transpose(zd)) + np.dot(zd, np.transpose(dX)) ) / (np.dot(np.transpose(dX), dX))
@@ -578,7 +676,7 @@ def Main(arguments):
                     Rho = 0.0
                 else:
                     Rho = (DEnergy / -(np.dot(np.transpose(Gradient), dX) + 0.5 * np.dot(np.dot(np.transpose(dX), Hessian), dX)).tolist()[0][0])
-                print(bcolors.OKGREEN, "  * Ctrl:",Ctrl, bcolors.ENDC)
+                print(bcolors.OKGREEN, "\n  * Ctrl:",Ctrl, bcolors.ENDC)
                 print("   lambda:    ",'% 12.6f' % float(Lambda))
                 print("   Rho:       ",'% 12.6f' % float(Rho))
             else:
@@ -613,7 +711,7 @@ def Main(arguments):
                     Rho = 0.0
                 else:
                     Rho = (DEnergy / -(np.dot(np.transpose(Gradient), dX) + 0.5 * np.dot(np.dot(np.transpose(dX), Hessian), dX)).tolist()[0][0])
-                print("   lambda:    ",'% 12.6f' % float(ew))
+                print("\n   lambda:    ",'% 12.6f' % float(ew))
                 print("   Rho:       ",'% 12.6f' % float(Rho))
       
 #     calculate the root for the sum of squares of gradient components:  
@@ -783,6 +881,7 @@ def GetGradient(Scales):
         for index,scales in enumerate(Sorted_Gradient_scales))
     GradientEnergyDictionary={} 
     GradientEnergyDictionary={t[0]:round(t[1], 15) for t in ll}
+    print(" "*100)
 
     """
     #Serial
@@ -803,7 +902,7 @@ def GetGradient(Scales):
 
     return(Gradient)
 
-#""" Hessian Functions """
+#""" Hessian Functiong """
 
 def CreateIndices():
     Indices = []
@@ -857,8 +956,8 @@ def GetHessianScales(Indices, Scales):
     return(E2PScales, E2MScales, EPPScales, ENPScales, EPNScales, ENNScales, Sorted_Hessian_scales)
 
 def GetHessian(Scales):
-
-    print(bcolors.OKBLUE, '\nCalculating Hessian: ', bcolors.ENDC, '\n')
+    len_hess = int((len(Scales) * (len(Scales) + 1)) * 2 - len(Scales) * 2)
+    print(bcolors.OKBLUE, '\nCalculating Hessian: {} runs'.format(len_hess), bcolors.ENDC, '\n')
     Indices, Diagonal = CreateIndices()
     E2PScales, E2MScales, EPPScales, ENPScales, EPNScales, ENNScales, Sorted_Hessian_scales = GetHessianScales(Indices, Scales)
 
