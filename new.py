@@ -234,14 +234,8 @@ def GetSTO():
             STO.append('STO ' + atomicvalence + ' ' + str(valencevalue))
     return STO
 
-
-def GenerateInput(Scale_values):
-    inputtext = '%NPROCS=' + str(a.GaussianProc) + '\n' 
-    inputtext += '# ' + a.OptMethod + '/gen gfinput\n'
-    inputtext += "\n" + a.ElementName.strip() + "\n\n"
-    inputtext += "{} {}\n".format(a.Charge, GetElementMultiplicity())
-    inputtext += GetElementSymbol().strip() + "\n\n"
-    inputtext += GetElementSymbol().strip() + ' 0\n'
+def returnBasisSetsInput(Scale_values):
+    inputtext = ""
     if (a.InputFileType == "STO") :
         inputtext += GenerateInputGen(Scale_values)
     elif (a.InputFileType == "AC") :
@@ -269,12 +263,15 @@ def GenerateInput(Scale_values):
         sys.exit()
     return inputtext
 
-def GenerateInputGen(Scale_values):
-    sto = GetSTO()
-    inputtext = ''
-    for index, sto_out in enumerate(sto):
-        inputtext += sto_out + ' ' + str(Scale_values[index])+'\n'
-    inputtext += '****\n\n'
+
+def GenerateInput(Scale_values):
+    inputtext = '%NPROCS=' + str(a.GaussianProc) + '\n' 
+    inputtext += '# ' + a.OptMethod + '/gen gfinput\n'
+    inputtext += "\n" + a.ElementName.strip() + "\n\n"
+    inputtext += "{} {}\n".format(a.Charge, GetElementMultiplicity())
+    inputtext += GetElementSymbol().strip() + "\n\n"
+    inputtext += GetElementSymbol().strip() + ' 0\n'
+    inputtext += returnBasisSetsInput(Scale_values)
     return inputtext
    
 def DefaultAC():
@@ -308,100 +305,100 @@ def GenerateInputGenAlpha(SV,DVV, AV):
     inputtext=''
     DV = []
     if a.Z in [1, 2]:
-        inputtext += 'S   3 {0:.6f}    \n'.format(SV[0])
+        inputtext += 'S   3 {0:.12f}    \n'.format(SV[0])
         DV = normalization(DVV[0:3],AV[0:3])[1]
-        inputtext += '      {} {}\n'.format(AV[0], DV[0])
-        inputtext += '      {} {}\n'.format(AV[1], DV[1])
-        inputtext += '      {} {}\n'.format(AV[2], DV[2])
-        inputtext += 'S   1 {0:.6f}    \n'.format(SV[1])
-        inputtext += '      {} {}\n'.format(AV[3], 1.000)
+        inputtext += '      {0:.12f}   {1:.12f}\n'.format(AV[0], DV[0])
+        inputtext += '      {0:.12f}   {1:.12f}\n'.format(AV[1], DV[1])
+        inputtext += '      {0:.12f}   {1:.12f}\n'.format(AV[2], DV[2])
+        inputtext += 'S   1 {0:.12f}    \n'.format(SV[1])
+        inputtext += '      {0:.12f}   {1:.12f}\n'.format(AV[3], 1.000)
         inputtext += '****\n\n\n'
 
     elif a.Z in range(3,5):
 
-        inputtext += 'S   6 {0:.6f}    \n'.format(SV[0])
+        inputtext += 'S   6 {0:.12f}    \n'.format(SV[0])
         DV[0:6] = normalization(DVV[0:6],AV[0:6])[1].tolist()
-        inputtext += '      {} {}\n'.format(AV[0], DV[0])
-        inputtext += '      {} {}\n'.format(AV[1], DV[1])
-        inputtext += '      {} {}\n'.format(AV[2], DV[2])
-        inputtext += '      {} {}\n'.format(AV[3], DV[3])
-        inputtext += '      {} {}\n'.format(AV[4], DV[4])
-        inputtext += '      {} {}\n'.format(AV[5], DV[5])
-        inputtext += 'S   3 {0:.6f}    \n'.format(SV[1])
+        inputtext += '      {0:.12f}   {1:.12f}\n'.format(AV[0], DV[0])
+        inputtext += '      {0:.12f}   {1:.12f}\n'.format(AV[1], DV[1])
+        inputtext += '      {0:.12f}   {1:.12f}\n'.format(AV[2], DV[2])
+        inputtext += '      {0:.12f}   {1:.12f}\n'.format(AV[3], DV[3])
+        inputtext += '      {0:.12f}   {1:.12f}\n'.format(AV[4], DV[4])
+        inputtext += '      {0:.12f}   {1:.12f}\n'.format(AV[5], DV[5])
+        inputtext += 'S   3 {0:.12f}    \n'.format(SV[1])
         DV[6:9] = normalization(DVV[6:9],AV[6:9])[1].tolist()
-        inputtext += '      {} {}\n'.format(AV[6], DV[6])
-        inputtext += '      {} {}\n'.format(AV[7], DV[7])
-        inputtext += '      {} {}\n'.format(AV[8], DV[8])
-        inputtext += 'S   1 {0:.6f}    \n'.format(SV[2])
-        inputtext += '      {} {}\n'.format(AV[9], 1.0000)
+        inputtext += '      {0:.12f}   {1:.12f}\n'.format(AV[6], DV[6])
+        inputtext += '      {0:.12f}   {1:.12f}\n'.format(AV[7], DV[7])
+        inputtext += '      {0:.12f}   {1:.12f}\n'.format(AV[8], DV[8])
+        inputtext += 'S   1 {0:.12f}    \n'.format(SV[2])
+        inputtext += '      {0:.12f}   {1:.12f}\n'.format(AV[9], 1.0000)
         inputtext += '****\n\n\n'
 
     elif a.Z in range(5,11):
 
-        inputtext += 'S   6 {0:.6f}    \n'.format(SV[0])
+        inputtext += 'S   6 {0:.12f}    \n'.format(SV[0])
         DV[0:6] = normalization(DVV[0:6],AV[0:6])[1].tolist()
-        inputtext += '      {} {}\n'.format(AV[0], DV[0])
-        inputtext += '      {} {}\n'.format(AV[1], DV[1])
-        inputtext += '      {} {}\n'.format(AV[2], DV[2])
-        inputtext += '      {} {}\n'.format(AV[3], DV[3])
-        inputtext += '      {} {}\n'.format(AV[4], DV[4])
-        inputtext += '      {} {}\n'.format(AV[5], DV[5])
-        inputtext += 'S   3 {0:.6f}    \n'.format(SV[1])
+        inputtext += '      {0:.12f}   {1:.12f}\n'.format(AV[0], DV[0])
+        inputtext += '      {0:.12f}   {1:.12f}\n'.format(AV[1], DV[1])
+        inputtext += '      {0:.12f}   {1:.12f}\n'.format(AV[2], DV[2])
+        inputtext += '      {0:.12f}   {1:.12f}\n'.format(AV[3], DV[3])
+        inputtext += '      {0:.12f}   {1:.12f}\n'.format(AV[4], DV[4])
+        inputtext += '      {0:.12f}   {1:.12f}\n'.format(AV[5], DV[5])
+        inputtext += 'S   3 {0:.12f}    \n'.format(SV[1])
         DV[6:9] = normalization(DVV[6:9],AV[6:9])[1].tolist()
-        inputtext += '      {} {}\n'.format(AV[6], DV[6])
-        inputtext += '      {} {}\n'.format(AV[7], DV[7])
-        inputtext += '      {} {}\n'.format(AV[8], DV[8])
-        inputtext += 'P   3 {0:.6f}    \n'.format(SV[2])
+        inputtext += '      {0:.12f}   {1:.12f}\n'.format(AV[6], DV[6])
+        inputtext += '      {0:.12f}   {1:.12f}\n'.format(AV[7], DV[7])
+        inputtext += '      {0:.12f}   {1:.12f}\n'.format(AV[8], DV[8])
+        inputtext += 'P   3 {0:.12f}    \n'.format(SV[2])
         DV[9:12] = normalization(DVV[9:12],AV[9:12])[1].tolist()
-        inputtext += '      {} {}\n'.format(AV[9], DV[9])
-        inputtext += '      {} {}\n'.format(AV[10], DV[10])
-        inputtext += '      {} {}\n'.format(AV[11], DV[11])
-        inputtext += 'S   1 {0:.6f}    \n'.format(SV[3])
-        inputtext += '      {} {}\n'.format(AV[12], 1.000)
-        inputtext += 'P   1 {0:.6f}    \n'.format(SV[4])
-        inputtext += '      {} {}\n'.format(AV[13], 1.000)
+        inputtext += '      {0:.12f}   {1:.12f}\n'.format(AV[9], DV[9])
+        inputtext += '      {0:.12f}   {1:.12f}\n'.format(AV[10], DV[10])
+        inputtext += '      {0:.12f}   {1:.12f}\n'.format(AV[11], DV[11])
+        inputtext += 'S   1 {0:.12f}    \n'.format(SV[3])
+        inputtext += '      {0:.12f}   {1:.12f}\n'.format(AV[12], 1.000)
+        inputtext += 'P   1 {0:.12f}    \n'.format(SV[4])
+        inputtext += '      {0:.12f}   {1:.12f}\n'.format(AV[13], 1.000)
         inputtext += '****\n\n\n'
 
     elif a.Z in range(11,19):
 
-        inputtext += 'S   6 {0:.6f}    \n'.format(SV[0])
+        inputtext += 'S   6 {0:.12f}    \n'.format(SV[0])
         DV[0:6] = normalization(DVV[0:6],AV[0:6])[1]
-        inputtext += '      {} {}\n'.format(AV[0], DV[0])
-        inputtext += '      {} {}\n'.format(AV[1], DV[1])
-        inputtext += '      {} {}\n'.format(AV[2], DV[2])
-        inputtext += '      {} {}\n'.format(AV[3], DV[3])
-        inputtext += '      {} {}\n'.format(AV[4], DV[4])
-        inputtext += '      {} {}\n'.format(AV[5], DV[5])
-        inputtext += 'S   6 {0:.6f}    \n'.format(SV[1])
+        inputtext += '      {0:.12f}   {1:.12f}\n'.format(AV[0], DV[0])
+        inputtext += '      {0:.12f}   {1:.12f}\n'.format(AV[1], DV[1])
+        inputtext += '      {0:.12f}   {1:.12f}\n'.format(AV[2], DV[2])
+        inputtext += '      {0:.12f}   {1:.12f}\n'.format(AV[3], DV[3])
+        inputtext += '      {0:.12f}   {1:.12f}\n'.format(AV[4], DV[4])
+        inputtext += '      {0:.12f}   {1:.12f}\n'.format(AV[5], DV[5])
+        inputtext += 'S   6 {0:.12f}    \n'.format(SV[1])
         DV[6:12] = normalization(DVV[6:12],AV[6:12])[1]
-        inputtext += '      {} {}\n'.format(AV[6], DV[6])
-        inputtext += '      {} {}\n'.format(AV[7], DV[7])
-        inputtext += '      {} {}\n'.format(AV[8], DV[8])
-        inputtext += '      {} {}\n'.format(AV[9], DV[9])
-        inputtext += '      {} {}\n'.format(AV[10], DV[10])
-        inputtext += '      {} {}\n'.format(AV[11], DV[11])
-        inputtext += 'P   6 {0:.6f}    \n'.format(SV[2])
+        inputtext += '      {0:.12f}   {1:.12f}\n'.format(AV[6], DV[6])
+        inputtext += '      {0:.12f}   {1:.12f}\n'.format(AV[7], DV[7])
+        inputtext += '      {0:.12f}   {1:.12f}\n'.format(AV[8], DV[8])
+        inputtext += '      {0:.12f}   {1:.12f}\n'.format(AV[9], DV[9])
+        inputtext += '      {0:.12f}   {1:.12f}\n'.format(AV[10], DV[10])
+        inputtext += '      {0:.12f}   {1:.12f}\n'.format(AV[11], DV[11])
+        inputtext += 'P   6 {0:.12f}    \n'.format(SV[2])
         DV[12:18] = normalization(DVV[12:18],AV[12:18])[1]
-        inputtext += '      {} {}\n'.format(AV[12], DV[12])
-        inputtext += '      {} {}\n'.format(AV[13], DV[13])
-        inputtext += '      {} {}\n'.format(AV[14], DV[14])
-        inputtext += '      {} {}\n'.format(AV[15], DV[15])
-        inputtext += '      {} {}\n'.format(AV[16], DV[16])
-        inputtext += '      {} {}\n'.format(AV[17], DV[17])
-        inputtext += 'S   3 {0:.6f}    \n'.format(SV[3])
+        inputtext += '      {0:.12f}   {1:.12f}\n'.format(AV[12], DV[12])
+        inputtext += '      {0:.12f}   {1:.12f}\n'.format(AV[13], DV[13])
+        inputtext += '      {0:.12f}   {1:.12f}\n'.format(AV[14], DV[14])
+        inputtext += '      {0:.12f}   {1:.12f}\n'.format(AV[15], DV[15])
+        inputtext += '      {0:.12f}   {1:.12f}\n'.format(AV[16], DV[16])
+        inputtext += '      {0:.12f}   {1:.12f}\n'.format(AV[17], DV[17])
+        inputtext += 'S   3 {0:.12f}    \n'.format(SV[3])
         DV[18:21] = normalization(DVV[18:21],AV[18:21])[1]
-        inputtext += '      {} {}\n'.format(AV[18], DV[18])
-        inputtext += '      {} {}\n'.format(AV[19], DV[19])
-        inputtext += '      {} {}\n'.format(AV[20], DV[20])
-        inputtext += 'P   3 {0:.6f}    \n'.format(SV[4])
+        inputtext += '      {0:.12f}   {1:.12f}\n'.format(AV[18], DV[18])
+        inputtext += '      {0:.12f}   {1:.12f}\n'.format(AV[19], DV[19])
+        inputtext += '      {0:.12f}   {1:.12f}\n'.format(AV[20], DV[20])
+        inputtext += 'P   3 {0:.12f}    \n'.format(SV[4])
         DV[21:24] = normalization(DVV[21:24],AV[21:24])[1]
-        inputtext += '      {} {}\n'.format(AV[21], DV[21])
-        inputtext += '      {} {}\n'.format(AV[22], DV[22])
-        inputtext += '      {} {}\n'.format(AV[23], DV[23])
-        inputtext += 'S   1 {0:.6f}    \n'.format(SV[5])
-        inputtext += '      {} {}\n'.format(AV[24], 1.0000)
-        inputtext += 'P   1 {0:.6f}    \n'.format(SV[6])
-        inputtext += '      {} {}\n'.format(AV[25], 1.0000)
+        inputtext += '      {0:.12f}   {1:.12f}\n'.format(AV[21], DV[21])
+        inputtext += '      {0:.12f}   {1:.12f}\n'.format(AV[22], DV[22])
+        inputtext += '      {0:.12f}   {1:.12f}\n'.format(AV[23], DV[23])
+        inputtext += 'S   1 {0:.12f}    \n'.format(SV[5])
+        inputtext += '      {0:.12f}   {1:.12f}\n'.format(AV[24], 1.0000)
+        inputtext += 'P   1 {0:.12f}    \n'.format(SV[6])
+        inputtext += '      {0:.12f}   {1:.12f}\n'.format(AV[25], 1.0000)
         inputtext += '****\n\n\n'
 
     return inputtext
@@ -739,9 +736,10 @@ def Main(arguments):
       
 #     Print to the output if the convergence criteria met, and exit: 
             if (RGS <= a.Limit):
+                a.x0 = np.array(Scales)
                 print(bcolors.OKGREEN,"STOP:", bcolors.ENDC)
-                print("The gradient is", "[",', '.join('%8.6f' % i for i in Gradient),"]", "and RGS =",'% 8.6f' % float(RGS))      
-                print(bcolors.OKBLUE,"\n                        -- Optimization Terminated Normally --")
+                print("The gradient is", "[",', '.join('%8.6f' % i for i in Gradient),"]", "and RGS =",'% 8.6f' % float(RGS))     
+                print(bcolors.OKBLUE,"\n                        -- Optimization Terminated Normally --", bcolors.ENDC)
                 print()
 # ------------------------------------------------------ Exit ---------------------------------------------------------------
     else:
@@ -749,7 +747,8 @@ def Main(arguments):
         ErrorTermination()
 
     #End of Main() function
-
+    print
+    print("\nThe full basis set is: \n\n{}".format(returnBasisSetsInput(a.x0))) 
 
 #""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 #""" Element Functions """
