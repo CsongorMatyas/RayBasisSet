@@ -234,6 +234,14 @@ def GetSTO():
             STO.append('STO ' + atomicvalence + ' ' + str(valencevalue))
     return STO
 
+def GenerateInputGen(Scale_values):
+    sto = GetSTO()
+    inputtext = ''
+    for index, sto_out in enumerate(sto):
+        inputtext += sto_out + ' ' + str(Scale_values[index])+'\n'
+    inputtext += '****\n\n'
+    return inputtext
+
 def returnBasisSetsInput(Scale_values):
     inputtext = ""
     if (a.InputFileType == "STO") :
