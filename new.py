@@ -108,7 +108,7 @@ def Arguments():
     a.EnergyFileI = 'EnergyI_' + a.fileName
     a.EnergyFileF = 'EnergyF_' + a.fileName
     
-    a.PRINT = True 
+    a.PRINT = False 
     return(arguments)
 
 # """ Starting the program """"
@@ -421,10 +421,9 @@ def Function(Scales):
 def EnergyParallel(Title, scales, index):
     Title = Title+'_'+a.ElementName.strip()+'_'+a.BasisSet.strip()+'_scale_'+str(index+1)
     Energy = Get_Energy(Title, scales)
-    if a.PRINT:
-        CurrentColor = random.choice(a.colorslist)
-        sys.stdout.write("{}   {}      ; Energy: {} {}\r".format(CurrentColor ,Title, Energy,bcolors.ENDC))
-        sys.stdout.flush()
+    CurrentColor = random.choice(a.colorslist)
+    sys.stdout.write("{}   {}      ; Energy: {} {}\r".format(CurrentColor ,Title, Energy,bcolors.ENDC))
+    sys.stdout.flush()
     return(index, Energy)
 
 def Get_Energy(FileName, Scale_values):
@@ -440,7 +439,7 @@ def Get_Energy(FileName, Scale_values):
     Energy = Energy.decode('ascii').rstrip('\n')
     if Energy != "":
         EnergyNUM=float(Energy)
-    #    print('Scale Values: {}; Energy: {}'.format(Scale_values, EnergyNUM))
+        if a.PRINT: print('Scale Values: {}; Energy: {}'.format(Scale_values, EnergyNUM))
         return EnergyNUM
 
     else:
@@ -453,7 +452,7 @@ def Get_Energy(FileName, Scale_values):
         Energy = Energy.decode('ascii').rstrip('\n')
         if Energy != "":
             EnergyNUM=float(Energy)
-    #        print('Scale Values: {}; Energy: {}'.format(Scale_values, EnergyNUM))
+            if a.PRINT: print('Scale Values: {}; Energy: {}'.format(Scale_values, EnergyNUM))
             return EnergyNUM
         else:
             print('Scale Values: {}; Energy: ----------'.format(Scale_values))
@@ -484,7 +483,7 @@ def Main(arguments):
         pass
     
     elif a.MinMethod == 'NM':
-        #a.PRINT = False
+        a.PRINT = True
         print(bcolors.OKBLUE, '\nStart of program: Minimize energy using Nelder-Mead algorithm from scipy.optimize.minimize python package.\n', bcolors.ENDC)
         a.Result = minimize(Function, a.x0, method='Nelder-Mead', options={'disp': True})
         print('\nThe results are: {}\n'.format(a.Result.x))
@@ -492,7 +491,7 @@ def Main(arguments):
         print(bcolors.OKBLUE, '\nEnd of program: Minimize energy using Nelder-Mead algorithm from scipy.optimize.minimize python package.\n', bcolors.ENDC)
     
     elif a.MinMethod == 'CG':
-        #a.PRINT = False
+        a.PRINT = True
         print(bcolors.OKBLUE, '\nStart of program: Minimize energy using conjugate gradient algorithm from scipy.optimize.minimize python package.\n', bcolors.ENDC)
         a.Result = minimize(Function, a.x0, method='CG', options={'gtol': a.Limit, 'disp': True})
         print('\nThe results are: {}\n'.format(a.Result.x))
