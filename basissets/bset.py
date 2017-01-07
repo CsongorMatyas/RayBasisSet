@@ -112,7 +112,7 @@ def GetElementMultiplicity(Z, Charge):
 def GetElementCoreValence(Z):    # have to be extended
     if Z in [0,1,2]                          : return ([],['1S'])
     elif Z in [3,4]                          : return (['1S'],['2S'])
-    elif Z in [5,6,7,8,9,10]                 : return (['1S'],['2SP'])
+    elif Z in [5,6,7,8,9,10]                 : return (['1S'],['2S','2P'])
     elif Z in [11,12]                        : return (['1S','2S','2P'],['3S'])
     elif Z in [13,14,15,16,17,18]            : return (['1S','2S','2P'],['3S','3P'])
     elif Z in [19,20]                        : return (['1S','2S','2P','3S','3P'],['4S'])
@@ -121,7 +121,7 @@ def GetElementCoreValence(Z):    # have to be extended
     else                                     : return([],[])
 
 def GetBasisSetCoreValence(Z):
-    if   Z < 19                         : return ('6','32')
+    if   Z < 19                         : return ('6','31')
     elif Z in [19,20,31,32,33,34,35,36] : return ('6','6')
     else                                : return ('','')
 
