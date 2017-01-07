@@ -1,4 +1,4 @@
-%nprocshared=2
+%nprocshared=12
 %chk=glo_1w_Alpha_ts_chair2_B3LYP_6-31Gd.chk
 # opt=(calcfc,ts,noeigentest,maxcycle=1000,cartesian) freq B3LYP/6-31G(d)
 
