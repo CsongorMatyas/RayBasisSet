@@ -5970,3 +5970,6 @@
  Requested convergence on             energy=1.00D-06.
  No special actions if energy rises.
  Integral accuracy reduced to 1.0D-05 until final iterations.
+ Initial convergence to 1.0D-05 achieved.  Increase integral accuracy.
+ SCF Done:  E(RB3LYP) =  -839.965302320     A.U. after   11 cycles
+            NFock= 11  Conv=0.50D-08     -V/T= 2.0087
