@@ -1,5 +1,5 @@
-%NPROCS=4
-# opt=maxcycle=1000 freq b3lyp/6-31g(d)
+%NPROCS=18
+# opt=(TS,CalcFC,NoEigenTest,MaxCycle=500,cartesian) Freq B3LYP 6-31G(d)
 
 boat1_Alpha_B3LYP_6-31G_d
 
