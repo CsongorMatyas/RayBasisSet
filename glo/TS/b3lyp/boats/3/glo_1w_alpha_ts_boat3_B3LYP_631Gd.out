@@ -13590,3 +13590,5 @@
  Requested convergence on MAX density matrix=1.00D-06.
  Requested convergence on             energy=1.00D-06.
  No special actions if energy rises.
+ SCF Done:  E(RB3LYP) =  -839.955597513     A.U. after    8 cycles
+            NFock=  8  Conv=0.47D-08     -V/T= 2.0086
