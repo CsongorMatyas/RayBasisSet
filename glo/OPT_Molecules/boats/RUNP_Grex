@@ -1,0 +1,7 @@
+for inputG in *.com; do 
+j=${inputG/.com/.sh}
+k=${inputG/.com/}
+cp tatankaForm.txt $j;
+sed -i "s#X#$k#g" $j ;
+qsub $j;
+done
