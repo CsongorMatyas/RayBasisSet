@@ -17,4 +17,4 @@ echo "Starting run at: `date`"
 module load gaussian
 
 # Run g09
-g09 < glo_2w_beta_ts_boat5_B3LYP_631Gd.gjf > glo_2w_beta_ts_boat5_B3LYP_631Gd.out
+g09 < glo_1w_alpha_ts_boat5_B3LYP_631Gd.gjf > glo_1w_alpha_ts_boat5_B3LYP_631Gd.out

@@ -35,3 +35,8 @@ boat5_Beta_B3LYP_6-31G_d
    1           0        1.493020   -1.212764   -0.278400
    1           0        2.693012   -2.061492   -1.266535
 
+# b3lyp/6-31g(d) irc=(calcfc,forward)
+
+glo_2w_beta_ts_boat5_B3LYP_631Gd
+
+0 1
