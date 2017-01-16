@@ -1,0 +1,8 @@
+for inputG in `cat list`; do 
+j=${inputG/.gjf/.sh}
+k=${inputG/.gjf/}
+pat=$(dirname $inputG)
+cp tatankaForm.txt $j;
+sed -i "s#X#$k#g" $j ;
+qsub $j;
+done
