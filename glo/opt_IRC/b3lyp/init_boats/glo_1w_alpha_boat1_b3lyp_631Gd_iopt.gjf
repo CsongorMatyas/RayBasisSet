@@ -1,5 +1,5 @@
-%chk=glo_1w_alpha_boat1_b3lyp_631Gd_iopt.chk
-# hf/3-21g
+%NPROCS=4
+# opt=(MaxCycle=1000) freq B3LYP/6-31G(d)
 
 Title Card Required
 
@@ -34,4 +34,7 @@ Title Card Required
  O                 -1.10814164    5.39353348    0.01993373
  H                 -0.79748203    4.54010238   -0.29110639
  H                 -0.62561894    6.09264482   -0.42729683
+
+D 6 4 5 3 F 0.0000
+D 6 2 7 3 F 0.0000
 
