@@ -1,5 +1,5 @@
-%NPROCS=4
-# opt=(MaxCycle=1000) freq B3LYP/6-31G(d)
+%NPROCS=8
+# opt=(modredundant,MaxCycle=1000) freq B3LYP/6-31G(d)
 
 Title Card Required
 
@@ -35,6 +35,6 @@ Title Card Required
  H                 -0.79748203    4.54010238   -0.29110639
  H                 -0.62561894    6.09264482   -0.42729683
 
-D 6 4 5 3 F 0.0000
-D 6 2 7 3 F 0.0000
+D 6 4 5 3 F 
+D 6 2 7 3 F
 
