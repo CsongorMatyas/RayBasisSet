@@ -1,3 +1,4 @@
+%NPROCS=20
 # b3lyp/6-31g(d) irc=(calcfc,forward,maxpoints=20)
 
 glo_1w_alpha_ts_boat5_B3LYP_631Gd
