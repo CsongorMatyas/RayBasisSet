@@ -1,0 +1,12 @@
+#!/bin/sh
+
+module load openbabel/2.3.2
+
+newlocb=""
+
+for i in `find .  -name "*.out"`; do  
+echo $i
+filein=${i/.out/.sdf}
+echo $filein
+obabel -ig03 $i -osdf -O $filein
+done
