@@ -1,0 +1,6 @@
+#!/bin/sh
+
+
+for i in `find .  -name "*.sdf"`; do  
+rm $i 
+done

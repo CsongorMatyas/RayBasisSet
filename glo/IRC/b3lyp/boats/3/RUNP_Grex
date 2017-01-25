@@ -1,0 +1,7 @@
+for inputG in *.gjf; do 
+j=${inputG/.gjf/.sh}
+k=${inputG/.gjf/}
+cp tatankaForm.txt $j;
+sed -i "s#X#$k#g" $j ;
+#qsub $j;
+done
