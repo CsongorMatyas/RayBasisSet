@@ -1,7 +1,7 @@
  Entering Gaussian System, Link 0=g09
  Initial command:
- /global/software/gaussian/g09.e01/l1.exe "/scratch/10499768.yak.local/Gau-15099.inp" -scrdir="/scratch/10499768.yak.local/"
- Entering Link 1 = /global/software/gaussian/g09.e01/l1.exe PID=     15100.
+ /global/software/gaussian/g09.e01/l1.exe "/scratch/10501389.yak.local/Gau-26716.inp" -scrdir="/scratch/10501389.yak.local/"
+ Entering Link 1 = /global/software/gaussian/g09.e01/l1.exe PID=     26717.
   
  Copyright (c) 1988,1990,1992,1993,1995,1998,2003,2009,2015,
             Gaussian, Inc.  All Rights Reserved.
@@ -74,7 +74,7 @@
  
  ******************************************
  Gaussian 09:  ES64L-G09RevE.01 30-Nov-2015
-                30-Jan-2017 
+                31-Jan-2017 
  ******************************************
  %NPROCS=4
  Will use up to    4 processors via shared memory.
@@ -428,7 +428,7 @@
      87 vectors produced by pass  4 Test12= 1.15D-14 1.08D-09 XBig12= 4.13D-10 1.73D-06.
      63 vectors produced by pass  5 Test12= 1.15D-14 1.08D-09 XBig12= 3.33D-13 6.10D-08.
       3 vectors produced by pass  6 Test12= 1.15D-14 1.08D-09 XBig12= 2.65D-16 1.67D-09.
- InvSVY:  IOpt=1 It=  1 EMax= 6.66D-16
+ InvSVY:  IOpt=1 It=  1 EMax= 4.72D-16
  Solved reduced A of dimension   501 with    93 vectors.
  End of Minotr F.D. properties file   721 does not exist.
  End of Minotr F.D. properties file   722 does not exist.
@@ -857,7 +857,7 @@
    1                    0.49642   0.49059  -0.36708  -0.32517  -0.21812
                           X18       X22       Z21       Z18       Z13
    1                    0.20870  -0.18945  -0.13283  -0.13096   0.10582
- RFO step:  Lambda0=8.045839895D-11 Lambda= 0.00000000D+00.
+ RFO step:  Lambda0=8.045840112D-11 Lambda= 0.00000000D+00.
  Linear search not attempted -- option 19 set.
  B after Tr=    -0.000000    0.000001    0.000001
          Rot=    1.000000    0.000000   -0.000000   -0.000000 Ang=   0.00 deg.
@@ -1154,7 +1154,7 @@
      30          1           0        1.703529   -1.798631    0.042070
  ---------------------------------------------------------------------
  Rotational constants (GHZ):      0.8197113      0.4809201      0.3921118
- 1\1\GINC-N126\FTS\RB3LYP\6-31G(d)\C6H16O8\ROOT\30-Jan-2017\0\\# opt=(c
+ 1\1\GINC-N225\FTS\RB3LYP\6-31G(d)\C6H16O8\ROOT\31-Jan-2017\0\\# opt=(c
  alcfc,ts,noeigentest,maxcycle=1000,cartesian) b3lyp 6-31g(d) freq\\./5
  /glo_2w_beta_boat5_b3lyp_631Gd_iopt.out\\0,1\O,0.44978,-0.71563,-0.744
  42\C,-1.20955,-0.35779,1.04239\C,-0.19757,1.6127,-0.22433\C,-1.34426,1
@@ -1174,13 +1174,18 @@
  451,5.4378421,-5.6434666,1.7102475\PG=C01 [X(C6H16O8)]\\@
 
 
- The number of Unix installations has grown to 10,
-  with more expected.
-                  -- The Unix Programmer's Manual,
-                     2nd Edition, June, 1972.
- Job cpu time:       0 days  0 hours 39 minutes  9.7 seconds.
+ HIGGLEDY-PIGGLEDY
+ NIC'LAUS COPERNICUS
+ LOOKED AT THE UNIVERSE,
+ SPOKE TO THE THRONG;
+ GIVE UP YOUR PTOLOMY,
+ RISE UP AND FOLLOW ME,
+ HELIOCENTRICALLY
+ PTOLEMY'S WRONG.
+   -- NANCY L. STARK
+ Job cpu time:       0 days  0 hours 37 minutes 47.1 seconds.
  File lengths (MBytes):  RWF=    220 Int=      0 D2E=      0 Chk=      6 Scr=      1
- Normal termination of Gaussian 09 at Mon Jan 30 06:49:51 2017.
+ Normal termination of Gaussian 09 at Tue Jan 31 07:11:36 2017.
  Link1:  Proceeding to internal job step number  2.
  --------------------------------------------------------------------
  #N Geom=AllCheck Guess=TCheck SCRF=Check GenChk RB3LYP/6-31G(d) Freq
@@ -1197,7 +1202,7 @@
  7/8=1,10=1,25=1/1,2,3,16;
  1/5=1,6=1000,10=4,11=1,30=1/3;
  99//99;
- Structure from the checkpoint file:  "/scratch/10499768.yak.local/Gau-15100.chk"
+ Structure from the checkpoint file:  "/scratch/10501389.yak.local/Gau-26717.chk"
  ------------------------------------------
  ./5/glo_2w_beta_boat5_b3lyp_631Gd_iopt.out
  ------------------------------------------
@@ -1447,7 +1452,7 @@
  One-electron integrals computed using PRISM.
  NBasis=   242 RedAO= T EigKep=  1.28D-03  NBF=   242
  NBsUse=   242 1.00D-06 EigRej= -1.00D+00 NBFU=   242
- Initial guess from the checkpoint file:  "/scratch/10499768.yak.local/Gau-15100.chk"
+ Initial guess from the checkpoint file:  "/scratch/10501389.yak.local/Gau-26717.chk"
  B after Tr=     0.000000   -0.000000    0.000000
          Rot=    1.000000    0.000000   -0.000000   -0.000000 Ang=   0.00 deg.
  Requested convergence on RMS density matrix=1.00D-08 within 128 cycles.
@@ -1480,7 +1485,7 @@
      90 vectors produced by pass  4 Test12= 1.15D-14 1.08D-09 XBig12= 1.38D-07 3.07D-05.
      63 vectors produced by pass  5 Test12= 1.15D-14 1.08D-09 XBig12= 1.12D-10 8.12D-07.
       3 vectors produced by pass  6 Test12= 1.15D-14 1.08D-09 XBig12= 7.15D-14 2.30D-08.
- InvSVY:  IOpt=1 It=  1 EMax= 5.33D-15
+ InvSVY:  IOpt=1 It=  1 EMax= 1.07D-14
  Solved reduced A of dimension   516 with    93 vectors.
  Isotropic polarizability for W=    0.000000       94.16 Bohr**3.
  End of Minotr F.D. properties file   721 does not exist.
@@ -1753,7 +1758,7 @@
     28  O   -0.829298
     29  H    0.411171
     30  H    0.441606
- Sum of Mulliken charges =  -0.00000
+ Sum of Mulliken charges =   0.00000
  Mulliken charges with hydrogens summed into heavy atoms:
                1
      1  O   -0.549478
@@ -1843,7 +1848,7 @@
  Approx polarizability: 136.460   4.566 128.213  -3.381  -1.945 122.913
  Calling FoFJK, ICntrl=    100127 FMM=F ISym2X=0 I1Cent= 0 IOpClX= 0 NMat=1 NMatS=1 NMatT=0.
  Full mass-weighted force constant matrix:
- Low frequencies --- -107.6411  -15.5071   -5.7339    0.0009    0.0010    0.0010
+ Low frequencies --- -107.6411  -15.5071   -5.7339    0.0006    0.0008    0.0010
  Low frequencies ---   11.4900   41.8248   55.1148
  ******    1 imaginary frequencies (negative Signs) ****** 
  Diagonal vibrational polarizability:
@@ -3247,7 +3252,7 @@
     -- Stationary point found.
  GradGradGradGradGradGradGradGradGradGradGradGradGradGradGradGradGradGrad
 
- 1\1\GINC-N126\Freq\RB3LYP\6-31G(d)\C6H16O8\ROOT\30-Jan-2017\0\\#N Geom
+ 1\1\GINC-N225\Freq\RB3LYP\6-31G(d)\C6H16O8\ROOT\31-Jan-2017\0\\#N Geom
  =AllCheck Guess=TCheck SCRF=Check GenChk RB3LYP/6-31G(d) Freq\\./5/glo
  _2w_beta_boat5_b3lyp_631Gd_iopt.out\\0,1\O,0.44978,-0.71563,-0.74442\C
  ,-1.20955,-0.35779,1.04239\C,-0.19757,1.6127,-0.22433\C,-1.34426,1.139
@@ -3995,10 +4000,10 @@
  0.00000144,-0.00000393,-0.00000695,0.00000098,-0.00000555\\\@
 
 
- ...THOSE SCIENCES ARE VAIN AND FULL OF ERRORS WHICH 
- ARE NOT BORN FROM EXPERIMENT, THE MOTHER OF CERTAINTY...
+ I FIND THAT THE THREE TRULY GREAT TIMES FOR THINKING THOUGHTS
+ ARE WHEN I AM STANDING IN THE SHOWER, SITTING ON THE JOHN, OR WALKING.
 
-                          -- LEONARDO DA VINCI, 1452-1519
- Job cpu time:       0 days  0 hours 37 minutes 27.4 seconds.
+                                    -- COLIN FLETCHER
+ Job cpu time:       0 days  0 hours 36 minutes 17.3 seconds.
  File lengths (MBytes):  RWF=    220 Int=      0 D2E=      0 Chk=      6 Scr=      1
- Normal termination of Gaussian 09 at Mon Jan 30 07:08:40 2017.
+ Normal termination of Gaussian 09 at Tue Jan 31 07:29:50 2017.

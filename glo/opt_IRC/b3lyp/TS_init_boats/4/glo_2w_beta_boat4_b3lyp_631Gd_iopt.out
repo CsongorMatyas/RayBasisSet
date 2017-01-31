@@ -1,7 +1,7 @@
  Entering Gaussian System, Link 0=g09
  Initial command:
- /global/software/gaussian/g09.e01/l1.exe "/scratch/10499759.yak.local/Gau-25708.inp" -scrdir="/scratch/10499759.yak.local/"
- Entering Link 1 = /global/software/gaussian/g09.e01/l1.exe PID=     25709.
+ /global/software/gaussian/g09.e01/l1.exe "/scratch/10501380.yak.local/Gau-11654.inp" -scrdir="/scratch/10501380.yak.local/"
+ Entering Link 1 = /global/software/gaussian/g09.e01/l1.exe PID=     11655.
   
  Copyright (c) 1988,1990,1992,1993,1995,1998,2003,2009,2015,
             Gaussian, Inc.  All Rights Reserved.
@@ -74,7 +74,7 @@
  
  ******************************************
  Gaussian 09:  ES64L-G09RevE.01 30-Nov-2015
-                30-Jan-2017 
+                31-Jan-2017 
  ******************************************
  %NPROCS=4
  Will use up to    4 processors via shared memory.
@@ -428,7 +428,7 @@
      87 vectors produced by pass  4 Test12= 1.15D-14 1.08D-09 XBig12= 5.51D-10 2.77D-06.
      63 vectors produced by pass  5 Test12= 1.15D-14 1.08D-09 XBig12= 4.65D-13 6.60D-08.
       1 vectors produced by pass  6 Test12= 1.15D-14 1.08D-09 XBig12= 3.31D-16 1.51D-09.
- InvSVY:  IOpt=1 It=  1 EMax= 4.44D-16
+ InvSVY:  IOpt=1 It=  1 EMax= 1.28D-15
  Solved reduced A of dimension   499 with    93 vectors.
  End of Minotr F.D. properties file   721 does not exist.
  End of Minotr F.D. properties file   722 does not exist.
@@ -767,7 +767,7 @@
     25  O    0.020920
     28  O    0.057487
  Electronic spatial extent (au):  <R**2>=           3101.6117
- Charge=             -0.0000 electrons
+ Charge=              0.0000 electrons
  Dipole moment (field-independent basis, Debye):
     X=              0.2183    Y=             -0.5239    Z=             -1.8879  Tot=              1.9714
  Quadrupole moment (field-independent basis, Debye-Ang):
@@ -857,7 +857,7 @@
    1                    0.32694  -0.28535   0.28060  -0.24252  -0.22754
                           Z15       Z7        Y22       Z25       Z27
    1                    0.22539  -0.22021  -0.20942  -0.20277  -0.18616
- RFO step:  Lambda0=1.536335349D-13 Lambda= 0.00000000D+00.
+ RFO step:  Lambda0=1.536324236D-13 Lambda= 0.00000000D+00.
  Linear search not attempted -- option 19 set.
  B after Tr=     0.000001    0.000000    0.000001
          Rot=    1.000000   -0.000000    0.000000    0.000000 Ang=  -0.00 deg.
@@ -1154,7 +1154,7 @@
      30          1           0        3.357821    1.578220    0.388038
  ---------------------------------------------------------------------
  Rotational constants (GHZ):      0.7127812      0.5074579      0.4004948
- 1\1\GINC-N103\FTS\RB3LYP\6-31G(d)\C6H16O8\ROOT\30-Jan-2017\0\\# opt=(c
+ 1\1\GINC-N105\FTS\RB3LYP\6-31G(d)\C6H16O8\ROOT\31-Jan-2017\0\\# opt=(c
  alcfc,ts,noeigentest,maxcycle=1000,cartesian) b3lyp 6-31g(d) freq\\./4
  /glo_2w_beta_boat4_b3lyp_631Gd_iopt.out\\0,1\O,0.4518,0.56214,-0.82635
  \C,-1.31654,-0.09227,0.69254\C,0.06218,-1.88285,-0.54468\C,-0.82463,-1
@@ -1174,13 +1174,11 @@
  3.8276925,3.8050289,0.1038132\PG=C01 [X(C6H16O8)]\\@
 
 
- ROSE IS A RED
- TY COBB IS BLUE
- 'CAUSE PETE JUST HIT
- NO. 4592.
- Job cpu time:       0 days  0 hours 38 minutes 50.2 seconds.
+ At the touch of love, everyone becomves a poet.
+                                -- Plato
+ Job cpu time:       0 days  0 hours 37 minutes 10.5 seconds.
  File lengths (MBytes):  RWF=    220 Int=      0 D2E=      0 Chk=      6 Scr=      1
- Normal termination of Gaussian 09 at Mon Jan 30 06:41:31 2017.
+ Normal termination of Gaussian 09 at Tue Jan 31 06:41:08 2017.
  Link1:  Proceeding to internal job step number  2.
  --------------------------------------------------------------------
  #N Geom=AllCheck Guess=TCheck SCRF=Check GenChk RB3LYP/6-31G(d) Freq
@@ -1197,7 +1195,7 @@
  7/8=1,10=1,25=1/1,2,3,16;
  1/5=1,6=1000,10=4,11=1,30=1/3;
  99//99;
- Structure from the checkpoint file:  "/scratch/10499759.yak.local/Gau-25709.chk"
+ Structure from the checkpoint file:  "/scratch/10501380.yak.local/Gau-11655.chk"
  ------------------------------------------
  ./4/glo_2w_beta_boat4_b3lyp_631Gd_iopt.out
  ------------------------------------------
@@ -1447,7 +1445,7 @@
  One-electron integrals computed using PRISM.
  NBasis=   242 RedAO= T EigKep=  1.33D-03  NBF=   242
  NBsUse=   242 1.00D-06 EigRej= -1.00D+00 NBFU=   242
- Initial guess from the checkpoint file:  "/scratch/10499759.yak.local/Gau-25709.chk"
+ Initial guess from the checkpoint file:  "/scratch/10501380.yak.local/Gau-11655.chk"
  B after Tr=    -0.000000    0.000000    0.000000
          Rot=    1.000000   -0.000000    0.000000   -0.000000 Ang=   0.00 deg.
  Requested convergence on RMS density matrix=1.00D-08 within 128 cycles.
@@ -1480,7 +1478,7 @@
      90 vectors produced by pass  4 Test12= 1.15D-14 1.08D-09 XBig12= 2.61D-07 3.86D-05.
      61 vectors produced by pass  5 Test12= 1.15D-14 1.08D-09 XBig12= 1.93D-10 1.03D-06.
       3 vectors produced by pass  6 Test12= 1.15D-14 1.08D-09 XBig12= 1.25D-13 2.64D-08.
- InvSVY:  IOpt=1 It=  1 EMax= 3.75D-15
+ InvSVY:  IOpt=1 It=  1 EMax= 6.22D-15
  Solved reduced A of dimension   514 with    93 vectors.
  Isotropic polarizability for W=    0.000000       94.93 Bohr**3.
  End of Minotr F.D. properties file   721 does not exist.
@@ -1753,7 +1751,7 @@
     28  O   -0.808261
     29  H    0.396018
     30  H    0.418943
- Sum of Mulliken charges =  -0.00000
+ Sum of Mulliken charges =   0.00000
  Mulliken charges with hydrogens summed into heavy atoms:
                1
      1  O   -0.552078
@@ -1843,7 +1841,7 @@
  Approx polarizability: 139.380  -2.298 120.313   3.206   1.843 126.860
  Calling FoFJK, ICntrl=    100127 FMM=F ISym2X=0 I1Cent= 0 IOpClX= 0 NMat=1 NMatS=1 NMatT=0.
  Full mass-weighted force constant matrix:
- Low frequencies ---  -43.3814  -15.3143  -10.6850    0.0010    0.0011    0.0013
+ Low frequencies ---  -43.3814  -15.3143  -10.6850   -0.0004   -0.0002    0.0004
  Low frequencies ---    8.7502   45.7506   60.8535
  ******    1 imaginary frequencies (negative Signs) ****** 
  Diagonal vibrational polarizability:
@@ -3236,12 +3234,12 @@
  RMS     Force            0.000006     0.000300     YES
  Maximum Displacement     0.000059     0.001800     YES
  RMS     Displacement     0.000013     0.001200     YES
- Predicted change in Energy=-4.895039D-10
+ Predicted change in Energy=-4.895038D-10
  Optimization completed.
     -- Stationary point found.
  GradGradGradGradGradGradGradGradGradGradGradGradGradGradGradGradGradGrad
 
- 1\1\GINC-N103\Freq\RB3LYP\6-31G(d)\C6H16O8\ROOT\30-Jan-2017\0\\#N Geom
+ 1\1\GINC-N105\Freq\RB3LYP\6-31G(d)\C6H16O8\ROOT\31-Jan-2017\0\\#N Geom
  =AllCheck Guess=TCheck SCRF=Check GenChk RB3LYP/6-31G(d) Freq\\./4/glo
  _2w_beta_boat4_b3lyp_631Gd_iopt.out\\0,1\O,0.4518,0.56214,-0.82635\C,-
  1.31654,-0.09227,0.69254\C,0.06218,-1.88285,-0.54468\C,-0.82463,-1.558
@@ -3989,10 +3987,8 @@
  0034,-0.00000242\\\@
 
 
- IT IS UNWORTHY OF EXCELLENT MEN TO LOSE HOURS LIKE SLAVES IN THE LABOR
- OF CALCULATION WHICH COULD BE SAFELY RELEGATED TO ANYONE ELSE
- IF A MACHINE WERE USED.
-    -- G.W. VON LEIBNIZ
- Job cpu time:       0 days  0 hours 37 minutes 16.3 seconds.
+ GOORD'S AXIOM:  A MEETING IS AN EVENT AT WHICH
+ THE MINUTES ARE KEPT AND THE HOURS ARE LOST.
+ Job cpu time:       0 days  0 hours 35 minutes 17.1 seconds.
  File lengths (MBytes):  RWF=    220 Int=      0 D2E=      0 Chk=      6 Scr=      1
- Normal termination of Gaussian 09 at Mon Jan 30 07:00:14 2017.
+ Normal termination of Gaussian 09 at Tue Jan 31 06:58:50 2017.

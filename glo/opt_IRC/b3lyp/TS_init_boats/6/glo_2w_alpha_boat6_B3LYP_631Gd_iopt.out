@@ -1,7 +1,7 @@
  Entering Gaussian System, Link 0=g09
  Initial command:
- /global/software/gaussian/g09.e01/l1.exe "/scratch/10499775.yak.local/Gau-28397.inp" -scrdir="/scratch/10499775.yak.local/"
- Entering Link 1 = /global/software/gaussian/g09.e01/l1.exe PID=     28398.
+ /global/software/gaussian/g09.e01/l1.exe "/scratch/10501396.yak.local/Gau-19038.inp" -scrdir="/scratch/10501396.yak.local/"
+ Entering Link 1 = /global/software/gaussian/g09.e01/l1.exe PID=     19039.
   
  Copyright (c) 1988,1990,1992,1993,1995,1998,2003,2009,2015,
             Gaussian, Inc.  All Rights Reserved.
@@ -74,7 +74,7 @@
  
  ******************************************
  Gaussian 09:  ES64L-G09RevE.01 30-Nov-2015
-                30-Jan-2017 
+                31-Jan-2017 
  ******************************************
  %NPROCS=4
  Will use up to    4 processors via shared memory.
@@ -427,7 +427,7 @@
      87 vectors produced by pass  3 Test12= 1.15D-14 1.08D-09 XBig12= 1.88D-07 4.25D-05.
      87 vectors produced by pass  4 Test12= 1.15D-14 1.08D-09 XBig12= 2.75D-10 1.42D-06.
      63 vectors produced by pass  5 Test12= 1.15D-14 1.08D-09 XBig12= 1.88D-13 4.26D-08.
- InvSVY:  IOpt=1 It=  1 EMax= 4.44D-16
+ InvSVY:  IOpt=1 It=  1 EMax= 3.89D-16
  Solved reduced A of dimension   498 with    93 vectors.
  End of Minotr F.D. properties file   721 does not exist.
  End of Minotr F.D. properties file   722 does not exist.
@@ -856,7 +856,7 @@
    1                    0.56674  -0.46601  -0.33510   0.27725  -0.17186
                           Z28       Z29       Y28       Y14       Y24
    1                    0.15654   0.13796   0.12891  -0.12838   0.11659
- RFO step:  Lambda0=7.080200141D-13 Lambda= 0.00000000D+00.
+ RFO step:  Lambda0=7.080182794D-13 Lambda= 0.00000000D+00.
  Linear search not attempted -- option 19 set.
  B after Tr=    -0.000001   -0.000000   -0.000000
          Rot=    1.000000   -0.000000   -0.000000   -0.000000 Ang=  -0.00 deg.
@@ -1153,7 +1153,7 @@
      30          1           0       -2.657950    0.573360   -0.531680
  ---------------------------------------------------------------------
  Rotational constants (GHZ):      0.7372128      0.5488310      0.3958094
- 1\1\GINC-N033\FTS\RB3LYP\6-31G(d)\C6H16O8\ROOT\30-Jan-2017\0\\# opt=(c
+ 1\1\GINC-N260\FTS\RB3LYP\6-31G(d)\C6H16O8\ROOT\31-Jan-2017\0\\# opt=(c
  alcfc,ts,noeigentest,maxcycle=1000,cartesian) b3lyp 6-31g(d) freq\\./6
  /glo_2w_alpha_boat6_B3LYP_631Gd_iopt.out\\0,1\C,-0.26959,0.94116,0.563
  46\C,2.15861,0.36822,0.05716\C,1.13413,0.69115,1.16101\C,1.69167,-0.76
@@ -1173,14 +1173,11 @@
  .2760883,-8.1904353,-4.5018973\PG=C01 [X(C6H16O8)]\\@
 
 
- IT IS THE BEHAVIOR AND DISTRIBUTION OF THE ELECTRONS 
- AROUND THE NUCLEUS THAT GIVES THE FUNDAMENTAL 
- CHARACTER OF AN ATOM:  IT MUST BE THE SAME FOR MOLECULES.
-
-                               -- C. A. COULSON, 1951
- Job cpu time:       0 days  0 hours 39 minutes 18.4 seconds.
+ BRING ME INTO THE COMPANY OF THOSE WHO SEEK TRUTH,
+ AND DELIVER ME FROM THOSE WHO HAVE FOUND IT.
+ Job cpu time:       0 days  0 hours 36 minutes 55.1 seconds.
  File lengths (MBytes):  RWF=    220 Int=      0 D2E=      0 Chk=      6 Scr=      1
- Normal termination of Gaussian 09 at Mon Jan 30 07:12:16 2017.
+ Normal termination of Gaussian 09 at Tue Jan 31 07:19:14 2017.
  Link1:  Proceeding to internal job step number  2.
  --------------------------------------------------------------------
  #N Geom=AllCheck Guess=TCheck SCRF=Check GenChk RB3LYP/6-31G(d) Freq
@@ -1197,7 +1194,7 @@
  7/8=1,10=1,25=1/1,2,3,16;
  1/5=1,6=1000,10=4,11=1,30=1/3;
  99//99;
- Structure from the checkpoint file:  "/scratch/10499775.yak.local/Gau-28398.chk"
+ Structure from the checkpoint file:  "/scratch/10501396.yak.local/Gau-19039.chk"
  -------------------------------------------
  ./6/glo_2w_alpha_boat6_B3LYP_631Gd_iopt.out
  -------------------------------------------
@@ -1447,7 +1444,7 @@
  One-electron integrals computed using PRISM.
  NBasis=   242 RedAO= T EigKep=  1.25D-03  NBF=   242
  NBsUse=   242 1.00D-06 EigRej= -1.00D+00 NBFU=   242
- Initial guess from the checkpoint file:  "/scratch/10499775.yak.local/Gau-28398.chk"
+ Initial guess from the checkpoint file:  "/scratch/10501396.yak.local/Gau-19039.chk"
  B after Tr=     0.000000    0.000000    0.000000
          Rot=    1.000000   -0.000000   -0.000000   -0.000000 Ang=   0.00 deg.
  Requested convergence on RMS density matrix=1.00D-08 within 128 cycles.
@@ -1480,7 +1477,7 @@
      90 vectors produced by pass  4 Test12= 1.15D-14 1.08D-09 XBig12= 1.35D-07 4.33D-05.
      63 vectors produced by pass  5 Test12= 1.15D-14 1.08D-09 XBig12= 9.08D-11 7.88D-07.
       3 vectors produced by pass  6 Test12= 1.15D-14 1.08D-09 XBig12= 6.59D-14 2.87D-08.
- InvSVY:  IOpt=1 It=  1 EMax= 6.22D-15
+ InvSVY:  IOpt=1 It=  1 EMax= 3.55D-15
  Solved reduced A of dimension   516 with    93 vectors.
  Isotropic polarizability for W=    0.000000       93.38 Bohr**3.
  End of Minotr F.D. properties file   721 does not exist.
@@ -1843,11 +1840,11 @@
  Approx polarizability: 125.340  -1.115 131.609  -3.482  -3.771 125.134
  Calling FoFJK, ICntrl=    100127 FMM=F ISym2X=0 I1Cent= 0 IOpClX= 0 NMat=1 NMatS=1 NMatT=0.
  Full mass-weighted force constant matrix:
- Low frequencies --- -207.1565   -0.0002    0.0009    0.0015    5.6284    9.4335
+ Low frequencies --- -207.1565    0.0006    0.0008    0.0009    5.6284    9.4335
  Low frequencies ---   12.7304   38.6614   45.4629
  ******    1 imaginary frequencies (negative Signs) ****** 
  Diagonal vibrational polarizability:
-      234.9203331     263.1909194      65.7876314
+      234.9203331     263.1909195      65.7876314
  Harmonic frequencies (cm**-1), IR intensities (KM/Mole), Raman scattering
  activities (A**4/AMU), depolarization ratios for plane and unpolarized
  incident light, reduced masses (AMU), force constants (mDyne/A),
@@ -3233,12 +3230,12 @@
  RMS     Force            0.000005     0.000300     YES
  Maximum Displacement     0.000034     0.001800     YES
  RMS     Displacement     0.000013     0.001200     YES
- Predicted change in Energy=-5.450223D-10
+ Predicted change in Energy=-5.450224D-10
  Optimization completed.
     -- Stationary point found.
  GradGradGradGradGradGradGradGradGradGradGradGradGradGradGradGradGradGrad
 
- 1\1\GINC-N033\Freq\RB3LYP\6-31G(d)\C6H16O8\ROOT\30-Jan-2017\0\\#N Geom
+ 1\1\GINC-N260\Freq\RB3LYP\6-31G(d)\C6H16O8\ROOT\31-Jan-2017\0\\#N Geom
  =AllCheck Guess=TCheck SCRF=Check GenChk RB3LYP/6-31G(d) Freq\\./6/glo
  _2w_alpha_boat6_B3LYP_631Gd_iopt.out\\0,1\C,-0.26959,0.94116,0.56346\C
  ,2.15861,0.36822,0.05716\C,1.13413,0.69115,1.16101\C,1.69167,-0.76105,
@@ -3987,11 +3984,9 @@
  00454\\\@
 
 
- AS FAR AS THE LAWS OF MATHEMATICS REFER TO REALITY,
- THEY ARE NOT CERTAIN; AND AS FAR AS THEY ARE CERTAIN,
- THEY DO NOT REFER TO REALITY.
-
-                                         -- ALBERT EINSTEIN
- Job cpu time:       0 days  0 hours 38 minutes 36.1 seconds.
+ We make a living by what we get,
+ we make a life by what we give.
+                   -- Sir Winston Churchill
+ Job cpu time:       0 days  0 hours 35 minutes 53.9 seconds.
  File lengths (MBytes):  RWF=    220 Int=      0 D2E=      0 Chk=      6 Scr=      1
- Normal termination of Gaussian 09 at Mon Jan 30 07:31:37 2017.
+ Normal termination of Gaussian 09 at Tue Jan 31 07:37:14 2017.

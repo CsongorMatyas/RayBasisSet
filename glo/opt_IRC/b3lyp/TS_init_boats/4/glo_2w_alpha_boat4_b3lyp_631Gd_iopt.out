@@ -1,7 +1,7 @@
  Entering Gaussian System, Link 0=g09
  Initial command:
- /global/software/gaussian/g09.e01/l1.exe "/scratch/10499762.yak.local/Gau-11126.inp" -scrdir="/scratch/10499762.yak.local/"
- Entering Link 1 = /global/software/gaussian/g09.e01/l1.exe PID=     11127.
+ /global/software/gaussian/g09.e01/l1.exe "/scratch/10501383.yak.local/Gau-7548.inp" -scrdir="/scratch/10501383.yak.local/"
+ Entering Link 1 = /global/software/gaussian/g09.e01/l1.exe PID=      7549.
   
  Copyright (c) 1988,1990,1992,1993,1995,1998,2003,2009,2015,
             Gaussian, Inc.  All Rights Reserved.
@@ -74,7 +74,7 @@
  
  ******************************************
  Gaussian 09:  ES64L-G09RevE.01 30-Nov-2015
-                30-Jan-2017 
+                31-Jan-2017 
  ******************************************
  %NPROCS=4
  Will use up to    4 processors via shared memory.
@@ -428,7 +428,7 @@
      87 vectors produced by pass  4 Test12= 1.15D-14 1.08D-09 XBig12= 4.87D-10 1.84D-06.
      65 vectors produced by pass  5 Test12= 1.15D-14 1.08D-09 XBig12= 4.07D-13 6.44D-08.
       1 vectors produced by pass  6 Test12= 1.15D-14 1.08D-09 XBig12= 3.26D-16 1.97D-09.
- InvSVY:  IOpt=1 It=  1 EMax= 5.00D-16
+ InvSVY:  IOpt=1 It=  1 EMax= 5.55D-16
  Solved reduced A of dimension   501 with    93 vectors.
  End of Minotr F.D. properties file   721 does not exist.
  End of Minotr F.D. properties file   722 does not exist.
@@ -857,7 +857,7 @@
    1                    0.40562  -0.29167  -0.25493  -0.22887  -0.19483
                           Z25       Z19       Y27       Z27       X28
    1                    0.19176   0.17998  -0.17724   0.16728   0.16091
- RFO step:  Lambda0=4.443052545D-10 Lambda= 0.00000000D+00.
+ RFO step:  Lambda0=4.443051911D-10 Lambda= 0.00000000D+00.
  Linear search not attempted -- option 19 set.
  B after Tr=    -0.000014    0.000038   -0.000033
          Rot=    1.000000   -0.000002    0.000002    0.000002 Ang=  -0.00 deg.
@@ -1154,7 +1154,7 @@
      30          1           0       -2.808620   -0.462899    1.932180
  ---------------------------------------------------------------------
  Rotational constants (GHZ):      0.7504410      0.4843062      0.3447298
- 1\1\GINC-N092\FTS\RB3LYP\6-31G(d)\C6H16O8\ROOT\30-Jan-2017\0\\# opt=(c
+ 1\1\GINC-N293\FTS\RB3LYP\6-31G(d)\C6H16O8\ROOT\31-Jan-2017\0\\# opt=(c
  alcfc,ts,noeigentest,maxcycle=1000,cartesian) b3lyp 6-31g(d) freq\\./4
  /glo_2w_alpha_boat4_b3lyp_631Gd_iopt.out\\0,1\O,-0.59258,0.62234,0.006
  98\C,1.76913,-0.103,-0.14013\C,-0.12752,-1.75688,-0.40475\C,1.24457,-1
@@ -1174,11 +1174,11 @@
  66403,2.7562391,2.2185265\PG=C01 [X(C6H16O8)]\\@
 
 
- MANHOOD BEGINS BY TRYING TO SHAVE FACE,
- AND ENDS BY TRYING TO SAVE FACE.
- Job cpu time:       0 days  0 hours 40 minutes 10.9 seconds.
+ MOST BUREAUCRACIES FUNCTION LIKE A SEPTIC TANK.
+ THE LARGE CHUNKS RISE TO THE TOP.
+ Job cpu time:       0 days  0 hours 36 minutes 35.5 seconds.
  File lengths (MBytes):  RWF=    220 Int=      0 D2E=      0 Chk=      6 Scr=      1
- Normal termination of Gaussian 09 at Mon Jan 30 06:42:10 2017.
+ Normal termination of Gaussian 09 at Tue Jan 31 06:45:32 2017.
  Link1:  Proceeding to internal job step number  2.
  --------------------------------------------------------------------
  #N Geom=AllCheck Guess=TCheck SCRF=Check GenChk RB3LYP/6-31G(d) Freq
@@ -1195,7 +1195,7 @@
  7/8=1,10=1,25=1/1,2,3,16;
  1/5=1,6=1000,10=4,11=1,30=1/3;
  99//99;
- Structure from the checkpoint file:  "/scratch/10499762.yak.local/Gau-11127.chk"
+ Structure from the checkpoint file:  "/scratch/10501383.yak.local/Gau-7549.chk"
  -------------------------------------------
  ./4/glo_2w_alpha_boat4_b3lyp_631Gd_iopt.out
  -------------------------------------------
@@ -1445,7 +1445,7 @@
  One-electron integrals computed using PRISM.
  NBasis=   242 RedAO= T EigKep=  1.24D-03  NBF=   242
  NBsUse=   242 1.00D-06 EigRej= -1.00D+00 NBFU=   242
- Initial guess from the checkpoint file:  "/scratch/10499762.yak.local/Gau-11127.chk"
+ Initial guess from the checkpoint file:  "/scratch/10501383.yak.local/Gau-7549.chk"
  B after Tr=     0.000000   -0.000000   -0.000000
          Rot=    1.000000    0.000000   -0.000000   -0.000000 Ang=   0.00 deg.
  Requested convergence on RMS density matrix=1.00D-08 within 128 cycles.
@@ -1478,7 +1478,7 @@
      90 vectors produced by pass  4 Test12= 1.15D-14 1.08D-09 XBig12= 1.71D-07 2.97D-05.
      62 vectors produced by pass  5 Test12= 1.15D-14 1.08D-09 XBig12= 1.32D-10 8.65D-07.
       3 vectors produced by pass  6 Test12= 1.15D-14 1.08D-09 XBig12= 7.89D-14 1.99D-08.
- InvSVY:  IOpt=1 It=  1 EMax= 2.66D-15
+ InvSVY:  IOpt=1 It=  1 EMax= 7.99D-15
  Solved reduced A of dimension   515 with    93 vectors.
  Isotropic polarizability for W=    0.000000       94.56 Bohr**3.
  End of Minotr F.D. properties file   721 does not exist.
@@ -1751,7 +1751,7 @@
     28  O   -0.812981
     29  H    0.434131
     30  H    0.395467
- Sum of Mulliken charges =  -0.00000
+ Sum of Mulliken charges =   0.00000
  Mulliken charges with hydrogens summed into heavy atoms:
                1
      1  O   -0.549315
@@ -1841,11 +1841,11 @@
  Approx polarizability: 139.722   2.051 122.838   2.619   2.439 122.323
  Calling FoFJK, ICntrl=    100127 FMM=F ISym2X=0 I1Cent= 0 IOpClX= 0 NMat=1 NMatS=1 NMatT=0.
  Full mass-weighted force constant matrix:
- Low frequencies ---  -34.1588  -10.0654   -1.5767   -0.0005    0.0005    0.0005
+ Low frequencies ---  -34.1588  -10.0654   -1.5767   -0.0009   -0.0008   -0.0007
  Low frequencies ---    5.7090   35.0269   63.9993
  ******    1 imaginary frequencies (negative Signs) ****** 
  Diagonal vibrational polarizability:
-      202.4273027     206.1332953     158.6987079
+      202.4273025     206.1332955     158.6987080
  Harmonic frequencies (cm**-1), IR intensities (KM/Mole), Raman scattering
  activities (A**4/AMU), depolarization ratios for plane and unpolarized
  incident light, reduced masses (AMU), force constants (mDyne/A),
@@ -3242,7 +3242,7 @@
     -- Stationary point found.
  GradGradGradGradGradGradGradGradGradGradGradGradGradGradGradGradGradGrad
 
- 1\1\GINC-N092\Freq\RB3LYP\6-31G(d)\C6H16O8\ROOT\30-Jan-2017\0\\#N Geom
+ 1\1\GINC-N293\Freq\RB3LYP\6-31G(d)\C6H16O8\ROOT\31-Jan-2017\0\\#N Geom
  =AllCheck Guess=TCheck SCRF=Check GenChk RB3LYP/6-31G(d) Freq\\./4/glo
  _2w_alpha_boat4_b3lyp_631Gd_iopt.out\\0,1\O,-0.59258,0.62234,0.00698\C
  ,1.76913,-0.103,-0.14013\C,-0.12752,-1.75688,-0.40475\C,1.24457,-1.488
@@ -3990,7 +3990,10 @@
  1495,-0.00000028,-0.00000910,-0.00000259,-0.00002212,0.00000156\\\@
 
 
- WOMEN HOLD UP HALF THE SKY. -- MAO TSE TUNG
- Job cpu time:       0 days  0 hours 37 minutes 14.6 seconds.
+ IN THE LONG RUN, DIGGING FOR TRUTH HAS ALWAYS PROVED NOT ONLY 
+ MORE INTERESTING BUT MORE PROFITABLE THAN DIGGING FOR GOLD.
+
+                             -- GEORGE R. HARRISON
+ Job cpu time:       0 days  0 hours 35 minutes  6.7 seconds.
  File lengths (MBytes):  RWF=    220 Int=      0 D2E=      0 Chk=      6 Scr=      1
- Normal termination of Gaussian 09 at Mon Jan 30 07:00:51 2017.
+ Normal termination of Gaussian 09 at Tue Jan 31 07:03:08 2017.

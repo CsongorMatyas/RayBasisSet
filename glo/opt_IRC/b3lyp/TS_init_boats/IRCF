@@ -1,0 +1,40 @@
+#!/bin/sh
+
+module load openbabel/2.3.2
+
+newlocb="/home/iawad/RayBasisSet/glo/opt_IRC/Tb3lyp/IRCF_init_boats/"
+#newcommand="# opt=(MaxCycle=1000) freq B3LYP/6-31G(d)"
+#newcommand="# opt=(calcfc,ts,noeigentest,maxcycle=1000,cartesian) b3lyp 6-31g(d) freq"
+newcommand="# b3lyp/6-31g(d) irc=(calcfc,forward,maxpoints=20)"
+
+for i in `find .  -name "*.out"`; do  
+newloc=${newlocb}$(dirname $i;)
+mkdir -p $newloc
+basefile=$(basename $i)
+basefile=${basefile/.out/}
+basefull=${newloc}"/"${basefile}
+filein=${basefull}".com"
+fileout=${basefull}".out"
+babel -ig03 $i -ocom $filein
+sed -i '1d' $filein
+sed -i "1i ${newcommand}" $filein
+sed -i "1i %NPROCS=4" $filein
+
+j=${newloc}"/"${basefile}".sh"
+
+echo "#!/bin/sh" > $j
+echo "# Script for running gaussian" >> $j
+echo "" >> $j
+echo "#PBS -l walltime=23:00:00" >> $j
+echo "#PBS -l mem=2000mb" >> $j
+echo "#PBS -r n" >> $j
+echo "#PBS -l nodes=1:ppn=2" >> $j
+echo "" >> $j
+echo "cd \$PBS_O_WORKDIR #makes it easy to return to the directory from which you submitted the job:" >> $j
+
+echo "module load gaussian" >> $j
+echo "g09 < $filein > $fileout" >> $j
+
+qsub $j;
+
+done

@@ -1,7 +1,7 @@
  Entering Gaussian System, Link 0=g09
  Initial command:
- /global/software/gaussian/g09.e01/l1.exe "/scratch/10499765.yak.local/Gau-5898.inp" -scrdir="/scratch/10499765.yak.local/"
- Entering Link 1 = /global/software/gaussian/g09.e01/l1.exe PID=      5899.
+ /global/software/gaussian/g09.e01/l1.exe "/scratch/10501386.yak.local/Gau-23924.inp" -scrdir="/scratch/10501386.yak.local/"
+ Entering Link 1 = /global/software/gaussian/g09.e01/l1.exe PID=     23925.
   
  Copyright (c) 1988,1990,1992,1993,1995,1998,2003,2009,2015,
             Gaussian, Inc.  All Rights Reserved.
@@ -74,7 +74,7 @@
  
  ******************************************
  Gaussian 09:  ES64L-G09RevE.01 30-Nov-2015
-                30-Jan-2017 
+                31-Jan-2017 
  ******************************************
  %NPROCS=4
  Will use up to    4 processors via shared memory.
@@ -428,7 +428,7 @@
      87 vectors produced by pass  4 Test12= 1.15D-14 1.08D-09 XBig12= 5.91D-10 1.91D-06.
      68 vectors produced by pass  5 Test12= 1.15D-14 1.08D-09 XBig12= 4.16D-13 4.26D-08.
       3 vectors produced by pass  6 Test12= 1.15D-14 1.08D-09 XBig12= 3.29D-16 1.25D-09.
- InvSVY:  IOpt=1 It=  1 EMax= 5.00D-16
+ InvSVY:  IOpt=1 It=  1 EMax= 5.55D-16
  Solved reduced A of dimension   506 with    93 vectors.
  End of Minotr F.D. properties file   721 does not exist.
  End of Minotr F.D. properties file   722 does not exist.
@@ -857,7 +857,7 @@
    1                    0.34083  -0.32056  -0.32050  -0.27039  -0.26869
                           X13       Z12       Z15       Y19       X12
    1                    0.21430  -0.20954  -0.20575   0.18319   0.17999
- RFO step:  Lambda0=2.088383817D-09 Lambda= 0.00000000D+00.
+ RFO step:  Lambda0=2.088383685D-09 Lambda= 0.00000000D+00.
  Linear search not attempted -- option 19 set.
  B after Tr=     0.000000   -0.000003   -0.000005
          Rot=    1.000000    0.000001   -0.000001   -0.000000 Ang=   0.00 deg.
@@ -958,7 +958,7 @@
  RMS     Force            0.000006     0.000300     YES
  Maximum Displacement     0.000626     0.001800     YES
  RMS     Displacement     0.000192     0.001200     YES
- Predicted change in Energy=-8.177058D-10
+ Predicted change in Energy=-8.177060D-10
  Optimization completed.
     -- Stationary point found.
  GradGradGradGradGradGradGradGradGradGradGradGradGradGradGradGradGradGrad
@@ -1154,7 +1154,7 @@
      30          1           0       -3.653800   -0.541954    0.374330
  ---------------------------------------------------------------------
  Rotational constants (GHZ):      0.6490906      0.5316207      0.3653026
- 1\1\GINC-N110\FTS\RB3LYP\6-31G(d)\C6H16O8\ROOT\30-Jan-2017\0\\# opt=(c
+ 1\1\GINC-N194\FTS\RB3LYP\6-31G(d)\C6H16O8\ROOT\31-Jan-2017\0\\# opt=(c
  alcfc,ts,noeigentest,maxcycle=1000,cartesian) b3lyp 6-31g(d) freq\\./3
  /glo_2w_alpha_boat3_b3lyp_631Gd_iopt.out\\0,1\C,1.32923,0.67898,0.6304
  1\C,0.9376,-1.43373,-0.81913\O,-0.72715,0.2445,-0.84114\C,-0.52769,-1.
@@ -1174,12 +1174,12 @@
  70846,-4.8879513,-0.3768644\PG=C01 [X(C6H16O8)]\\@
 
 
- WE HAVE LEFT UNDONE THOSE THINGS WHICH WE OUGHT TO HAVE DONE,
- AND WE HAVE DONE THOSE THINGS WHICH WE OUGHT NOT TO HAVE DONE.
-                   BOOK OF COMMON PRAYER                      
- Job cpu time:       0 days  0 hours 36 minutes 41.7 seconds.
+ ACCORDING TO HEN3RY, LIFE IS MUCH LIKE A SEWER........
+ YOU GET OUT OF IT JUST WHAT YOU PUT INTO IT...........
+                         TOM LEHRER - (THE 3 IS SILENT)
+ Job cpu time:       0 days  0 hours 35 minutes 26.9 seconds.
  File lengths (MBytes):  RWF=    220 Int=      0 D2E=      0 Chk=      6 Scr=      1
- Normal termination of Gaussian 09 at Mon Jan 30 06:46:06 2017.
+ Normal termination of Gaussian 09 at Tue Jan 31 06:47:57 2017.
  Link1:  Proceeding to internal job step number  2.
  --------------------------------------------------------------------
  #N Geom=AllCheck Guess=TCheck SCRF=Check GenChk RB3LYP/6-31G(d) Freq
@@ -1196,7 +1196,7 @@
  7/8=1,10=1,25=1/1,2,3,16;
  1/5=1,6=1000,10=4,11=1,30=1/3;
  99//99;
- Structure from the checkpoint file:  "/scratch/10499765.yak.local/Gau-5899.chk"
+ Structure from the checkpoint file:  "/scratch/10501386.yak.local/Gau-23925.chk"
  -------------------------------------------
  ./3/glo_2w_alpha_boat3_b3lyp_631Gd_iopt.out
  -------------------------------------------
@@ -1446,7 +1446,7 @@
  One-electron integrals computed using PRISM.
  NBasis=   242 RedAO= T EigKep=  1.41D-03  NBF=   242
  NBsUse=   242 1.00D-06 EigRej= -1.00D+00 NBFU=   242
- Initial guess from the checkpoint file:  "/scratch/10499765.yak.local/Gau-5899.chk"
+ Initial guess from the checkpoint file:  "/scratch/10501386.yak.local/Gau-23925.chk"
  B after Tr=    -0.000000    0.000000    0.000000
          Rot=    1.000000    0.000000   -0.000000    0.000000 Ang=   0.00 deg.
  Requested convergence on RMS density matrix=1.00D-08 within 128 cycles.
@@ -1480,7 +1480,7 @@
      63 vectors produced by pass  5 Test12= 1.15D-14 1.08D-09 XBig12= 1.34D-10 8.04D-07.
       3 vectors produced by pass  6 Test12= 1.15D-14 1.08D-09 XBig12= 9.69D-14 3.03D-08.
       1 vectors produced by pass  7 Test12= 1.15D-14 1.08D-09 XBig12= 9.76D-17 1.13D-09.
- InvSVY:  IOpt=1 It=  1 EMax= 3.55D-15
+ InvSVY:  IOpt=1 It=  1 EMax= 6.22D-15
  Solved reduced A of dimension   517 with    93 vectors.
  Isotropic polarizability for W=    0.000000       94.17 Bohr**3.
  End of Minotr F.D. properties file   721 does not exist.
@@ -1753,7 +1753,7 @@
     28  O   -0.820404
     29  H    0.398799
     30  H    0.429815
- Sum of Mulliken charges =   0.00000
+ Sum of Mulliken charges =  -0.00000
  Mulliken charges with hydrogens summed into heavy atoms:
                1
      1  C    0.268815
@@ -1843,7 +1843,7 @@
  Approx polarizability: 130.052   2.085 124.795  -2.280  -2.613 128.779
  Calling FoFJK, ICntrl=    100127 FMM=F ISym2X=0 I1Cent= 0 IOpClX= 0 NMat=1 NMatS=1 NMatT=0.
  Full mass-weighted force constant matrix:
- Low frequencies ---  -77.1094   -7.4332   -0.0012   -0.0009   -0.0005    5.7708
+ Low frequencies ---  -77.1094   -7.4332    0.0003    0.0004    0.0006    5.7708
  Low frequencies ---    9.6121   33.1539   36.0553
  ******    1 imaginary frequencies (negative Signs) ****** 
  Diagonal vibrational polarizability:
@@ -3244,7 +3244,7 @@
     -- Stationary point found.
  GradGradGradGradGradGradGradGradGradGradGradGradGradGradGradGradGradGrad
 
- 1\1\GINC-N110\Freq\RB3LYP\6-31G(d)\C6H16O8\ROOT\30-Jan-2017\0\\#N Geom
+ 1\1\GINC-N194\Freq\RB3LYP\6-31G(d)\C6H16O8\ROOT\31-Jan-2017\0\\#N Geom
  =AllCheck Guess=TCheck SCRF=Check GenChk RB3LYP/6-31G(d) Freq\\./3/glo
  _2w_alpha_boat3_b3lyp_631Gd_iopt.out\\0,1\C,1.32923,0.67898,0.63041\C,
  0.9376,-1.43373,-0.81913\O,-0.72715,0.2445,-0.84114\C,-0.52769,-1.1493
@@ -3993,7 +3993,8 @@
  71,-0.00000100\\\@
 
 
- SACRED COWS MAKE GREAT HAMBURGERS -- ROBERT REISNER
- Job cpu time:       0 days  0 hours 34 minutes 52.5 seconds.
+ THE REASON MAN'S BEST FRIEND IS A DOG IS BECAUSE
+ HE WAGS HIS TAIL INSTEAD OF HIS TONGUE.
+ Job cpu time:       0 days  0 hours 34 minutes 14.9 seconds.
  File lengths (MBytes):  RWF=    220 Int=      0 D2E=      0 Chk=      6 Scr=      1
- Normal termination of Gaussian 09 at Mon Jan 30 07:03:35 2017.
+ Normal termination of Gaussian 09 at Tue Jan 31 07:05:08 2017.
