@@ -1,0 +1,14 @@
+%chk=D:\Dropbox\My Dropbox\Sajat gyujtes\Hehre MOLMOD\01\OH2.chk
+#p opt freq b3lyp/6-31g(d,p) guess=(local,save) geom=connectivity
+
+OH2
+
+0 1
+ O                  5.26925072   -1.26526824    0.00000000
+ H                  6.12058205   -0.82160736    0.00000000
+ H                  4.56718613   -0.61051232    0.00000000
+
+ 1 2 1.0 3 1.0
+ 2
+ 3
+
