@@ -1,0 +1,15 @@
+%NPROCS=1
+# UHF/gen gfinput
+
+HYDROGEN
+
+0 2
+H
+
+H 0
+STO 1S 3 1.0
+STO 1S 1 1.0
+****
+
+
+
