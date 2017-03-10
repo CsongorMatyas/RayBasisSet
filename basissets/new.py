@@ -74,6 +74,7 @@ def Arguments():
     parser.add_argument('-P','--GaussianProc',  required=False,type=int,  help='Number of processors for Gaussian',default=1)
     parser.add_argument('-p','--ParallelProc',  required=False,type=int,  help='Total number of processors used',  default=1)
     parser.add_argument('-s','--Scales',        required=False,type=float,help='Initial scale values',             nargs='+')
+    parser.add_argument('-L','--Length',        required=False,type=float,help='Bond lenght',                      default=1)
     parser.add_argument('-r','--Ranges',        required=False,type=float,help='Range of each scale value',        nargs='+')
     parser.add_argument('-D','--Delta',         required=False,type=float,help='The value of Delta',               default=0.001)
     parser.add_argument('-l','--Limit',         required=False,type=float,help='Error limit',                      default=1.0e-4)
@@ -94,6 +95,7 @@ def Arguments():
     a.ParallelProc = arguments.ParallelProc
     a.Ranges = arguments.Ranges
     a.Type=arguments.Type
+    a.length=arguments.Length
 
     a.colorslist = [bcolors.HEADER,bcolors.OKBLUE,bcolors.WARNING,bcolors.FAIL,bcolors.ENDC,bcolors.BOLD]
 
@@ -283,7 +285,7 @@ def GenerateInput(Scale_values):
     inputtext += "{} {}\n".format(a.Charge, GetElementMultiplicity())
     inputtext += GetElementSymbol().strip()
     if (a.Type == 'Di'):
-        inputtext +="\n" +  GetElementSymbol().strip() + "   1   {}".format(0.7321)
+        inputtext +="\n" +  GetElementSymbol().strip() + "   1   {0:.12f}".format(a.length)
     inputtext += "\n\n"
     inputtext += GetElementSymbol().strip() + ' 0\n'
     inputtext += returnBasisSetsInput(Scale_values)
