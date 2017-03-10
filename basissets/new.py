@@ -303,6 +303,7 @@ def DefaultAC():
                  -0.059944749, 0.596038540, 0.458178629,
                   0.162394855, 0.566170886, 0.422307175]
     elif a.Z in range(11,19):
+        print('Not available')
         pass
 
 
@@ -471,15 +472,19 @@ def Main(arguments):
         print('End of program: Calculate single energy with given scales.')
     
     elif a.MinMethod == 'own':
+        print('{} method is not available'.format(a.MinMethod))
         pass
     
     elif a.MinMethod == 'comb':
+        print('{} method is not available'.format(a.MinMethod))
         pass
     
     elif a.MinMethod == 'scan':
+        print('{} method is not available'.format(a.MinMethod))
         pass
     
     elif a.MinMethod == 'scan2D':
+        print('{} method is not available'.format(a.MinMethod))
         pass
     
     elif a.MinMethod == 'NM':
@@ -520,6 +525,7 @@ def Main(arguments):
 
     elif a.MinMethod == 'NCG':
         ###result = minimize(Function, x0, jac=GetGradient, method='Newton-CG', options={'xtol': a.Limit, 'disp': True})
+        print('{} method is not available'.format(a.MinMethod))
         pass
     
     elif a.MinMethod == 'SLS':
@@ -529,6 +535,7 @@ def Main(arguments):
     
     elif a.MinMethod == 'TR':
         ##result = minimize(Function, x0, jac=GetGradient, hess=GetHessian, method='trust-ncg', options={'disp': True})
+        print('{} method is not available'.format(a.MinMethod))
         pass
     
     elif a.MinMethod == 'GA':
@@ -757,7 +764,7 @@ def Main(arguments):
     print
     if a.MinMethod == 'all': 
         print("\nThe full basis set is: \n\n{}".format(returnBasisSetsInput(a.x0))) 
-    else:
+    elif a.MinMethod in ['NM','CG','LBF','TNC','GA']:
         print("\nThe full basis set is: \n\n{}".format(returnBasisSetsInput(a.Result.x))) 
 
 
