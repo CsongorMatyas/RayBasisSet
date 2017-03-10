@@ -472,19 +472,19 @@ def Main(arguments):
         print('End of program: Calculate single energy with given scales.')
     
     elif a.MinMethod == 'own':
-        print('{} method is not available'.format(a.MinMethod))
+        a.Warnings.append('{} method is not available'.format(a.MinMethod))
         pass
     
     elif a.MinMethod == 'comb':
-        print('{} method is not available'.format(a.MinMethod))
+        a.Warnings.append('{} method is not available'.format(a.MinMethod))
         pass
     
     elif a.MinMethod == 'scan':
-        print('{} method is not available'.format(a.MinMethod))
+        a.Warnings.append('{} method is not available'.format(a.MinMethod))
         pass
     
     elif a.MinMethod == 'scan2D':
-        print('{} method is not available'.format(a.MinMethod))
+        a.Warnings.append('{} method is not available'.format(a.MinMethod))
         pass
     
     elif a.MinMethod == 'NM':
@@ -525,7 +525,7 @@ def Main(arguments):
 
     elif a.MinMethod == 'NCG':
         ###result = minimize(Function, x0, jac=GetGradient, method='Newton-CG', options={'xtol': a.Limit, 'disp': True})
-        print('{} method is not available'.format(a.MinMethod))
+        a.Warnings.append('{} method is not available'.format(a.MinMethod))
         pass
     
     elif a.MinMethod == 'SLS':
