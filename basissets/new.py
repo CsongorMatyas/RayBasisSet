@@ -755,7 +755,11 @@ def Main(arguments):
 
     #End of Main() function
     print
-    print("\nThe full basis set is: \n\n{}".format(returnBasisSetsInput(a.x0))) 
+    if a.MinMethod == 'all': 
+        print("\nThe full basis set is: \n\n{}".format(returnBasisSetsInput(a.x0))) 
+    else:
+        print("\nThe full basis set is: \n\n{}".format(returnBasisSetsInput(a.Result.x))) 
+
 
 #""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 #""" Element Functions """
