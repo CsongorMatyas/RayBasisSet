@@ -40,6 +40,7 @@ class a: #Class of the arguments, "a" for short, all arguments that will be pass
     NumD = None
     NumS = None
     PRINT = None
+    Type = None
 
 class bcolors:
     HEADER = '\033[95m'
@@ -59,6 +60,8 @@ def Arguments():
     parser.add_argument('-e','--Element',       required=True, type=int,  help='Input element atomic number')
     parser.add_argument('-c','--Charge',        required=False,type=int,  help='The charge',                       default=0)
 
+    parser.add_argument('-t','--Type', required=False,type=str,  help='Atom or Diatomic',              default='Mono',
+                        choices=['Mono','Di'])
     parser.add_argument('-m','--OptMethod',     required=False,type=str,  help='Optimization method',              default='UHF',
                         choices=['UHF', 'ROHF', 'HF', 'B3LYP', 'MP2'])
     parser.add_argument('-M','--MinMethod',     required=False,type=str,  help='Minimization method',              default='en',
@@ -90,6 +93,7 @@ def Arguments():
     a.GaussianProc = arguments.GaussianProc
     a.ParallelProc = arguments.ParallelProc
     a.Ranges = arguments.Ranges
+    a.Type=arguments.Type
 
     a.colorslist = [bcolors.HEADER,bcolors.OKBLUE,bcolors.WARNING,bcolors.FAIL,bcolors.ENDC,bcolors.BOLD]
 
@@ -277,7 +281,10 @@ def GenerateInput(Scale_values):
     inputtext += '# ' + a.OptMethod + '/gen gfinput\n'
     inputtext += "\n" + a.ElementName.strip() + "\n\n"
     inputtext += "{} {}\n".format(a.Charge, GetElementMultiplicity())
-    inputtext += GetElementSymbol().strip() + "\n\n"
+    inputtext += GetElementSymbol().strip()
+    if (a.Type == 'Di'):
+        inputtext +="\n" +  GetElementSymbol().strip() + "   1   {}".format(0.7321)
+    inputtext += "\n\n"
     inputtext += GetElementSymbol().strip() + ' 0\n'
     inputtext += returnBasisSetsInput(Scale_values)
     return inputtext
@@ -838,11 +845,14 @@ def GetElementGroupPeriod():          # Valid for representative elements, only.
     return(Group, Period)
    
 def GetElementMultiplicity():
-    N_el = a.Z - a.Charge
-    if   N_el in [0,2,4,10,12,18,20,36,38,54,56,86]            :return 1
-    elif N_el in [1,3,5,9,11,13,17,19,31,35,37,49,53,55,81,85] :return 2
-    elif N_el in [6,8,14,16,32,34,50,52,82,84]                 :return 3
-    elif N_el in [7,15,33,51,83]                               :return 4
+    if (a.Type == 'Di'):
+        return 1
+    else:
+        N_el = a.Z - a.Charge
+        if   N_el in [0,2,4,10,12,18,20,36,38,54,56,86]            :return 1
+        elif N_el in [1,3,5,9,11,13,17,19,31,35,37,49,53,55,81,85] :return 2
+        elif N_el in [6,8,14,16,32,34,50,52,82,84]                 :return 3
+        elif N_el in [7,15,33,51,83]                               :return 4
 
 def GetElementCoreValence():    #This has to be extended 
     if   a.Z in [0,1,2]                        : return ([],['1S'])
