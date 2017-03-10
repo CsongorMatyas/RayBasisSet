@@ -1,0 +1,6 @@
+#module load gaussian
+for i in *.com; do 
+j=${i/.com/.out}
+g09 < $i > $j
+done
+
